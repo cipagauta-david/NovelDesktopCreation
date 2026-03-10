@@ -70,6 +70,13 @@ El usuario puede crear proyectos nuevos. Cada proyecto puede incluir tabs inicia
 
 El usuario además puede crear nuevas tabs personalizadas.
 
+Cada proyecto debe ser una carpeta autocontenida con:
+- base de datos local del proyecto,
+- carpeta de assets,
+- y metadata/versionado del proyecto,
+
+de forma que pueda copiarse, respaldarse y abrirse sin depender de servicios externos.
+
 ### 7.3 Tabs como colecciones
 Una tab representa una colección de entidades. La UI esperada es:
 - tabs en la parte superior,
@@ -87,6 +94,22 @@ Cada entidad puede representar un personaje, capítulo, lugar, evento, facción,
 - plantillas,
 - y metadatos.
 
+Modelo mínimo de entidad para MVP:
+- `id`,
+- `title`,
+- `content`,
+- `template_id?`,
+- `fields`,
+- `tags`,
+- `aliases`,
+- `relations`,
+- `history_metadata`,
+- `created_at`,
+- `updated_at`,
+- `revision_id`.
+
+`content` será el cuerpo principal editable y `fields` la estructura tipada complementaria, para evitar mezclar documento libre con metadata operacional.
+
 ### 7.5 Templates
 El sistema debe permitir crear y guardar templates reutilizables para:
 - personajes,
@@ -95,6 +118,8 @@ El sistema debe permitir crear y guardar templates reutilizables para:
 - sistemas de magia,
 - conflictos,
 - u otros tipos de entidad.
+
+Los templates deben definir fields reutilizables, validaciones básicas, prompts sugeridos y layout inicial, sin convertirse todavía en un sistema de tipos arbitrario.
 
 ### 7.6 IA contextual por tab
 Cada tab puede tener su propio system prompt personalizable y persistente. Esto permite que la IA tenga comportamientos distintos según contexto.
@@ -123,6 +148,8 @@ Reglas de interacción:
 - **Ctrl + click**: navegar a la entidad enlazada,
 - **hover**: mostrar un panel de preview contextual.
 
+Para el MVP se utilizará un editor híbrido de markdown enriquecido. Las referencias deben almacenarse como marcas estructuradas resolubles a `entity_id`, no solo como texto dependiente del título visible.
+
 ### 7.9 Grafo / board visual
 Debe existir una visualización tipo grafo/corcho donde el usuario pueda:
 - ver entidades como nodos,
@@ -138,6 +165,8 @@ Las entidades deben soportar inserción avanzada de multimedia:
 - potencial soporte de video,
 - paneles de inspiración estilo Notion.
 
+Para el MVP, los assets deben copiarse dentro de la carpeta local del proyecto y registrarse con metadata en la base de datos. El soporte inicial será de imágenes; video y embeds avanzados quedan diferidos.
+
 ### 7.11 Historial preciso
 Cada proyecto y cada entidad deben tener historial detallado de:
 - creación,
@@ -147,6 +176,8 @@ Cada proyecto y cada entidad deben tener historial detallado de:
 - templates,
 - acciones de IA,
 - y restauración/comparación de versiones.
+
+Cada cambio debe generar una revisión incremental visible. Cada entidad mantendrá `revision_id` para dejar preparada una futura sincronización, aunque la colaboración y resolución de conflictos no formen parte del MVP.
 
 ### 7.12 Búsqueda optimizada
 El sistema debe priorizar búsqueda por:
@@ -158,6 +189,8 @@ El sistema debe priorizar búsqueda por:
 - relaciones,
 - backlinks,
 - y posteriormente búsqueda semántica.
+
+La estrategia base del MVP será un índice textual local con SQLite + FTS5, reindexación incremental por entidad y ranking priorizado por título, aliases, tags, fields indexables y luego contenido.
 
 ## 8. Requerimientos funcionales
 ### RF-01 Onboarding
@@ -255,6 +288,14 @@ El MVP debe incluir:
 - drag & drop de imágenes,
 - y una primera vista de grafo.
 
+Queda explícitamente fuera del MVP:
+- colaboración multiusuario en tiempo real,
+- búsqueda semántica/vectorial,
+- editor por bloques completo,
+- marketplace o runtime abierto de plugins,
+- timeline avanzada,
+- y soporte robusto de video.
+
 ## 13. Roadmap sugerido
 ### Fase 1
 - núcleo local-first,
@@ -297,11 +338,14 @@ El MVP debe incluir:
 - El historial registra cambios de manera visible.
 - La IA puede proponer cambios y solicitar confirmación.
 
-## 15. Preguntas abiertas
-- ¿Editor por bloques, markdown enriquecido o híbrido?
-- ¿Qué estrategia exacta de indexación local se usará?
-- ¿Cómo se modelarán los fields dinámicos?
-- ¿Cuál será el formato interno de plugins/skills?
-- ¿Cómo se resolverán conflictos en futura colaboración?
-- ¿Qué nivel de tipado tendrán las relaciones?
-- ¿Cómo sepersistirán assets multimedia a escala?
+## 15. Decisiones cerradas y temas diferidos
+### Decisiones cerradas
+- El MVP usará un editor híbrido de markdown enriquecido, con `fields` estructurados fuera del cuerpo principal.
+- La búsqueda local se implementará con SQLite + FTS5 e indexación incremental.
+- Los fields dinámicos se modelarán como schema tipado por template o tab, con tipos mínimos como `text`, `long_text`, `number`, `date`, `boolean`, `enum`, `multi_enum`, `reference` y `list`.
+- Las relaciones serán semi-tipadas, con tipos base como `references`, `contains`, `belongs_to`, `located_in`, `member_of`, `causes` y `related_to`, manteniendo `custom_label` cuando haga falta flexibilidad narrativa.
+- Los assets multimedia se persistirán dentro de la carpeta del proyecto, con nombres internos estables y metadata asociada en base de datos.
+
+### Temas diferidos de forma explícita
+- Plugins/skills externos quedan fuera del MVP; por ahora solo se reserva una interfaz conceptual basada en `manifest`, `permissions` y `actions`.
+- La colaboración futura no se resolverá en esta fase. El sistema solo dejará preparado `revision_id` y trazabilidad suficiente para una estrategia posterior de merge manual o sincronización híbrida.
