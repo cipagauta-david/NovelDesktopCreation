@@ -4,6 +4,30 @@ NovelDesktopCreation es un workspace narrativo **web-first, local-first y prepar
 
 ## Documento base del proyecto
 - PRD formal: [`docs/PRD-formal.md`](./docs/PRD-formal.md)
+- Arquitectura técnica inicial: [`docs/technical-architecture-initial.md`](./docs/technical-architecture-initial.md)
+
+## MVP ejecutable
+Este repositorio ya incluye un MVP web-first/local-first implementado con React + Vite.
+
+### Cómo arrancarlo
+```bash
+npm install
+npm run dev
+```
+
+### Qué incluye el MVP actual
+- onboarding inicial para proveedor/modelo con hint seguro de API key,
+- gestión de múltiples proyectos narrativos,
+- tabs iniciales y personalizadas con prompt contextual editable,
+- entidades con documento editable + fields tipados,
+- templates reutilizables y guardado del contexto actual como template,
+- referencias estructuradas `{{}}` con sugerencias,
+- hover preview y navegación solo con **Ctrl + click**,
+- historial visible por entidad y actividad de proyecto,
+- drag & drop inicial de imágenes,
+- búsqueda textual priorizada,
+- propuesta de IA con confirmación explícita,
+- y primera vista de grafo narrativa.
 
 ## Decisiones actuales del MVP
 - editor híbrido de markdown enriquecido con referencias `{{}}`,

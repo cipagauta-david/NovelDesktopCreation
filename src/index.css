@@ -1,0 +1,661 @@
+:root {
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  color: #e2e8f0;
+  background:
+    radial-gradient(circle at top, rgba(139, 92, 246, 0.16), transparent 28%),
+    #020617;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: transparent;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.72);
+  color: inherit;
+  border-radius: 14px;
+}
+
+button {
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(196, 181, 253, 0.72);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.85rem 0.95rem;
+}
+
+textarea {
+  resize: vertical;
+}
+
+label {
+  display: grid;
+  gap: 0.45rem;
+  color: #cbd5e1;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.onboarding-shell {
+  display: grid;
+  grid-template-columns: 1.25fr 0.95fr;
+  gap: 1.5rem;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.hero-panel,
+.onboarding-card,
+.sidebar,
+.workspace,
+.entity-pane,
+.editor-pane,
+.inspector-card,
+.graph-panel,
+.editor-panel,
+.empty-state,
+.search-results,
+.brand-card,
+.template-card,
+.project-pill,
+.entity-card,
+.history-item,
+.asset-card,
+.proposal-card {
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.74);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.38);
+}
+
+.hero-panel,
+.onboarding-card,
+.sidebar,
+.workspace,
+.entity-pane,
+.editor-pane,
+.inspector-card,
+.graph-panel,
+.editor-panel,
+.empty-state,
+.search-results,
+.proposal-card {
+  border-radius: 28px;
+}
+
+.hero-panel {
+  padding: 2.2rem;
+  display: grid;
+  gap: 2rem;
+  align-content: center;
+}
+
+.hero-panel h1,
+.brand-card h1,
+.topbar h2,
+.editor-header h3 {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 3.5rem);
+  line-height: 1.05;
+}
+
+.hero-panel p,
+.brand-card p,
+.topbar p,
+.editor-header p,
+.search-result span,
+.project-pill span,
+.template-card span,
+.history-item p,
+.proposal-card p,
+.empty-state p {
+  margin: 0;
+  color: #94a3b8;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c4b5fd;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feature-grid li {
+  padding: 1rem 1.15rem;
+  border-radius: 20px;
+  background: rgba(30, 41, 59, 0.78);
+  border: 1px solid rgba(167, 139, 250, 0.18);
+}
+
+.onboarding-card {
+  padding: 2rem;
+  display: grid;
+  gap: 1rem;
+  align-content: center;
+}
+
+.onboarding-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  border-color: transparent;
+  color: white;
+  font-weight: 700;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  padding: 1.2rem;
+  border-radius: 0;
+  border-right: 1px solid rgba(148, 163, 184, 0.12);
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.brand-card,
+.template-card,
+.project-pill,
+.entity-card,
+.search-result,
+.asset-card,
+.history-item {
+  border-radius: 20px;
+}
+
+.brand-card {
+  padding: 1.2rem;
+}
+
+.brand-card h1 {
+  font-size: 1.8rem;
+}
+
+.brand-card small,
+.template-card small,
+.entity-card small,
+.search-result small,
+.history-item small,
+.graph-panel p,
+.reference-tooltip small {
+  color: #94a3b8;
+}
+
+.sidebar-section {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.section-header h2,
+.section-header h3,
+.section-header h4,
+.onboarding-card h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.project-list,
+.template-list,
+.entity-list,
+.history-list,
+.asset-grid,
+.search-results {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.project-pill,
+.entity-card,
+.search-result {
+  padding: 1rem;
+  text-align: left;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.project-pill.active,
+.entity-card.active,
+.tab-pill.active,
+.segmented-control .active {
+  border-color: rgba(196, 181, 253, 0.8);
+  background: rgba(91, 33, 182, 0.38);
+}
+
+.stacked-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.workspace {
+  padding: 1.2rem;
+  border-radius: 0;
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.topbar h2 {
+  font-size: 2.1rem;
+}
+
+.topbar-actions {
+  display: grid;
+  gap: 0.75rem;
+  min-width: min(420px, 100%);
+}
+
+.search-box {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.segmented-control {
+  display: inline-flex;
+  gap: 0.45rem;
+  padding: 0.3rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.segmented-control button {
+  padding: 0.6rem 0.95rem;
+}
+
+.tabs-row {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.tab-strip,
+.tab-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.tab-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.8rem 1rem;
+}
+
+.tab-actions input {
+  min-width: 220px;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 320px;
+  gap: 1rem;
+  min-height: 0;
+}
+
+.entity-pane,
+.editor-pane {
+  padding: 1rem;
+}
+
+.entity-pane {
+  display: grid;
+  gap: 0.85rem;
+  align-content: start;
+}
+
+.compact-label {
+  font-size: 0.9rem;
+}
+
+.editor-pane {
+  min-height: 720px;
+}
+
+.editor-panel,
+.graph-panel,
+.empty-state,
+.inspector-card,
+.proposal-card {
+  padding: 1rem;
+}
+
+.editor-panel,
+.graph-panel {
+  height: 100%;
+  display: grid;
+  gap: 1rem;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.editor-actions,
+.proposal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: end;
+}
+
+.editor-form-grid,
+.dual-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.document-editor,
+.reference-preview-panel,
+.fields-panel,
+.assets-panel {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.document-editor textarea,
+.inspector-card textarea,
+.onboarding-card textarea {
+  min-height: 180px;
+}
+
+.document-editor textarea {
+  min-height: 320px;
+}
+
+.asset-dropzone {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px dashed rgba(196, 181, 253, 0.36);
+  background: rgba(30, 41, 59, 0.58);
+}
+
+.inline-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: auto;
+  color: #c4b5fd;
+  cursor: pointer;
+}
+
+.inline-upload input {
+  display: none;
+}
+
+.suggestions-popover {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.8rem;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.94);
+  border: 1px solid rgba(167, 139, 250, 0.26);
+}
+
+.suggestions-popover button {
+  padding: 0.8rem;
+  text-align: left;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.rendered-document {
+  min-height: 220px;
+  padding: 1rem;
+  border-radius: 20px;
+  background: rgba(2, 6, 23, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  white-space: pre-wrap;
+}
+
+.plain-chunk {
+  color: #cbd5e1;
+}
+
+.reference-chip-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.reference-chip {
+  margin: 0 0.22rem;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(139, 92, 246, 0.28);
+  border: 1px solid rgba(196, 181, 253, 0.5);
+}
+
+.reference-tooltip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.45rem);
+  width: 260px;
+  display: none;
+  padding: 0.85rem;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(196, 181, 253, 0.25);
+  z-index: 10;
+}
+
+.reference-tooltip p {
+  margin: 0;
+  color: #94a3b8;
+}
+
+.reference-chip-wrapper:hover .reference-tooltip {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr auto;
+  gap: 0.55rem;
+}
+
+.inspector-pane {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.history-list {
+  max-height: 280px;
+  overflow: auto;
+}
+
+.history-list.compact {
+  max-height: 220px;
+}
+
+.history-item {
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.asset-grid {
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+}
+
+.asset-card {
+  margin: 0;
+  padding: 0.45rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.asset-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.graph-panel svg {
+  width: 100%;
+  min-height: 540px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at center, rgba(59, 130, 246, 0.08), transparent 55%),
+    rgba(2, 6, 23, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.graph-node {
+  cursor: pointer;
+}
+
+.graph-node text {
+  fill: #f8fafc;
+  font-size: 0.72rem;
+  pointer-events: none;
+}
+
+.empty-state {
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.toast {
+  position: fixed;
+  right: 1.2rem;
+  bottom: 1.2rem;
+  padding: 0.9rem 1.15rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(196, 181, 253, 0.42);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.4);
+}
+
+@media (max-width: 1440px) {
+  .content-grid {
+    grid-template-columns: 260px minmax(0, 1fr);
+  }
+
+  .inspector-pane {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .app-shell,
+  .onboarding-shell,
+  .content-grid,
+  .editor-form-grid,
+  .dual-column {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  }
+
+  .topbar,
+  .editor-header {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .topbar-actions {
+    min-width: 0;
+  }
+
+  .inspector-pane {
+    grid-template-columns: 1fr;
+  }
+}
