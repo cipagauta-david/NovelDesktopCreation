@@ -65,7 +65,9 @@ export function draftPayload(draft: DraftState): EntityDraft {
 }
 
 export function formatTimestamp(timestamp: string): string {
-  return new Intl.DateTimeFormat('es-ES', {
+  const locale = typeof navigator !== 'undefined' && navigator.language ? navigator.language : undefined
+
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(timestamp))
