@@ -17,6 +17,7 @@ npm run dev
 
 ### Qué incluye el MVP actual
 - onboarding inicial para proveedor/modelo con hint seguro de API key,
+- soporte de proveedores OpenAI, Anthropic, Google Gemini, OpenRouter y Local/Ollama,
 - gestión de múltiples proyectos narrativos,
 - tabs iniciales y personalizadas con prompt contextual editable,
 - entidades con documento editable + fields tipados,
@@ -28,6 +29,14 @@ npm run dev
 - búsqueda textual priorizada,
 - propuesta de IA con confirmación explícita,
 - y primera vista de grafo narrativa.
+
+## Organización del código
+La app quedó separada por responsabilidad:
+- `src/types`: tipos de dominio y UI,
+- `src/data`: constantes, seeds y persistencia inicial,
+- `src/utils`: referencias, búsqueda y helpers de workspace,
+- `src/hooks`: coordinación central del estado y acciones,
+- `src/components`: onboarding, layout, paneles y controles reutilizables.
 
 ## Decisiones actuales del MVP
 - editor híbrido de markdown enriquecido con referencias `{{}}`,
