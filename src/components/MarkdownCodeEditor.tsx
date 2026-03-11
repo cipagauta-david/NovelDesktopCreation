@@ -26,8 +26,11 @@ type MarkdownCodeEditorProps = {
 const REFERENCE_PATTERN = /\{\{entity:[^|}]+\|([^}]+)\}\}/g
 
 class ReferenceWidget extends WidgetType {
-  constructor(private readonly label: string) {
+  private readonly label: string;
+
+  constructor(label: string) {
     super()
+    this.label = label
   }
 
   override eq(other: ReferenceWidget) {

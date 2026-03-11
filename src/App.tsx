@@ -99,31 +99,25 @@ function App() {
 
   return (
     <main className="app-shell">
-      <WorkspaceHeader
-        className={zenMode ? 'focus-hidden-shell' : ''}
-        project={workspace.activeProject}
-        searchResultsCount={workspace.searchResults.length}
-        workspaceView={workspace.workspaceView}
-        leftPanelOpen={hasLeftPanel}
-        inspectorOpen={hasInspectorPanel}
-        hasActiveSearch={workspace.searchQuery.trim().length > 0}
-        onOpenSearch={() => setSearchPaletteOpen(true)}
-        onViewChange={workspace.setWorkspaceView}
-        onToggleLeftPanel={handleToggleNavigation}
-        onToggleInspector={() => workspace.togglePanel('inspector')}
-      />
+      {!zenMode && (
+        <WorkspaceHeader
+          project={workspace.activeProject}
+          searchResultsCount={workspace.searchResults.length}
+          workspaceView={workspace.workspaceView}
+          leftPanelOpen={hasLeftPanel}
+          inspectorOpen={hasInspectorPanel}
+          hasActiveSearch={workspace.searchQuery.trim().length > 0}
+          onOpenSearch={() => setSearchPaletteOpen(true)}
+          onViewChange={workspace.setWorkspaceView}
+          onToggleLeftPanel={handleToggleNavigation}
+          onToggleInspector={() => workspace.togglePanel('inspector')}
+        />
+      )}
 
       <section className={zenMode ? 'workspace-stage focus-mode' : 'workspace-stage'}>
         <section className="workspace-grid">
-          <aside
-            className={
-              zenMode
-                ? 'left-workspace-panel focus-hidden-shell'
-                : hasLeftPanel
-                  ? 'left-workspace-panel open'
-                  : 'left-workspace-panel'
-            }
-          >
+          {!zenMode && (
+            <aside className={hasLeftPanel ? 'left-workspace-panel open' : 'left-workspace-panel'}>
               <div className="left-panel-topbar">
                 <span className="eyebrow">Navegación</span>
                 <button
@@ -187,6 +181,7 @@ function App() {
                 </div>
               </div>
             </aside>
+          )}
 
           <div className={zenMode ? 'main-column focus-mode' : 'main-column'}>
             {workspace.workspaceView === 'graph' ? (
@@ -201,7 +196,7 @@ function App() {
                 draft={workspace.activeDraft}
                 templates={workspace.activeTemplates}
                 editorViewRef={workspace.editorViewRef}
-                referenceSuggestion={workspace.referenceSuggestion}
+                referenceSuggestionActive={Boolean(workspace.referenceSuggestion)}
                 suggestionOptions={workspace.suggestionOptions}
                 saveStatus={workspace.saveStatus}
                 zenMode={zenMode}
@@ -238,15 +233,8 @@ function App() {
             )}
           </div>
 
-          <aside
-            className={
-              zenMode
-                ? 'inspector-panel-shell focus-hidden-shell'
-                : hasInspectorPanel
-                  ? 'inspector-panel-shell open'
-                  : 'inspector-panel-shell'
-            }
-          >
+          {!zenMode && (
+            <aside className={hasInspectorPanel ? 'inspector-panel-shell open' : 'inspector-panel-shell'}>
               {workspace.panels.inspector && (
                 <InspectorPanel
                   activeTab={workspace.activeTab}
@@ -262,6 +250,7 @@ function App() {
                 />
               )}
             </aside>
+          )}
         </section>
       </section>
 

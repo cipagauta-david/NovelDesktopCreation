@@ -1,7 +1,6 @@
 import type { Project, WorkspaceView } from '../types/workspace'
 
 type WorkspaceHeaderProps = {
-  className?: string
   project: Project | undefined
   searchResultsCount: number
   workspaceView: WorkspaceView
@@ -15,7 +14,6 @@ type WorkspaceHeaderProps = {
 }
 
 export function WorkspaceHeader({
-  className,
   project,
   searchResultsCount,
   workspaceView,
@@ -28,7 +26,7 @@ export function WorkspaceHeader({
   onToggleInspector,
 }: WorkspaceHeaderProps) {
   return (
-    <header className={className ? `workspace-header ${className}` : 'workspace-header'}>
+    <header className="workspace-header">
       <div className="workspace-header-title">
         <button
           type="button"
