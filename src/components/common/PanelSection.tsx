@@ -26,8 +26,13 @@ export function PanelSection({
         </div>
         <div className="section-card-actions">
           {actions}
-          <button type="button" className="ghost-button" onClick={() => setOpen((current) => !current)}>
-            {open ? 'Ocultar' : 'Mostrar'}
+          <button
+            type="button"
+            className="section-toggle"
+            aria-label={open ? `Contraer ${title}` : `Expandir ${title}`}
+            onClick={() => setOpen((current) => !current)}
+          >
+            {open ? '⌃' : '⌄'}
           </button>
         </div>
       </header>

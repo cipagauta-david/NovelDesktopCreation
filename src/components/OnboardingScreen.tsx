@@ -16,30 +16,29 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
   return (
     <main className="onboarding-shell">
       <section className="hero-panel">
-        <div className="eyebrow">NovelDesktopCreation · functional MVP</div>
-        <h1>Workspace narrativo local-first, organizado y listo para producir.</h1>
+        <div className="eyebrow">Primer paso</div>
+        <h1>Organiza tu novela, tu mundo y tus ideas en un solo lugar.</h1>
         <p>
-          Configura proveedor, modelo y perfil creativo sin fricción. OpenRouter ya forma parte del
-          flujo desde el minuto cero para abrir el abanico de modelos sin acoplar la UX a un solo
-          vendor.
+          Prepara tu espacio creativo en menos de un minuto. Elige cómo quieres usar la IA y entra
+          a escribir con colecciones, entidades, referencias cruzadas y vista de relaciones.
         </p>
 
         <div className="hero-grid">
           <article className="hero-feature">
-            <strong>Menos ruido</strong>
-            <span>Paneles colapsables, menús compactos y foco editorial claro.</span>
+            <strong>Todo en contexto</strong>
+            <span>Escenas, personajes, lugares y notas conectadas en un mismo flujo.</span>
           </article>
           <article className="hero-feature">
-            <strong>Módulos separados</strong>
-            <span>Tipos, datos, utilidades, hook de estado y componentes desacoplados.</span>
+            <strong>Escritura con estructura</strong>
+            <span>Documento libre, propiedades reutilizables y plantillas para arrancar rápido.</span>
           </article>
           <article className="hero-feature">
             <strong>Referencias vivas</strong>
-            <span>{'{{}}'} estructurado, preview, navegación segura y grafo derivado.</span>
+            <span>{'{{}}'} para enlazar ideas, previsualizarlas y moverte entre ellas sin perder foco.</span>
           </article>
           <article className="hero-feature">
-            <strong>IA con control</strong>
-            <span>Propuestas confirmables, prompts por tab y proveedores múltiples.</span>
+            <strong>IA bajo control</strong>
+            <span>Sugerencias útiles, confirmación explícita y distintos modelos según tu estilo.</span>
           </article>
         </div>
       </section>
@@ -53,11 +52,11 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
       >
         <div className="section-title">
           <span className="eyebrow">Onboarding</span>
-          <h2>Deja el sistema operativo en menos de un minuto</h2>
+          <h2>Empieza en menos de un minuto</h2>
         </div>
 
         <label>
-          Perfil creativo
+          Tu nombre o perfil creativo
           <input
             value={authorName}
             onChange={(event) => setAuthorName(event.target.value)}
@@ -97,7 +96,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
         </div>
 
         <label>
-          API key / token
+          API key o token
           <input
             value={apiKey}
             onChange={(event) => setApiKey(event.target.value)}
@@ -105,10 +104,11 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
             type="password"
             autoComplete="current-password"
           />
+          <small className="form-hint">Déjalo vacío si solo quieres entrar al modo local o demo.</small>
         </label>
 
         <button className="primary-button" type="submit">
-          Entrar al workspace
+          Entrar al espacio de trabajo
         </button>
       </form>
     </main>

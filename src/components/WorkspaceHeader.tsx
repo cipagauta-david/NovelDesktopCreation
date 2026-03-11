@@ -1,68 +1,67 @@
-import type { PanelKey, Project, WorkspaceView } from '../types/workspace'
+import type { Project, WorkspaceView } from '../types/workspace'
 
 type WorkspaceHeaderProps = {
+  className?: string
   project: Project | undefined
-  searchQuery: string
+  searchResultsCount: number
   workspaceView: WorkspaceView
-  panels: Record<PanelKey, boolean>
-  onSearchChange: (value: string) => void
+  leftPanelOpen: boolean
+  inspectorOpen: boolean
+  hasActiveSearch: boolean
+  onOpenSearch: () => void
   onViewChange: (view: WorkspaceView) => void
-  onTogglePanel: (panel: PanelKey) => void
+  onToggleLeftPanel: () => void
+  onToggleInspector: () => void
 }
 
 export function WorkspaceHeader({
+  className,
   project,
-  searchQuery,
+  searchResultsCount,
   workspaceView,
-  panels,
-  onSearchChange,
+  leftPanelOpen,
+  inspectorOpen,
+  hasActiveSearch,
+  onOpenSearch,
   onViewChange,
-  onTogglePanel,
+  onToggleLeftPanel,
+  onToggleInspector,
 }: WorkspaceHeaderProps) {
   return (
-    <header className="workspace-header">
-      <div className="workspace-title">
-        <span className="eyebrow">Proyecto activo</span>
-        <h2>{project?.name}</h2>
-        <p>{project?.description}</p>
+    <header className={className ? `workspace-header ${className}` : 'workspace-header'}>
+      <div className="workspace-header-title">
+        <button
+          type="button"
+          className={leftPanelOpen ? 'toggle-chip active' : 'toggle-chip'}
+          onClick={onToggleLeftPanel}
+        >
+          Navegación
+        </button>
+
+        <div className="workspace-project-meta">
+          <span className="eyebrow">Proyecto</span>
+          <strong>{project?.name ?? 'Proyecto narrativo'}</strong>
+          <small>{project?.description ?? 'Escribe y conecta escenas, personajes y lugares.'}</small>
+        </div>
       </div>
 
-      <div className="workspace-tools">
-        <div className="toolbar-group">
-          <button
-            type="button"
-            className={panels.sidebar ? 'icon-button active' : 'icon-button'}
-            aria-label="Mostrar u ocultar sidebar"
-            onClick={() => onTogglePanel('sidebar')}
-          >
-            ☰
-          </button>
-          <button
-            type="button"
-            className={panels.entities ? 'icon-button active' : 'icon-button'}
-            aria-label="Mostrar u ocultar panel de entidades"
-            onClick={() => onTogglePanel('entities')}
-          >
-            ≣
-          </button>
-          <button
-            type="button"
-            className={panels.inspector ? 'icon-button active' : 'icon-button'}
-            aria-label="Mostrar u ocultar inspector"
-            onClick={() => onTogglePanel('inspector')}
-          >
-            ⋮
-          </button>
+      <div className="workspace-header-actions">
+        <div className="workspace-status">
+          {hasActiveSearch
+            ? `${searchResultsCount} coincidencia${searchResultsCount === 1 ? '' : 's'}`
+            : project?.updatedAt
+              ? 'Todo en contexto'
+              : 'Listo para escribir'}
         </div>
 
-        <label className="search-box">
-          <span>Buscar</span>
-          <input
-            value={searchQuery}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Título, tag, alias, field o contenido"
-          />
-        </label>
+        <button
+          type="button"
+          className={hasActiveSearch ? 'search-trigger active' : 'search-trigger'}
+          onClick={onOpenSearch}
+        >
+          <span>Buscar…</span>
+          <small>Ctrl+K</small>
+        </button>
 
         <div className="segmented-control">
           <button
@@ -70,16 +69,24 @@ export function WorkspaceHeader({
             className={workspaceView === 'editor' ? 'active' : ''}
             onClick={() => onViewChange('editor')}
           >
-            Editor
+            Escritura
           </button>
           <button
             type="button"
             className={workspaceView === 'graph' ? 'active' : ''}
             onClick={() => onViewChange('graph')}
           >
-            Grafo
+            Mapa
           </button>
         </div>
+
+        <button
+          type="button"
+          className={inspectorOpen ? 'toggle-chip active' : 'toggle-chip'}
+          onClick={onToggleInspector}
+        >
+          Contexto
+        </button>
       </div>
     </header>
   )

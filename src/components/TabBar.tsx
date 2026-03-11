@@ -29,50 +29,64 @@ export function TabBar({
   const [showComposer, setShowComposer] = useState(false)
 
   return (
-    <section className="tab-bar">
-      <div className="tab-strip">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={tab.id === activeTab?.id ? 'tab-pill active' : 'tab-pill'}
-            onClick={() => onSelectTab(tab.id)}
-          >
-            <span>{tab.icon}</span>
-            {tab.name}
-          </button>
-        ))}
+    <section className="tab-bar tab-bar-compact">
+      <div className="tab-strip-area">
+        <div className="tab-strip-header">
+          <span className="eyebrow">Colecciones</span>
+          <ActionMenu
+            label="Opciones de la colección"
+            items={[
+              { label: 'Mover a la izquierda', onSelect: () => onMoveTab(-1) },
+              { label: 'Mover a la derecha', onSelect: () => onMoveTab(1) },
+              { label: 'Renombrar colección', onSelect: onRenameTab },
+              {
+                label: 'Eliminar colección',
+                onSelect: onDeleteTab,
+                destructive: true,
+                disabled: tabs.length === 1,
+              },
+            ]}
+          />
+        </div>
+
+        <div className="tab-tree" role="tree" aria-label="Colecciones del proyecto">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={tab.id === activeTab?.id ? 'tab-tree-item active' : 'tab-tree-item'}
+              onClick={() => onSelectTab(tab.id)}
+              role="treeitem"
+              aria-selected={tab.id === activeTab?.id}
+            >
+              <span className="tab-tree-icon">{tab.icon}</span>
+              <span className="tab-tree-copy">
+                <strong>{tab.name}</strong>
+                <small>{tab.prompt}</small>
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="tab-toolbar">
-        <ActionMenu
-          label="Opciones de tab"
-          items={[
-            {
-              label: showComposer ? 'Ocultar nueva tab' : 'Mostrar nueva tab',
-              onSelect: () => setShowComposer((current) => !current),
-            },
-            { label: 'Mover a la izquierda', onSelect: () => onMoveTab(-1) },
-            { label: 'Mover a la derecha', onSelect: () => onMoveTab(1) },
-            { label: 'Renombrar tab', onSelect: onRenameTab },
-            {
-              label: 'Eliminar tab',
-              onSelect: onDeleteTab,
-              destructive: true,
-              disabled: tabs.length === 1,
-            },
-          ]}
-        />
+        <button
+          type="button"
+          className="ghost-button compact-button"
+          onClick={() => setShowComposer((current) => !current)}
+        >
+          {showComposer ? 'Cerrar' : 'Nueva colección'}
+        </button>
 
         {showComposer && (
           <div className="inline-composer">
             <input
               value={newTabName}
               onChange={(event) => onNewTabNameChange(event.target.value)}
-              placeholder="Nueva tab personalizada"
+              placeholder="Nombre de la nueva colección"
             />
             <button type="button" className="primary-button" onClick={onCreateTab}>
-              Añadir
+              Crear
             </button>
           </div>
         )}

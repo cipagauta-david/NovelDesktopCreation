@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { EditorSelection } from '@codemirror/state'
+import type { EditorView } from '@codemirror/view'
 
 import { providerModels, STORAGE_KEY } from '../data/constants'
 import { getDefaultPersistedState, loadPersistedState } from '../data/seed'
@@ -40,6 +42,7 @@ export function useWorkspace() {
   const [data, setData] = useState<PersistedState>(() => loadPersistedState())
   const [workspaceView, setWorkspaceView] = useState<WorkspaceView>('editor')
   const [searchQuery, setSearchQuery] = useState('')
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [toast, setToast] = useState('')
   const [newProjectName, setNewProjectName] = useState('')
   const [newProjectDescription, setNewProjectDescription] = useState('')
@@ -53,7 +56,7 @@ export function useWorkspace() {
   } | null>(null)
   const [pendingProposal, setPendingProposal] = useState<AiProposal | null>(null)
   const [panels, setPanels] = useState<PanelVisibility>(defaultPanels)
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const editorViewRef = useRef<EditorView | null>(null)
 
   const activeProject = useMemo(
     () => data.projects.find((project) => project.id === data.activeProjectId) ?? data.projects[0],
@@ -173,14 +176,18 @@ export function useWorkspace() {
 
   useEffect(() => {
     if (!draft || !activeEntity || !activeProject || draft.entityId !== activeEntity.id) {
-      return undefined
+      const frameId = window.requestAnimationFrame(() => setSaveStatus('idle'))
+      return () => window.cancelAnimationFrame(frameId)
     }
 
     const hasChanges =
       JSON.stringify(draftPayload(draft)) !== JSON.stringify(draftFromEntity(activeEntity))
     if (!hasChanges) {
-      return undefined
+      const frameId = window.requestAnimationFrame(() => setSaveStatus('saved'))
+      return () => window.cancelAnimationFrame(frameId)
     }
+
+    const frameId = window.requestAnimationFrame(() => setSaveStatus('saving'))
 
     const timeoutId = window.setTimeout(() => {
       setData((current) => ({
@@ -235,10 +242,23 @@ export function useWorkspace() {
           }
         }),
       }))
+      setSaveStatus('saved')
     }, 700)
 
-    return () => window.clearTimeout(timeoutId)
+    return () => {
+      window.cancelAnimationFrame(frameId)
+      window.clearTimeout(timeoutId)
+    }
   }, [activeEntity, activeProject, draft])
+
+  useEffect(() => {
+    if (saveStatus !== 'saved') {
+      return undefined
+    }
+
+    const timeoutId = window.setTimeout(() => setSaveStatus('idle'), 1600)
+    return () => window.clearTimeout(timeoutId)
+  }, [saveStatus])
 
   function withProjectUpdate(projectId: string, updater: (project: Project) => Project) {
     setData((current) => ({
@@ -650,7 +670,7 @@ export function useWorkspace() {
   }
 
   function insertReference(entity: EntityRecord) {
-    if (!activeDraft || !textareaRef.current || !referenceSuggestion) return
+    if (!activeDraft || !editorViewRef.current || !referenceSuggestion) return
     const replacement = buildStructuredReference(entity.id, entity.title)
     const nextContent = `${activeDraft.content.slice(0, referenceSuggestion.start)}${replacement}${activeDraft.content.slice(referenceSuggestion.end)}`
     setDraft({ ...activeDraft, content: nextContent })
@@ -658,11 +678,13 @@ export function useWorkspace() {
 
     requestAnimationFrame(() => {
       const nextPosition = referenceSuggestion.start + replacement.length
-      textareaRef.current?.focus()
-      if (textareaRef.current) {
-        textareaRef.current.selectionStart = nextPosition
-        textareaRef.current.selectionEnd = nextPosition
+      const view = editorViewRef.current
+      if (!view) {
+        return
       }
+
+      view.focus()
+      view.dispatch({ selection: EditorSelection.cursor(nextPosition) })
     })
   }
 
@@ -807,6 +829,7 @@ export function useWorkspace() {
     data,
     toast,
     setToast,
+    saveStatus,
     workspaceView,
     setWorkspaceView,
     searchQuery,
@@ -832,7 +855,7 @@ export function useWorkspace() {
     referenceSuggestion,
     pendingProposal,
     panels,
-    textareaRef,
+    editorViewRef,
     onboardingReady: Boolean(data.settings),
     completeOnboarding,
     selectProject,

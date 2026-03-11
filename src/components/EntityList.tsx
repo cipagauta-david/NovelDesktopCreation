@@ -26,7 +26,7 @@ export function EntityList({
   onCreateEntity,
   onSelectEntity,
 }: EntityListProps) {
-  const [showComposer, setShowComposer] = useState(true)
+  const [showComposer, setShowComposer] = useState(false)
 
   return (
     <aside className="entity-column">
@@ -34,45 +34,55 @@ export function EntityList({
         title={title}
         meta={`${count} entidades`}
         actions={
-          <button type="button" className="ghost-button" onClick={() => setShowComposer((current) => !current)}>
-            {showComposer ? 'Ocultar alta' : 'Mostrar alta'}
+          <button type="button" className="ghost-button compact-button" onClick={() => setShowComposer((current) => !current)}>
+            {showComposer ? 'Cerrar' : 'Crear entidad'}
           </button>
         }
       >
-        {showComposer && (
-          <div className="stacked-form">
-            <label className="compact-label">
-              Template base
-              <select
-                value={selectedTemplateId}
-                onChange={(event) => onTemplateChange(event.target.value)}
-              >
-                {templates.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button className="primary-button" type="button" onClick={onCreateEntity}>
-              Nueva entidad
-            </button>
-          </div>
-        )}
+        <div className="entity-list-layout">
+          {showComposer && (
+            <div className="stacked-form entity-composer">
+              <label className="compact-label">
+                Plantilla base
+                <select
+                  value={selectedTemplateId}
+                  onChange={(event) => onTemplateChange(event.target.value)}
+                >
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button className="ghost-button create-entity-button" type="button" onClick={onCreateEntity}>
+                Crear entidad
+              </button>
+            </div>
+          )}
 
-        <div className="entity-list">
-          {entities.map((entity) => (
-            <button
-              key={entity.id}
-              type="button"
-              className={entity.id === activeEntityId ? 'list-card active' : 'list-card'}
-              onClick={() => onSelectEntity(entity.id, entity.tabId)}
-            >
-              <strong>{entity.title}</strong>
-              <span>{entity.fields.map((field) => field.key).slice(0, 3).join(' · ') || 'Sin fields aún'}</span>
-              <small>rev {entity.revision}</small>
-            </button>
-          ))}
+          {entities.length > 0 ? (
+            <div className="entity-list entity-list-scrollable">
+              {entities.map((entity) => (
+                <button
+                  key={entity.id}
+                  type="button"
+                  className={entity.id === activeEntityId ? 'list-card active' : 'list-card'}
+                  onClick={() => onSelectEntity(entity.id, entity.tabId)}
+                >
+                  <strong>{entity.title}</strong>
+                  <span>
+                    {entity.fields.map((field) => field.key).slice(0, 3).join(' · ') || 'Sin propiedades todavía'}
+                  </span>
+                  <small>Versión {entity.revision}</small>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-mini-state">
+              Aún no hay entidades en esta colección. Crea la primera para empezar a escribir.
+            </div>
+          )}
         </div>
       </PanelSection>
     </aside>
