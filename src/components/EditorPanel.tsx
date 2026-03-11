@@ -1,4 +1,13 @@
-import { useMemo, useState, type ReactNode, type RefObject } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+  type RefObject,
+} from 'react'
 import { markdown } from '@codemirror/lang-markdown'
 import { EditorView, type ViewUpdate } from '@codemirror/view'
 import CodeMirror from '@uiw/react-codemirror'
@@ -8,19 +17,27 @@ import type { DraftState, EntityRecord, EntityTemplate, FieldValue } from '../ty
 import { formatTimestamp } from '../utils/workspace'
 import { ActionMenu } from './common/ActionMenu'
 import { PanelSection } from './common/PanelSection'
-import { baseEditorTheme, editorBasicSetup, editorModes, liveOverlayTheme } from './editor/editorThemes'
-import { getActiveBlockRange } from './editor/editorUtils'
+import {
+  type EntityHoverPayload,
+  createGhostTextExtensions,
+  createLiveEditorExtensions,
+  createNarrativeGhostTextProvider,
+  createSourceEditorExtensions,
+} from './editor/editorExperience'
+import { baseEditorTheme, editorBasicSetup, editorModes } from './editor/editorThemes'
 import { renderDocument } from './editor/renderDocument'
 
 type EditorPanelProps = {
   entity: EntityRecord
   draft: DraftState
   templates: EntityTemplate[]
+  allEntities: EntityRecord[]
   editorViewRef: RefObject<EditorView | null>
   referenceSuggestionActive: boolean
   suggestionOptions: EntityRecord[]
   saveStatus: 'idle' | 'saving' | 'saved'
   zenMode: boolean
+  onOpenEntity: (entityId: string) => void
   onDraftChange: (next: DraftState) => void
   onHandleEditorChange: (value: string, selectionEnd: number | null) => void
   onInsertReference: (entity: EntityRecord) => void
@@ -40,11 +57,13 @@ export function EditorPanel({
   entity,
   draft,
   templates,
+  allEntities,
   editorViewRef,
   referenceSuggestionActive,
   suggestionOptions,
   saveStatus,
   zenMode,
+  onOpenEntity,
   onDraftChange,
   onHandleEditorChange,
   onInsertReference,
@@ -61,21 +80,175 @@ export function EditorPanel({
 }: EditorPanelProps) {
   const [editorMode, setEditorMode] = useState<EditorMode>('live')
   const [cursorPosition, setCursorPosition] = useState(0)
+  const [previewContent, setPreviewContent] = useState(draft.content)
+  const [suggestionsStyle, setSuggestionsStyle] = useState<CSSProperties>()
+  const [hoveredReference, setHoveredReference] = useState<{
+    entityId: string
+    left: number
+    top: number
+  } | null>(null)
+  const previewPaneRef = useRef<HTMLDivElement | null>(null)
+  const writingLaneRef = useRef<HTMLDivElement | null>(null)
+  const entityById = useMemo(() => new Map(allEntities.map((entry) => [entry.id, entry])), [allEntities])
 
-  const sourceEditorExtensions = useMemo(
-    () => [markdown(), EditorView.lineWrapping, baseEditorTheme],
+  const ghostTextProvider = useMemo(() => createNarrativeGhostTextProvider(draft.title), [draft.title])
+  const handleEntityHover = useMemo(
+    () => (payload: EntityHoverPayload) => {
+      const lane = writingLaneRef.current
+      if (!lane) {
+        return
+      }
+
+      const laneRect = lane.getBoundingClientRect()
+      const top = Math.max(12, payload.rect.bottom - laneRect.top + 10)
+      const left = Math.max(12, Math.min(payload.rect.left - laneRect.left, laneRect.width - 320))
+      setHoveredReference((current) => {
+        if (
+          current?.entityId === payload.entityId &&
+          Math.abs(current.left - left) < 1 &&
+          Math.abs(current.top - top) < 1
+        ) {
+          return current
+        }
+
+        return {
+          entityId: payload.entityId,
+          left,
+          top,
+        }
+      })
+    },
     [],
+  )
+  const hideEntityHover = useMemo(() => () => setHoveredReference(null), [])
+  const sourceEditorExtensions = useMemo(
+    () => [markdown(), EditorView.lineWrapping, baseEditorTheme, ...createSourceEditorExtensions(), ...createGhostTextExtensions(ghostTextProvider)],
+    [ghostTextProvider],
   )
   const liveEditorExtensions = useMemo(
-    () => [markdown(), EditorView.lineWrapping, baseEditorTheme, liveOverlayTheme],
-    [],
+    () => [
+      markdown(),
+      EditorView.lineWrapping,
+      baseEditorTheme,
+      ...createLiveEditorExtensions({
+        onEntityInteract: onOpenEntity,
+        onEntityHover: handleEntityHover,
+        onEntityHoverEnd: hideEntityHover,
+      }),
+      ...createGhostTextExtensions(ghostTextProvider),
+    ],
+    [ghostTextProvider, handleEntityHover, hideEntityHover, onOpenEntity],
   )
+  const hoveredEntity = hoveredReference ? (entityById.get(hoveredReference.entityId) ?? null) : null
 
   function handleCursorActivity(selectionEnd: number | null) {
     setCursorPosition(Math.max(selectionEnd ?? 0, 0))
   }
 
-  const activeBlockRange = getActiveBlockRange(draft.content, cursorPosition)
+  useEffect(() => {
+    setPreviewContent(draft.content)
+  }, [draft.entityId])
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setPreviewContent(draft.content), 32)
+    return () => window.clearTimeout(timeoutId)
+  }, [draft.content])
+
+  useEffect(() => {
+    setHoveredReference(null)
+  }, [draft.entityId, editorMode])
+
+  useLayoutEffect(() => {
+    if (!referenceSuggestionActive || suggestionOptions.length === 0) {
+      setSuggestionsStyle(undefined)
+      return
+    }
+
+    const view = editorViewRef.current
+    const lane = writingLaneRef.current
+    if (!view || !lane) {
+      return
+    }
+
+    const updatePosition = () => {
+      const caret = view.coordsAtPos(view.state.selection.main.head)
+      const laneRect = lane.getBoundingClientRect()
+      const fallbackTop = 24
+      const fallbackLeft = 24
+      if (!caret) {
+        setSuggestionsStyle({ top: fallbackTop, left: fallbackLeft, width: Math.min(420, laneRect.width - 48) })
+        return
+      }
+
+      const nextLeft = Math.max(20, Math.min(caret.left - laneRect.left - 12, laneRect.width - 380))
+      const nextTop = Math.max(20, caret.bottom - laneRect.top + 12)
+      setSuggestionsStyle({
+        top: nextTop,
+        left: nextLeft,
+        width: Math.min(360, Math.max(260, laneRect.width - nextLeft - 20)),
+      })
+    }
+
+    updatePosition()
+    const scrollTarget = view.scrollDOM
+    window.addEventListener('resize', updatePosition)
+    scrollTarget.addEventListener('scroll', updatePosition, { passive: true })
+
+    return () => {
+      window.removeEventListener('resize', updatePosition)
+      scrollTarget.removeEventListener('scroll', updatePosition)
+    }
+  }, [cursorPosition, editorMode, editorViewRef, referenceSuggestionActive, suggestionOptions.length])
+
+  useEffect(() => {
+    if (editorMode !== 'split') {
+      return
+    }
+
+    let cleanup: (() => void) | undefined
+    const frameId = window.requestAnimationFrame(() => {
+      const sourceScroller = editorViewRef.current?.scrollDOM
+      const previewScroller = previewPaneRef.current
+      if (!sourceScroller || !previewScroller) {
+        return
+      }
+
+      let syncing: 'source' | 'preview' | null = null
+      const syncScroll = (origin: 'source' | 'preview') => {
+        if (syncing && syncing !== origin) {
+          return
+        }
+
+        syncing = origin
+        const from = origin === 'source' ? sourceScroller : previewScroller
+        const to = origin === 'source' ? previewScroller : sourceScroller
+        const maxFrom = from.scrollHeight - from.clientHeight
+        const maxTo = to.scrollHeight - to.clientHeight
+        const ratio = maxFrom <= 0 ? 0 : from.scrollTop / maxFrom
+
+        window.requestAnimationFrame(() => {
+          to.scrollTop = maxTo <= 0 ? 0 : ratio * maxTo
+          syncing = null
+        })
+      }
+
+      const handleSourceScroll = () => syncScroll('source')
+      const handlePreviewScroll = () => syncScroll('preview')
+
+      sourceScroller.addEventListener('scroll', handleSourceScroll, { passive: true })
+      previewScroller.addEventListener('scroll', handlePreviewScroll, { passive: true })
+
+      cleanup = () => {
+        sourceScroller.removeEventListener('scroll', handleSourceScroll)
+        previewScroller.removeEventListener('scroll', handlePreviewScroll)
+      }
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frameId)
+      cleanup?.()
+    }
+  }, [draft.entityId, editorMode, editorViewRef, previewContent])
 
   const commonEditorProps = {
     value: draft.content,
@@ -100,11 +273,6 @@ export function EditorPanel({
     },
   }
 
-  const previewDocument = renderDocument(draft.content, {
-    activeBlockRange,
-    showRawActiveBlock: editorMode === 'live',
-  })
-
   let editorSurface: ReactNode
 
   if (editorMode === 'split') {
@@ -116,8 +284,8 @@ export function EditorPanel({
           className="editor-code-mirror editor-source-editor"
           aria-label="Editor markdown en vista dividida"
         />
-        <div className="editor-pane editor-preview-pane">
-          {renderDocument(draft.content)}
+        <div ref={previewPaneRef} className="editor-pane editor-preview-pane">
+          {renderDocument(previewContent)}
         </div>
       </div>
     )
@@ -132,18 +300,12 @@ export function EditorPanel({
     )
   } else {
     editorSurface = (
-      <div className="editor-stack">
-        <div className="editor-render-layer" aria-hidden="true">
-          {previewDocument}
-        </div>
-
-        <CodeMirror
-          {...commonEditorProps}
-          extensions={liveEditorExtensions}
-          className="editor-code-mirror editor-live-editor"
-          aria-label="Editor markdown live"
-        />
-      </div>
+      <CodeMirror
+        {...commonEditorProps}
+        extensions={liveEditorExtensions}
+        className="editor-code-mirror editor-live-editor"
+        aria-label="Editor markdown live"
+      />
     )
   }
 
@@ -168,11 +330,11 @@ export function EditorPanel({
         </div>
       }
     >
-      <div className={zenMode ? 'writing-lane zen-writing-lane' : 'writing-lane'}>
+      <div ref={writingLaneRef} className={zenMode ? 'writing-lane zen-writing-lane' : 'writing-lane'}>
         {editorSurface}
 
         {referenceSuggestionActive && suggestionOptions.length > 0 && (
-          <div className="suggestions-popover">
+          <div className="suggestions-popover floating-suggestions-popover" style={suggestionsStyle}>
             {suggestionOptions.map((option) => (
               <button key={option.id} type="button" onClick={() => onInsertReference(option)}>
                 <strong>{option.title}</strong>
@@ -180,6 +342,28 @@ export function EditorPanel({
               </button>
             ))}
           </div>
+        )}
+
+        {hoveredReference && hoveredEntity && (
+          <aside
+            className="entity-hover-popover"
+            style={{ left: hoveredReference.left, top: hoveredReference.top }}
+            aria-live="polite"
+          >
+            <span className="eyebrow">Entidad referenciada</span>
+            <strong>{hoveredEntity.title}</strong>
+            <p>
+              {hoveredEntity.content.trim().slice(0, 170) || 'Sin contenido descriptivo.'}
+              {hoveredEntity.content.trim().length > 170 ? '…' : ''}
+            </p>
+            <div className="entity-hover-meta">
+              <span>rev {hoveredEntity.revision}</span>
+              <span>{formatTimestamp(hoveredEntity.updatedAt)}</span>
+            </div>
+            {hoveredEntity.tags.length > 0 && (
+              <small>{hoveredEntity.tags.slice(0, 4).map((tag) => `#${tag}`).join(' ')}</small>
+            )}
+          </aside>
         )}
 
         {!zenMode && (
@@ -210,9 +394,9 @@ export function EditorPanel({
     </PanelSection>
   )
 
-  if (zenMode) {
-    return (
-      <section className="editor-panel editor-panel-zen" aria-label="Editor en modo foco">
+  return (
+    <section className={zenMode ? 'editor-panel editor-panel-zen' : 'editor-panel'} aria-label="Editor principal">
+      {zenMode && (
         <button
           type="button"
           className="zen-exit-button"
@@ -221,14 +405,9 @@ export function EditorPanel({
         >
           ✕
         </button>
-        {documentEditor}
-      </section>
-    )
-  }
+      )}
 
-  return (
-    <section className="editor-panel" aria-label="Editor principal">
-      <div className="panel-header">
+      <div className={zenMode ? 'panel-header editor-topbar-shell is-hidden' : 'panel-header editor-topbar-shell'}>
         <div className="editor-heading">
           <span className="eyebrow">Entidad activa</span>
           <input
@@ -268,43 +447,45 @@ export function EditorPanel({
       </div>
 
       <div className="editor-grid">
-        <PanelSection title="Metadatos" meta="Plantilla, etiquetas y claves de contexto" defaultOpen={false}>
-          <div className="form-grid compact-metadata-grid">
-            <label>
-              Plantilla
-              <select
-                value={draft.templateId}
-                onChange={(event) => onDraftChange({ ...draft, templateId: event.target.value })}
-              >
-                {templates.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Etiquetas
-              <input
-                value={draft.tagsText}
-                onChange={(event) => onDraftChange({ ...draft, tagsText: event.target.value })}
-                placeholder="misterio, política, magia"
-              />
-            </label>
-            <label>
-              Alias
-              <input
-                value={draft.aliasesText}
-                onChange={(event) => onDraftChange({ ...draft, aliasesText: event.target.value })}
-                placeholder="sobrenombres, títulos, abreviaturas"
-              />
-            </label>
-          </div>
-        </PanelSection>
+        <div className={zenMode ? 'editor-meta-shell is-hidden' : 'editor-meta-shell'}>
+          <PanelSection title="Metadatos" meta="Plantilla, etiquetas y claves de contexto" defaultOpen={false}>
+            <div className="form-grid compact-metadata-grid">
+              <label>
+                Plantilla
+                <select
+                  value={draft.templateId}
+                  onChange={(event) => onDraftChange({ ...draft, templateId: event.target.value })}
+                >
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Etiquetas
+                <input
+                  value={draft.tagsText}
+                  onChange={(event) => onDraftChange({ ...draft, tagsText: event.target.value })}
+                  placeholder="misterio, política, magia"
+                />
+              </label>
+              <label>
+                Alias
+                <input
+                  value={draft.aliasesText}
+                  onChange={(event) => onDraftChange({ ...draft, aliasesText: event.target.value })}
+                  placeholder="sobrenombres, títulos, abreviaturas"
+                />
+              </label>
+            </div>
+          </PanelSection>
+        </div>
 
         <div className="split-grid">{documentEditor}</div>
 
-        <div className="split-grid">
+        <div className={zenMode ? 'split-grid editor-side-shell is-hidden' : 'split-grid editor-side-shell'}>
           <PanelSection
             title="Propiedades"
             meta={`${draft.fields.length} propiedades · ${entity.assets.length} assets`}

@@ -99,7 +99,7 @@ function App() {
 
   return (
     <main className="app-shell">
-      {!zenMode && (
+      <div className={zenMode ? 'workspace-header-shell is-hidden' : 'workspace-header-shell'}>
         <WorkspaceHeader
           project={workspace.activeProject}
           searchResultsCount={workspace.searchResults.length}
@@ -112,7 +112,7 @@ function App() {
           onToggleLeftPanel={handleToggleNavigation}
           onToggleInspector={() => workspace.togglePanel('inspector')}
         />
-      )}
+      </div>
 
       <section className={zenMode ? 'workspace-stage focus-mode' : 'workspace-stage'}>
         <section className="workspace-grid">
@@ -195,11 +195,13 @@ function App() {
                 entity={workspace.activeEntity}
                 draft={workspace.activeDraft}
                 templates={workspace.activeTemplates}
+                allEntities={workspace.activeProject?.entities ?? []}
                 editorViewRef={workspace.editorViewRef}
                 referenceSuggestionActive={Boolean(workspace.referenceSuggestion)}
                 suggestionOptions={workspace.suggestionOptions}
                 saveStatus={workspace.saveStatus}
                 zenMode={zenMode}
+                onOpenEntity={(entityId) => workspace.selectEntity(entityId)}
                 onDraftChange={workspace.setDraft}
                 onHandleEditorChange={workspace.handleEditorChange}
                 onInsertReference={workspace.insertReference}

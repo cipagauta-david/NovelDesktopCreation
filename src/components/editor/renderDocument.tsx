@@ -18,7 +18,10 @@ export function renderInlineContent(text: string) {
         contentEditable={false}
         spellCheck={false}
       >
-        {token.label}
+        <span className="editor-inline-pill-icon" aria-hidden="true">
+          ✦
+        </span>
+        <span>{token.label}</span>
       </span>
     )
   })
