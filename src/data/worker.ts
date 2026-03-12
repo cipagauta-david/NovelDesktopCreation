@@ -1,6 +1,7 @@
 import * as Comlink from 'comlink'
 import type { EntityRecord, PersistedState } from '../types/workspace'
-import { SearchIndex, type FtsSearchResult } from './searchIndex'
+import { SearchIndex } from './search/SearchIndex'
+import type { FtsSearchResult } from './search/types'
 
 export interface AppWorker {
   init(): Promise<void>

@@ -9,7 +9,7 @@
       - generic [ref=e10]: Proyecto narrativo inicial con tabs, referencias, búsqueda, historial y grafo.
     - generic [ref=e11]:
       - generic [ref=e12]:
-        - button "Navegación" [ref=e13] [cursor=pointer]
+        - button "Navegación" [active] [ref=e13] [cursor=pointer]
         - generic [ref=e14]:
           - button "Escritura" [ref=e15] [cursor=pointer]
           - button "Mapa" [ref=e16] [cursor=pointer]
@@ -20,156 +20,108 @@
       - generic [ref=e21]: Todo en contexto
   - generic [ref=e23]:
     - complementary [ref=e24]:
-      - generic [ref=e25]:
-        - generic [ref=e26]: Navegación
-        - button "Ocultar" [ref=e27] [cursor=pointer]: ‹
-      - generic [ref=e28]:
-        - complementary [ref=e30]:
-          - generic [ref=e31]:
-            - generic [ref=e32]: Espacio narrativo
-            - strong [ref=e33]: Autor(a)
-            - generic [ref=e34]: IA activa · Local/Ollama · llama3.2
-          - generic [ref=e35]:
-            - generic [ref=e36]:
-              - generic [ref=e37]:
-                - heading "Proyecto activo" [level=3] [ref=e38]
-                - generic [ref=e39]: 1 proyecto
-              - generic [ref=e40]:
-                - button "Nuevo" [ref=e41] [cursor=pointer]
-                - button "Opciones de proyecto" [ref=e43] [cursor=pointer]: ⋯
-                - button "Contraer Proyecto activo" [ref=e44] [cursor=pointer]: ⌃
-            - generic [ref=e46]:
-              - generic [ref=e47]:
-                - text: Selector de proyecto
-                - combobox "Selector de proyecto" [ref=e48]:
-                  - option "Crónicas del Umbral" [selected]
-              - generic [ref=e50]:
-                - strong [ref=e51]: Crónicas del Umbral
-                - generic [ref=e52]: Proyecto narrativo inicial con tabs, referencias, búsqueda, historial y grafo.
-          - generic [ref=e54]:
-            - generic [ref=e55]:
-              - heading "Templates" [level=3] [ref=e56]
-              - generic [ref=e57]: 3 disponibles
-            - generic [ref=e58]:
-              - button "Guardar plantilla actual" [ref=e59] [cursor=pointer]
-              - button "Expandir Templates" [ref=e60] [cursor=pointer]: ⌄
-        - generic [ref=e61]:
-          - generic [ref=e62]:
-            - generic [ref=e63]:
-              - generic [ref=e64]:
-                - generic [ref=e65]: Colecciones
-                - button "Opciones de la colección" [ref=e67] [cursor=pointer]: ⋯
-              - tree "Colecciones del proyecto" [ref=e68]:
-                - treeitem "📚 Capítulos Redacta escenas con tensión progresiva, continuidad impecable y ritmo cinematográfico." [selected] [ref=e69] [cursor=pointer]:
-                  - generic [ref=e70]: 📚
-                  - generic [ref=e71]:
-                    - strong [ref=e72]: Capítulos
-                    - generic [ref=e73]: Redacta escenas con tensión progresiva, continuidad impecable y ritmo cinematográfico.
-                - treeitem "🧍 Personajes Profundiza en motivaciones, contradicciones internas y evolución emocional." [ref=e74] [cursor=pointer]:
-                  - generic [ref=e75]: 🧍
-                  - generic [ref=e76]:
-                    - strong [ref=e77]: Personajes
-                    - generic [ref=e78]: Profundiza en motivaciones, contradicciones internas y evolución emocional.
-                - treeitem "🏙️ Escenarios Describe espacios con atmósfera, utilidad narrativa y detalles sensoriales concretos." [ref=e79] [cursor=pointer]:
-                  - generic [ref=e80]: 🏙️
-                  - generic [ref=e81]:
-                    - strong [ref=e82]: Escenarios
-                    - generic [ref=e83]: Describe espacios con atmósfera, utilidad narrativa y detalles sensoriales concretos.
-                - treeitem "🧭 Historia Mantén continuidad temporal, causa-efecto y claridad de eventos históricos." [ref=e84] [cursor=pointer]:
-                  - generic [ref=e85]: 🧭
-                  - generic [ref=e86]:
-                    - strong [ref=e87]: Historia
-                    - generic [ref=e88]: Mantén continuidad temporal, causa-efecto y claridad de eventos históricos.
-                - treeitem "🧪 Lógica del mundo Define reglas consistentes, costes dramáticos y límites verificables del sistema." [ref=e89] [cursor=pointer]:
-                  - generic [ref=e90]: 🧪
-                  - generic [ref=e91]:
-                    - strong [ref=e92]: Lógica del mundo
-                    - generic [ref=e93]: Define reglas consistentes, costes dramáticos y límites verificables del sistema.
-            - button "Nueva colección" [ref=e95] [cursor=pointer]
-          - complementary:
-            - generic [ref=e96]:
-              - generic [ref=e97]:
-                - generic [ref=e98]:
-                  - heading "Capítulos" [level=3] [ref=e99]
-                  - generic [ref=e100]: 1 entidades
-                - generic [ref=e101]:
-                  - button "Crear entidad" [ref=e102] [cursor=pointer]
-                  - button "Contraer Capítulos" [ref=e103] [cursor=pointer]: ⌃
-              - generic [ref=e105]:
-                - button "⠿ Capítulo 1 — La grieta de ceniza Objetivo · Obstáculo Versión 3" [ref=e108] [cursor=pointer]:
-                  - button "⠿" [ref=e109]
-                  - generic [ref=e110]:
-                    - strong [ref=e111]: Capítulo 1 — La grieta de ceniza
-                    - generic [ref=e112]: Objetivo · Obstáculo
-                    - generic [ref=e113]: Versión 3
-                - status [ref=e114]
-    - region "Editor principal" [ref=e116]:
-      - generic [ref=e117]:
-        - generic [ref=e118]:
-          - generic [ref=e119]: Entidad activa
-          - textbox "Título de la entidad" [ref=e120]: Capítulo 1 — La grieta de ceniza
-          - generic [ref=e121]:
-            - paragraph [ref=e122]: rev 3 · Mar 12, 2026, 12:36 PM
-            - generic [ref=e123]: Listo
-        - generic [ref=e125]:
-          - button "Sugerencia IA" [ref=e126] [cursor=pointer]
-          - button "Modo foco" [ref=e127] [cursor=pointer]
-          - button "Opciones de entidad" [ref=e129] [cursor=pointer]: ⋯
-      - generic [ref=e130]:
-        - generic [ref=e133]:
-          - generic [ref=e134]:
-            - heading "Metadatos" [level=3] [ref=e135]
-            - generic [ref=e136]: Plantilla, etiquetas y claves de contexto
-          - button "Expandir Metadatos" [ref=e138] [cursor=pointer]: ⌄
-        - generic [ref=e140]:
-          - generic [ref=e141]:
-            - generic [ref=e142]:
-              - heading "Documento" [level=3] [ref=e143]
-              - generic [ref=e144]: "Usa {{}} para enlazar entidades relacionadas"
-            - generic [ref=e145]:
-              - tablist "Modo del editor" [ref=e146]:
-                - button "Dividida" [ref=e147] [cursor=pointer]
-                - button "Source" [ref=e148] [cursor=pointer]
-                - button "Live Preview" [pressed] [ref=e149] [cursor=pointer]
-              - button "Contraer Documento" [ref=e150] [cursor=pointer]: ⌃
-          - generic [ref=e152]:
-            - generic "Editor markdown live" [ref=e153]:
-              - textbox [ref=e156]:
-                - generic [ref=e157]: "## Gancho"
-                - generic [ref=e158]: Ariadna detecta que el pulso del Velo cambió durante la guardia nocturna.
-                - generic [ref=e160]: Escena clave
-                - generic [ref=e161]:
+      - generic:
+        - generic [ref=e25]: Navegación
+        - button "Ocultar" [ref=e26] [cursor=pointer]: ‹
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - generic [ref=e29]:
+            - generic [ref=e30]: Colecciones
+            - button "Opciones de la colección" [ref=e32] [cursor=pointer]: ⋯
+          - tree "Colecciones del proyecto" [ref=e33]:
+            - treeitem "📚 Capítulos Redacta escenas con tensión progresiva, continuidad impecable y ritmo cinematográfico." [selected] [ref=e34] [cursor=pointer]:
+              - generic [ref=e35]: 📚
+              - generic [ref=e36]:
+                - strong [ref=e37]: Capítulos
+                - generic [ref=e38]: Redacta escenas con tensión progresiva, continuidad impecable y ritmo cinematográfico.
+            - treeitem "🧍 Personajes Profundiza en motivaciones, contradicciones internas y evolución emocional." [ref=e39] [cursor=pointer]:
+              - generic [ref=e40]: 🧍
+              - generic [ref=e41]:
+                - strong [ref=e42]: Personajes
+                - generic [ref=e43]: Profundiza en motivaciones, contradicciones internas y evolución emocional.
+            - treeitem "🏙️ Escenarios Describe espacios con atmósfera, utilidad narrativa y detalles sensoriales concretos." [ref=e44] [cursor=pointer]:
+              - generic [ref=e45]: 🏙️
+              - generic [ref=e46]:
+                - strong [ref=e47]: Escenarios
+                - generic [ref=e48]: Describe espacios con atmósfera, utilidad narrativa y detalles sensoriales concretos.
+            - treeitem "🧭 Historia Mantén continuidad temporal, causa-efecto y claridad de eventos históricos." [ref=e49] [cursor=pointer]:
+              - generic [ref=e50]: 🧭
+              - generic [ref=e51]:
+                - strong [ref=e52]: Historia
+                - generic [ref=e53]: Mantén continuidad temporal, causa-efecto y claridad de eventos históricos.
+            - treeitem "🧪 Lógica del mundo Define reglas consistentes, costes dramáticos y límites verificables del sistema." [ref=e54] [cursor=pointer]:
+              - generic [ref=e55]: 🧪
+              - generic [ref=e56]:
+                - strong [ref=e57]: Lógica del mundo
+                - generic [ref=e58]: Define reglas consistentes, costes dramáticos y límites verificables del sistema.
+        - button "Nueva colección" [ref=e60] [cursor=pointer]
+    - region "Editor principal" [ref=e62]:
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - generic [ref=e65]: Entidad activa
+          - textbox "Título de la entidad" [ref=e66]: Capítulo 1 — La grieta de ceniza
+          - generic [ref=e67]:
+            - paragraph [ref=e68]: rev 3 · Mar 12, 2026, 3:17 PM
+            - generic [ref=e69]: Listo
+        - generic [ref=e71]:
+          - button "Sugerencia IA" [ref=e72] [cursor=pointer]
+          - button "Modo foco" [ref=e73] [cursor=pointer]
+          - button "Opciones de entidad" [ref=e75] [cursor=pointer]: ⋯
+      - generic [ref=e76]:
+        - generic [ref=e79]:
+          - generic [ref=e80]:
+            - heading "Metadatos" [level=3] [ref=e81]
+            - generic [ref=e82]: Plantilla, etiquetas y claves de contexto
+          - button "Expandir Metadatos" [ref=e84] [cursor=pointer]: ⌄
+        - generic [ref=e86]:
+          - generic [ref=e87]:
+            - generic [ref=e88]:
+              - heading "Documento" [level=3] [ref=e89]
+              - generic [ref=e90]: "Usa {{}} para enlazar entidades relacionadas"
+            - generic [ref=e91]:
+              - tablist "Modo del editor" [ref=e92]:
+                - button "Dividida" [ref=e93] [cursor=pointer]
+                - button "Source" [ref=e94] [cursor=pointer]
+                - button "Live Preview" [pressed] [ref=e95] [cursor=pointer]
+              - button "Contraer Documento" [ref=e96] [cursor=pointer]: ⌃
+          - generic [ref=e98]:
+            - generic "Editor markdown live" [ref=e99]:
+              - textbox [ref=e102]:
+                - generic [ref=e103]: "## Gancho"
+                - generic [ref=e104]: Ariadna detecta que el pulso del Velo cambió durante la guardia nocturna.
+                - generic [ref=e106]: Escena clave
+                - generic [ref=e107]:
                   - text: La alarma nace en
-                  - generic [ref=e162] [cursor=pointer]:
-                    - generic [ref=e163]: ✦
-                    - generic [ref=e164]: Puerto Ceniza
+                  - generic [ref=e108] [cursor=pointer]:
+                    - generic [ref=e109]: ✦
+                    - generic [ref=e110]: Puerto Ceniza
                   - text: ", mientras"
-                  - generic [ref=e165] [cursor=pointer]:
-                    - generic [ref=e166]: ✦
-                    - generic [ref=e167]: Ariadna Vale
+                  - generic [ref=e111] [cursor=pointer]:
+                    - generic [ref=e112]: ✦
+                    - generic [ref=e113]: Ariadna Vale
                   - text: decide romper protocolo.
-                - generic [ref=e169]: Consecuencia
-                - generic [ref=e170]:
+                - generic [ref=e115]: Consecuencia
+                - generic [ref=e116]:
                   - text: La decisión obliga a revisar
-                  - generic [ref=e171] [cursor=pointer]:
-                    - generic [ref=e172]: ✦
-                    - generic [ref=e173]: Principio de Resonancia
+                  - generic [ref=e117] [cursor=pointer]:
+                    - generic [ref=e118]: ✦
+                    - generic [ref=e119]: Principio de Resonancia
                   - text: .
-            - generic [ref=e174]:
-              - generic [ref=e175]: Arrastra imágenes aquí o
-              - generic [ref=e176] [cursor=pointer]: súbelas desde disco
-        - generic [ref=e177]:
-          - generic [ref=e179]:
-            - generic [ref=e180]:
-              - heading "Propiedades" [level=3] [ref=e181]
-              - generic [ref=e182]: 2 propiedades · 0 assets
-            - generic [ref=e183]:
-              - button "Añadir propiedad" [ref=e184] [cursor=pointer]
-              - button "Expandir Propiedades" [ref=e185] [cursor=pointer]: ⌄
-          - generic [ref=e187]:
-            - generic [ref=e188]:
-              - heading "Assets visuales" [level=3] [ref=e189]
-              - generic [ref=e190]: 0 imágenes
-            - button "Expandir Assets visuales" [ref=e192] [cursor=pointer]: ⌄
+            - generic [ref=e120]:
+              - generic [ref=e121]: Arrastra imágenes aquí o
+              - generic [ref=e122] [cursor=pointer]: súbelas desde disco
+        - generic [ref=e123]:
+          - generic [ref=e125]:
+            - generic [ref=e126]:
+              - heading "Propiedades" [level=3] [ref=e127]
+              - generic [ref=e128]: 2 propiedades · 0 assets
+            - generic [ref=e129]:
+              - button "Añadir propiedad" [ref=e130] [cursor=pointer]
+              - button "Expandir Propiedades" [ref=e131] [cursor=pointer]: ⌄
+          - generic [ref=e133]:
+            - generic [ref=e134]:
+              - heading "Assets visuales" [level=3] [ref=e135]
+              - generic [ref=e136]: 0 imágenes
+            - button "Expandir Assets visuales" [ref=e138] [cursor=pointer]: ⌄
     - complementary
 ```

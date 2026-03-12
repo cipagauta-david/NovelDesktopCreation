@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
-import { providerModels } from '../data/constants'
-import type { OnboardingPayload, Provider } from '../types/workspace'
+import { providerModels } from '../../data/constants'
+import type { OnboardingPayload, Provider } from '../../types/workspace'
 
 type OnboardingScreenProps = {
   onSubmit: (payload: OnboardingPayload) => void

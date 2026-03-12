@@ -1,58 +1,13 @@
-import type { Provider, LlmTraceEntry } from '../types/workspace'
-import { LlmError, classifyFetchError, retryDelay } from './llmErrors'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 
-// ── Tipos ───────────────────────────────────────────────────
+import type { Provider } from '../../types/workspace'
+import { LlmError, classifyFetchError } from '../llmErrors'
+import { buildUserPrompt, SYSTEM_PROMPT } from './prompt'
+import { buildTrace } from './trace'
+import type { LlmRequestInput, StreamCallbacks } from './types'
 
-export type LlmRequestInput = {
-  provider: Provider
-  model: string
-  apiKey?: string
-  tabPrompt: string
-  entityTitle: string
-  entityContent: string
-}
-
-export type StreamCallbacks = {
-  onToken: (chunk: string) => void
-  onDone: (fullText: string) => void
-  onError: (error: LlmError) => void
-  onTrace: (trace: LlmTraceEntry) => void
-}
-
-// ── Constantes ──────────────────────────────────────────────
-
-const SYSTEM_PROMPT =
-  'Eres un asistente editorial para narrativa. Debes proponer mejoras concretas y breves en español.'
-const MAX_ENTITY_CONTENT_LENGTH = 4000
 const MAX_ERROR_DETAIL_LENGTH = 240
 const ANTHROPIC_MAX_TOKENS = 700
-const MAX_RETRIES = 3
-
-// ── Fallback provider order ─────────────────────────────────
-
-const FALLBACK_ORDER: Provider[] = ['OpenAI', 'OpenRouter', 'Anthropic', 'Google Gemini', 'Local/Ollama']
-
-function buildUserPrompt(input: LlmRequestInput) {
-  return [
-    `Entidad: ${input.entityTitle}`,
-    `Contexto de tab: ${input.tabPrompt || 'Sin prompt definido.'}`,
-    'Contenido actual:',
-    input.entityContent.slice(0, MAX_ENTITY_CONTENT_LENGTH) || '(vacío)',
-    '',
-    'Devuelve 3 bullets de mejora narrativa y una nota breve de continuidad.',
-  ].join('\n')
-}
-
-function traceUid(prefix: string): string {
-  return `${prefix}-${crypto.randomUUID()}`
-}
-
-function estimateTokens(text: string): number {
-  return Math.ceil(text.length / 3.8)
-}
-
-// ── Extract text from non-streaming responses ───────────────
 
 function extractTextFromPayload(payload: unknown): string {
   if (!payload || typeof payload !== 'object') return ''
@@ -86,8 +41,6 @@ function extractTextFromPayload(payload: unknown): string {
   return ''
 }
 
-// ── Fetch con clasificación de errores ──────────────────────
-
 async function safeFetch(url: string, init: RequestInit, provider: Provider): Promise<unknown> {
   const response = await fetch(url, init)
   if (!response.ok) {
@@ -100,8 +53,6 @@ async function safeFetch(url: string, init: RequestInit, provider: Provider): Pr
   }
   return response.json()
 }
-
-// ── Streaming endpoints (SSE) ───────────────────────────────
 
 async function streamOpenAiCompatible(
   url: string,
@@ -129,7 +80,9 @@ async function streamOpenAiCompatible(
           fullText += delta
           callbacks.onToken(delta)
         }
-      } catch { /* ignore parse errors on stream chunks */ }
+      } catch {
+        void 0
+      }
     },
     onclose() {
       const duration = Date.now() - startTime
@@ -176,7 +129,9 @@ async function streamAnthropic(
             fullText += text
             callbacks.onToken(text)
           }
-        } catch { /* ignore */ }
+        } catch {
+          void 0
+        }
       }
     },
     onclose() {
@@ -190,8 +145,6 @@ async function streamAnthropic(
     openWhenHidden: true,
   })
 }
-
-// ── Non-streaming fallback (Gemini, Ollama) ─────────────────
 
 async function fetchNonStreaming(
   input: LlmRequestInput,
@@ -238,74 +191,18 @@ async function fetchNonStreaming(
   callbacks.onTrace(buildTrace(input, provider, text, duration, 'ok'))
 }
 
-// ── Trace builder ───────────────────────────────────────────
-
-function buildTrace(
-  input: LlmRequestInput,
-  provider: Provider,
-  response: string,
-  durationMs: number,
-  status: LlmTraceEntry['status'],
-  errorDetail?: string,
-): LlmTraceEntry {
-  return {
-    id: traceUid('trace'),
-    timestamp: new Date().toISOString(),
-    provider,
-    model: input.model,
-    promptSnippet: buildUserPrompt(input).slice(0, 200),
-    responseSnippet: response.slice(0, 300),
-    durationMs,
-    tokenEstimate: estimateTokens(buildUserPrompt(input) + response),
-    status,
-    errorDetail,
+export function getDefaultModelForProvider(provider: Provider): string {
+  const defaults: Record<Provider, string> = {
+    OpenAI: 'gpt-4o-mini',
+    Anthropic: 'claude-3-5-haiku',
+    'Google Gemini': 'gemini-2.0-flash',
+    OpenRouter: 'openrouter/openai/gpt-4o-mini',
+    'Local/Ollama': 'llama3.2',
   }
+  return defaults[provider]
 }
 
-// ── Main streaming API with retries + fallback ──────────────
-
-export async function requestLlmStreaming(
-  input: LlmRequestInput,
-  signal: AbortSignal,
-  callbacks: StreamCallbacks,
-): Promise<void> {
-  const userPrompt = buildUserPrompt(input)
-
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    if (signal.aborted) {
-      callbacks.onError(new LlmError({ provider: input.provider, message: 'Cancelled', category: 'cancelled', retryable: false }))
-      return
-    }
-
-    const startTime = Date.now()
-    try {
-      await executeProviderRequest(input, signal, callbacks, startTime, userPrompt)
-      return
-    } catch (err) {
-      const llmErr = classifyFetchError(err, input.provider)
-
-      if (llmErr.category === 'cancelled') {
-        callbacks.onTrace(buildTrace(input, input.provider, '', Date.now() - startTime, 'cancelled'))
-        callbacks.onError(llmErr)
-        return
-      }
-
-      if (!llmErr.retryable || attempt === MAX_RETRIES) {
-        const fallbackResult = await tryFallbackProviders(input, signal, callbacks)
-        if (!fallbackResult) {
-          callbacks.onTrace(buildTrace(input, input.provider, '', Date.now() - startTime, 'error', llmErr.message))
-          callbacks.onError(llmErr)
-        }
-        return
-      }
-
-      const delay = retryDelay(attempt)
-      await new Promise((resolve) => setTimeout(resolve, delay))
-    }
-  }
-}
-
-async function executeProviderRequest(
+export async function executeProviderRequest(
   input: LlmRequestInput,
   signal: AbortSignal,
   callbacks: StreamCallbacks,
@@ -350,73 +247,4 @@ async function executeProviderRequest(
     throw new LlmError({ provider, message: 'API key requerida', category: 'auth' })
   }
   await fetchNonStreaming(input, signal, callbacks, startTime)
-}
-
-async function tryFallbackProviders(
-  originalInput: LlmRequestInput,
-  signal: AbortSignal,
-  callbacks: StreamCallbacks,
-): Promise<boolean> {
-  const fallbacks = FALLBACK_ORDER.filter((p) => p !== originalInput.provider)
-
-  for (const provider of fallbacks) {
-    if (signal.aborted) return false
-    if (provider !== 'Local/Ollama' && !originalInput.apiKey) continue
-
-    const fallbackInput: LlmRequestInput = {
-      ...originalInput,
-      provider,
-      model: getDefaultModelForProvider(provider),
-    }
-
-    const startTime = Date.now()
-    try {
-      await executeProviderRequest(
-        fallbackInput,
-        signal,
-        {
-          ...callbacks,
-          onTrace: (trace) => callbacks.onTrace({ ...trace, status: 'fallback' }),
-        },
-        startTime,
-        buildUserPrompt(fallbackInput),
-      )
-      return true
-    } catch {
-      // Continue to next fallback
-    }
-  }
-
-  return false
-}
-
-function getDefaultModelForProvider(provider: Provider): string {
-  const defaults: Record<Provider, string> = {
-    OpenAI: 'gpt-4o-mini',
-    Anthropic: 'claude-3-5-haiku',
-    'Google Gemini': 'gemini-2.0-flash',
-    OpenRouter: 'openrouter/openai/gpt-4o-mini',
-    'Local/Ollama': 'llama3.2',
-  }
-  return defaults[provider]
-}
-
-// ── Legacy non-streaming API (preserved for compatibility) ──
-
-export async function requestLlmProposal(input: LlmRequestInput): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let fullText = ''
-    const controller = new AbortController()
-
-    requestLlmStreaming(
-      input,
-      controller.signal,
-      {
-        onToken: (chunk) => { fullText += chunk },
-        onDone: () => resolve(fullText),
-        onError: (err) => reject(err),
-        onTrace: () => { /* no-op for legacy */ },
-      },
-    ).catch(reject)
-  })
 }

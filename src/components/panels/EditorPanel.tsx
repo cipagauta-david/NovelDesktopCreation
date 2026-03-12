@@ -13,20 +13,24 @@ import { markdown } from '@codemirror/lang-markdown'
 import { EditorView, type ViewUpdate } from '@codemirror/view'
 import CodeMirror from '@uiw/react-codemirror'
 
-import type { EditorMode } from '../types/editor'
-import type { DraftState, EntityRecord, EntityTemplate, FieldValue } from '../types/workspace'
-import { formatTimestamp } from '../utils/workspace'
-import { ActionMenu } from './common/ActionMenu'
-import { PanelSection } from './common/PanelSection'
+import type { EditorMode } from '../../types/editor'
+import type { DraftState, EntityRecord, EntityTemplate, FieldValue } from '../../types/workspace'
+import { PanelSection } from '../common/PanelSection'
 import {
   type EntityHoverPayload,
   createGhostTextExtensions,
   createLiveEditorExtensions,
   createNarrativeGhostTextProvider,
   createSourceEditorExtensions,
-} from './editor/editorExperience'
-import { baseEditorTheme, editorBasicSetup, editorModes } from './editor/editorThemes'
-import { renderDocument } from './editor/renderDocument'
+} from '../editor/editorExperience'
+import { baseEditorTheme, editorBasicSetup, editorModes } from '../editor/editorThemes'
+import { renderDocument } from '../editor/renderDocument'
+import { EditorAssets } from '../editor/panel/EditorAssets'
+import { EditorHeader } from '../editor/panel/EditorHeader'
+import { EditorMetadata } from '../editor/panel/EditorMetadata'
+import { EditorProperties } from '../editor/panel/EditorProperties'
+import { EditorSuggestions } from '../editor/panel/EditorSuggestions'
+import { EntityHover } from '../editor/panel/EntityHover'
 
 type EditorPanelProps = {
   entity: EntityRecord
@@ -350,38 +354,14 @@ export function EditorPanel({
       <div ref={writingLaneRef} className={zenMode ? 'writing-lane zen-writing-lane' : 'writing-lane'}>
         {editorSurface}
 
-        {referenceSuggestionActive && suggestionOptions.length > 0 && (
-          <div className="suggestions-popover floating-suggestions-popover" style={suggestionsStyle}>
-            {suggestionOptions.map((option) => (
-              <button key={option.id} type="button" onClick={() => onInsertReference(option)}>
-                <strong>{option.title}</strong>
-                <span>{option.aliases.join(', ') || 'Sin aliases'}</span>
-              </button>
-            ))}
-          </div>
-        )}
+        <EditorSuggestions
+          active={referenceSuggestionActive}
+          options={suggestionOptions}
+          style={suggestionsStyle}
+          onInsertReference={onInsertReference}
+        />
 
-        {hoveredReference && hoveredEntity && (
-          <aside
-            className="entity-hover-popover"
-            style={{ left: hoveredReference.left, top: hoveredReference.top }}
-            aria-live="polite"
-          >
-            <span className="eyebrow">Entidad referenciada</span>
-            <strong>{hoveredEntity.title}</strong>
-            <p>
-              {hoveredEntity.content.trim().slice(0, 170) || 'Sin contenido descriptivo.'}
-              {hoveredEntity.content.trim().length > 170 ? '…' : ''}
-            </p>
-            <div className="entity-hover-meta">
-              <span>rev {hoveredEntity.revision}</span>
-              <span>{formatTimestamp(hoveredEntity.updatedAt)}</span>
-            </div>
-            {hoveredEntity.tags.length > 0 && (
-              <small>{hoveredEntity.tags.slice(0, 4).map((tag) => `#${tag}`).join(' ')}</small>
-            )}
-          </aside>
-        )}
+        <EntityHover position={hoveredReference} entity={hoveredEntity} />
 
         {!zenMode && (
           <div
@@ -424,131 +404,35 @@ export function EditorPanel({
         </button>
       )}
 
-      <div className={zenMode ? 'panel-header editor-topbar-shell is-hidden' : 'panel-header editor-topbar-shell'}>
-        <div className="editor-heading">
-          <span className="eyebrow">Entidad activa</span>
-          <input
-            className="title-inline-input"
-            value={draft.title}
-            onChange={(event) => onDraftChange({ ...draft, title: event.target.value })}
-            placeholder="Título de la entidad"
-            aria-label="Título de la entidad"
-          />
-          <div className="entity-meta-row">
-            <p>
-              rev {entity.revision} · {formatTimestamp(entity.updatedAt)}
-            </p>
-            <span className={`save-indicator ${saveStatus}`}>
-              <span className="save-indicator-dot" />
-              {saveStatus === 'saving' ? 'Guardando…' : saveStatus === 'saved' ? 'Sincronizado' : 'Listo'}
-            </span>
-          </div>
-        </div>
-        <div className="toolbar-group">
-          <button className="ghost-button" type="button" onClick={onGenerateAiProposal}>
-            Sugerencia IA
-          </button>
-          <button className="ghost-button" type="button" onClick={onToggleZenMode}>
-            {zenMode ? 'Salir de foco' : 'Modo foco'}
-          </button>
-          <ActionMenu
-            label="Opciones de entidad"
-            items={[
-              { label: 'Aplicar template seleccionado', onSelect: onApplyTemplate },
-              { label: 'Duplicar entidad', onSelect: onDuplicate },
-              { label: 'Archivar entidad', onSelect: onArchive },
-              { label: 'Eliminar entidad', onSelect: onDelete, destructive: true },
-            ]}
-          />
-        </div>
-      </div>
+      <EditorHeader
+        draft={draft}
+        entity={entity}
+        saveStatus={saveStatus}
+        zenMode={zenMode}
+        onDraftChange={onDraftChange}
+        onApplyTemplate={onApplyTemplate}
+        onDuplicate={onDuplicate}
+        onArchive={onArchive}
+        onDelete={onDelete}
+        onGenerateAiProposal={onGenerateAiProposal}
+        onToggleZenMode={onToggleZenMode}
+      />
 
       <div className="editor-grid">
-        <div className={zenMode ? 'editor-meta-shell is-hidden' : 'editor-meta-shell'}>
-          <PanelSection title="Metadatos" meta="Plantilla, etiquetas y claves de contexto" defaultOpen={false}>
-            <div className="form-grid compact-metadata-grid">
-              <label>
-                Plantilla
-                <select
-                  value={draft.templateId}
-                  onChange={(event) => onDraftChange({ ...draft, templateId: event.target.value })}
-                >
-                  {templates.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Etiquetas
-                <input
-                  value={draft.tagsText}
-                  onChange={(event) => onDraftChange({ ...draft, tagsText: event.target.value })}
-                  placeholder="misterio, política, magia"
-                />
-              </label>
-              <label>
-                Alias
-                <input
-                  value={draft.aliasesText}
-                  onChange={(event) => onDraftChange({ ...draft, aliasesText: event.target.value })}
-                  placeholder="sobrenombres, títulos, abreviaturas"
-                />
-              </label>
-            </div>
-          </PanelSection>
-        </div>
+        <EditorMetadata draft={draft} templates={templates} zenMode={zenMode} onDraftChange={onDraftChange} />
 
         <div className="split-grid">{documentEditor}</div>
 
         <div className={zenMode ? 'split-grid editor-side-shell is-hidden' : 'split-grid editor-side-shell'}>
-          <PanelSection
-            title="Propiedades"
-            meta={`${draft.fields.length} propiedades · ${entity.assets.length} assets`}
-            defaultOpen={false}
-            actions={
-              <button type="button" className="ghost-button compact-button" onClick={onAddField}>
-                Añadir propiedad
-              </button>
-            }
-          >
-            {draft.fields.map((field: FieldValue) => (
-              <div key={field.id} className="field-row">
-                <input
-                  value={field.key}
-                  onChange={(event) => onUpdateField(field.id, 'key', event.target.value)}
-                  placeholder="Nombre de la propiedad"
-                />
-                <input
-                  value={field.value}
-                  onChange={(event) => onUpdateField(field.id, 'value', event.target.value)}
-                  placeholder="Valor"
-                />
-                <button type="button" className="icon-button" onClick={() => onRemoveField(field.id)}>
-                  ✕
-                </button>
-              </div>
-            ))}
-          </PanelSection>
+          <EditorProperties
+            fields={draft.fields as FieldValue[]}
+            assetCount={entity.assets.length}
+            onAddField={onAddField}
+            onUpdateField={onUpdateField}
+            onRemoveField={onRemoveField}
+          />
 
-          <PanelSection
-            title="Assets visuales"
-            meta={`${entity.assets.length} imágenes`}
-            defaultOpen={false}
-          >
-            <div className="asset-grid">
-              {entity.assets.map((asset) => (
-                <figure key={asset.id} className="asset-card">
-                  <img src={asset.dataUrl} alt={asset.name} />
-                  <figcaption>{asset.name}</figcaption>
-                </figure>
-              ))}
-              {entity.assets.length === 0 && (
-                <div className="empty-mini-state">Todavía no hay imágenes asociadas.</div>
-              )}
-            </div>
-          </PanelSection>
+          <EditorAssets assets={entity.assets} />
         </div>
       </div>
     </section>

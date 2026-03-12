@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { SearchResult } from '../types/workspace'
+import type { SearchResult } from '../../types/workspace'
 
 interface CommandPaletteProps {
   searchQuery: string

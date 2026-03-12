@@ -10,11 +10,14 @@ import type {
   LlmStreamStatus,
   LlmTraceEntry,
   Project,
-} from '../types/workspace'
-import { getReferenceTokens } from '../utils/references'
-import { buildSnippet } from '../utils/search'
-import { formatTimestamp } from '../utils/workspace'
-import { PanelSection } from './common/PanelSection'
+} from '../../types/workspace'
+import { getReferenceTokens } from '../../utils/references'
+import { buildSnippet } from '../../utils/search'
+import { formatTimestamp } from '../../utils/workspace'
+import { PanelSection } from '../common/PanelSection'
+import { InspectorAssistantComposer } from '../inspector/InspectorAssistantComposer'
+import { InspectorHistory } from '../inspector/InspectorHistory'
+import { InspectorTabs } from '../inspector/InspectorTabs'
 
 type InspectorPanelProps = {
   activeTab: CollectionTab | null
@@ -34,19 +37,7 @@ type InspectorPanelProps = {
 }
 
 function renderHistory(items: HistoryEvent[]) {
-  return (
-    <div className="history-list">
-      {items.map((event) => (
-        <article key={event.id} className="history-item">
-          <strong>{event.label}</strong>
-          <p>{event.details}</p>
-          <small>
-            {event.actorType} · {formatTimestamp(event.timestamp)}
-          </small>
-        </article>
-      ))}
-    </div>
-  )
+  return <InspectorHistory items={items} />
 }
 
 export const InspectorPanel = memo(function InspectorPanel({
@@ -102,29 +93,7 @@ export const InspectorPanel = memo(function InspectorPanel({
           <span className="eyebrow">Contexto</span>
         </div>
 
-        <div className="context-tabs">
-          <button
-            type="button"
-            className={activePanelTab === 'context' ? 'context-tab active' : 'context-tab'}
-            onClick={() => setActivePanelTab('context')}
-          >
-            Contexto / IA
-          </button>
-          <button
-            type="button"
-            className={activePanelTab === 'meta' ? 'context-tab active' : 'context-tab'}
-            onClick={() => setActivePanelTab('meta')}
-          >
-            Metadatos
-          </button>
-          <button
-            type="button"
-            className={activePanelTab === 'history' ? 'context-tab active' : 'context-tab'}
-            onClick={() => setActivePanelTab('history')}
-          >
-            Historial
-          </button>
-        </div>
+        <InspectorTabs activeTab={activePanelTab} onChange={setActivePanelTab} />
       </div>
 
       <div className="inspector-scroll-area">
@@ -271,24 +240,11 @@ export const InspectorPanel = memo(function InspectorPanel({
       </div>
 
       {activePanelTab === 'context' && (
-        <form className="assistant-composer" onSubmit={handleAssistantSubmit}>
-          <label className="assistant-composer-label">
-            <span>Habla con la IA</span>
-            <textarea
-              value={assistantDraft}
-              onChange={(event) => setAssistantDraft(event.target.value)}
-              placeholder="Pide una escena alternativa, continuidad, tono o conflicto."
-              rows={3}
-            />
-          </label>
-
-          <div className="assistant-composer-actions">
-            <small>Se integra en las instrucciones activas de esta colección.</small>
-            <button type="submit" className="primary-button" disabled={!assistantDraft.trim()}>
-              Enviar
-            </button>
-          </div>
-        </form>
+        <InspectorAssistantComposer
+          value={assistantDraft}
+          onChange={setAssistantDraft}
+          onSubmit={handleAssistantSubmit}
+        />
       )}
     </aside>
   )

@@ -1,5 +1,5 @@
 import { memo, useCallback, useMemo, useRef, useState, type PointerEvent } from 'react'
-import type { GraphModel } from '../types/workspace'
+import type { GraphModel } from '../../types/workspace'
 
 type GraphPanelProps = {
   graphModel: GraphModel

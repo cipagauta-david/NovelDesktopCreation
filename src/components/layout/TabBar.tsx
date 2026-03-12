@@ -1,7 +1,7 @@
 import { memo, useState } from 'react'
 
-import type { CollectionTab } from '../types/workspace'
-import { ActionMenu } from './common/ActionMenu'
+import type { CollectionTab } from '../../types/workspace'
+import { ActionMenu } from '../common/ActionMenu'
 
 type TabBarProps = {
   tabs: CollectionTab[]

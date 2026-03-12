@@ -1,4 +1,4 @@
-import type { Project, WorkspaceView } from '../types/workspace'
+import type { Project, WorkspaceView } from '../../types/workspace'
 
 type WorkspaceHeaderProps = {
   project: Project | undefined

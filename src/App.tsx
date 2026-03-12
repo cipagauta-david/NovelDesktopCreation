@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { AppShell } from './components/AppShell'
+import { AppShell } from './components/layout/AppShell'
 import { useAppWorker } from './hooks/useAppWorker'
-import { getDefaultPersistedState } from './data/seed'
+import { getDefaultPersistedState } from './data/seed/project'
 import type { PersistedState } from './types/workspace'
 
 function App() {

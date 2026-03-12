@@ -2,10 +2,7 @@ import { useMemo, useState, useCallback, useEffect } from 'react'
 
 import { providerModels } from '../data/constants'
 import type { AppSettings, DraftState, OnboardingPayload, PanelKey, PanelVisibility, PersistedGraphLayouts, PersistedState, WorkspaceView } from '../types/workspace'
-import { getReferenceTokens } from '../utils/references'
 import { draftStateFromEntity } from '../utils/workspace'
-import { downloadProjectAsJson, promptFileImport } from '../utils/exportImport'
-import { createHistoryEvent, isoNow } from '../utils/workspace'
 
 import { useProjectManagement } from './workspace/useProjectManagement'
 import { useTabManagement } from './workspace/useTabManagement'
@@ -13,6 +10,9 @@ import { useEntityManagement } from './workspace/useEntityManagement'
 import { useAiManagement } from './workspace/useAiManagement'
 import { useSearchManagement } from './workspace/useSearchManagement'
 import { usePersistenceManagement } from './workspace/usePersistenceManagement'
+import { useGraphManagement } from './workspace/workspaceCore/useGraphManagement'
+import { useWorkspaceOrdering } from './workspace/workspaceCore/useWorkspaceOrdering'
+import { useWorkspaceTransfer } from './workspace/workspaceCore/useWorkspaceTransfer'
 import * as Comlink from 'comlink'
 import type { AppWorker } from '../data/worker'
 
@@ -67,45 +67,7 @@ export function useWorkspace(
   // Motor de persistencia optimista con el worker
   usePersistenceManagement(activeProject, activeEntity, draft, setData, setSaveStatus, saveStatus, worker)
 
-  const graphModel = useMemo(() => {
-    if (!activeProject) return { nodes: [], edges: [] }
-    const layout = graphLayouts[activeProject.id] ?? {}
-    const nodes = activeProject.entities.filter((e) => e.status === 'active').map((e, index, all) => {
-      const savedPos = layout[e.id]
-      const angle = (Math.PI * 2 * index) / Math.max(all.length, 1)
-      return {
-        id: e.id,
-        title: e.title,
-        x: savedPos?.x ?? 260 + Math.cos(angle) * 180,
-        y: savedPos?.y ?? 220 + Math.sin(angle) * 160,
-        tabId: e.tabId,
-      }
-    })
-    const edges = activeProject.entities.flatMap((e) =>
-      getReferenceTokens(e.content).filter((token) => activeProject.entities.some((t) => t.id === token.entityId)).map((token) => ({ source: e.id, target: token.entityId }))
-    )
-    return { nodes, edges }
-  }, [activeProject, graphLayouts])
-
-  const updateGraphNodePosition = useCallback((entityId: string, x: number, y: number) => {
-    if (!activeProject) return
-    setGraphLayouts((prev) => ({
-      ...prev,
-      [activeProject.id]: {
-        ...(prev[activeProject.id] ?? {}),
-        [entityId]: { x, y },
-      },
-    }))
-  }, [activeProject])
-
-  const resetGraphLayout = useCallback(() => {
-    if (!activeProject) return
-    setGraphLayouts((prev) => {
-      const next = { ...prev }
-      delete next[activeProject.id]
-      return next
-    })
-  }, [activeProject])
+  const graphManagement = useGraphManagement({ activeProject, graphLayouts, setGraphLayouts })
 
   // Persist graph layouts alongside data
   useEffect(() => {
@@ -151,77 +113,12 @@ export function useWorkspace(
 
   const togglePanel = useCallback((panel: PanelKey) => setPanels((c) => ({ ...c, [panel]: !c[panel] })), [])
 
-  // ── Import / Export ─────────────────────────────────────
-  const exportActiveProject = useCallback(() => {
-    if (!activeProject) return
-    downloadProjectAsJson(activeProject)
-    setToast(`Proyecto "${activeProject.name}" exportado.`)
-  }, [activeProject, setToast])
-
-  const importProject = useCallback(async () => {
-    const result = await promptFileImport()
-    if (!result.ok) {
-      if (result.error !== 'Importación cancelada.') {
-        setToast(result.error)
-      }
-      return
-    }
-    setData((current) => ({
-      ...current,
-      projects: [result.project, ...current.projects],
-      activeProjectId: result.project.id,
-      activeTabId: result.project.tabs[0]?.id ?? '',
-      activeEntityId: result.project.entities[0]?.id ?? '',
-    }))
-    setToast(`Proyecto "${result.project.name}" importado correctamente.`)
-  }, [setData, setToast])
-
-  // ── Entity reordering ───────────────────────────────────
-  const reorderEntities = useCallback((entityIds: string[]) => {
-    if (!activeProject || !activeTab) return
-    const now = isoNow()
-    projectManagement.withProjectUpdate(activeProject.id, (project) => {
-      // Get entities for this tab in the new order, keeping others untouched
-      const tabEntitiesMap = new Map(
-        project.entities.filter((e) => e.tabId === activeTab.id).map((e) => [e.id, e])
-      )
-      const reorderedTabEntities = entityIds
-        .map((id) => tabEntitiesMap.get(id))
-        .filter((e): e is NonNullable<typeof e> => Boolean(e))
-      const otherEntities = project.entities.filter((e) => e.tabId !== activeTab.id)
-
-      return {
-        ...project,
-        entities: [...reorderedTabEntities, ...otherEntities],
-        updatedAt: now,
-        history: [
-          createHistoryEvent('Entidades reordenadas', `Reordenamiento en ${activeTab.name}.`),
-          ...project.history,
-        ].slice(0, 40),
-      }
-    })
-  }, [activeProject, activeTab, projectManagement])
-
-  // ── Tab reordering (drag & drop) ────────────────────────
-  const reorderTabs = useCallback((tabIds: string[]) => {
-    if (!activeProject) return
-    const now = isoNow()
-    projectManagement.withProjectUpdate(activeProject.id, (project) => {
-      const tabMap = new Map(project.tabs.map((t) => [t.id, t]))
-      const reordered = tabIds
-        .map((id) => tabMap.get(id))
-        .filter((t): t is NonNullable<typeof t> => Boolean(t))
-      return {
-        ...project,
-        tabs: reordered,
-        updatedAt: now,
-        history: [
-          createHistoryEvent('Tabs reordenadas', 'Reordenamiento por drag & drop.'),
-          ...project.history,
-        ].slice(0, 40),
-      }
-    })
-  }, [activeProject, projectManagement])
+  const transfer = useWorkspaceTransfer({ activeProject, setData, setToast })
+  const ordering = useWorkspaceOrdering({
+    activeProject,
+    activeTab,
+    withProjectUpdate: projectManagement.withProjectUpdate,
+  })
 
   return {
     providerModels, data, toast, setToast, saveStatus, workspaceView, setWorkspaceView, searchQuery, setSearchQuery,
@@ -230,7 +127,7 @@ export function useWorkspace(
     newTabName: tabManagement.newTabName, setNewTabName: tabManagement.setNewTabName,
     newEntityTemplateId: entityManagement.newEntityTemplateId, setNewEntityTemplateId: entityManagement.setNewEntityTemplateId,
     activeProject, activeTab, activeEntity, activeDraft, activeTemplates: activeProject?.templates ?? [], activeTabEntities: tabEntities, selectedNewEntityTemplateId: entityManagement.selectedNewEntityTemplateId,
-    searchResults, graphModel, suggestionOptions, referenceSuggestion, pendingProposal: aiManagement.pendingProposal, panels, editorViewRef: entityManagement.editorViewRef, onboardingReady: Boolean(data.settings), completeOnboarding,
+    searchResults, graphModel: graphManagement.graphModel, suggestionOptions, referenceSuggestion, pendingProposal: aiManagement.pendingProposal, panels, editorViewRef: entityManagement.editorViewRef, onboardingReady: Boolean(data.settings), completeOnboarding,
     // AI streaming
     streamStatus: aiManagement.streamStatus, streamingText: aiManagement.streamingText, llmTraces: aiManagement.llmTraces, stopGeneration: aiManagement.stopGeneration,
     selectProject: projectManagement.selectProject, renameActiveProject: projectManagement.renameActiveProject, deleteActiveProject: projectManagement.deleteActiveProject, createProject: projectManagement.createProject, clearWorkspace,
@@ -240,7 +137,7 @@ export function useWorkspace(
     insertReference: entityManagement.insertReference, handleEditorChange: entityManagement.handleEditorChange, navigateFromReference: entityManagement.navigateFromReference, saveCurrentAsTemplate: entityManagement.saveCurrentAsTemplate,
     generateAiProposal: aiManagement.generateAiProposal, confirmAiProposal: aiManagement.confirmAiProposal, dismissProposal: aiManagement.dismissProposal, togglePanel, worker,
     // New features
-    exportActiveProject, importProject, reorderEntities, reorderTabs,
-    updateGraphNodePosition, resetGraphLayout,
+    exportActiveProject: transfer.exportActiveProject, importProject: transfer.importProject, reorderEntities: ordering.reorderEntities, reorderTabs: ordering.reorderTabs,
+    updateGraphNodePosition: graphManagement.updateGraphNodePosition, resetGraphLayout: graphManagement.resetGraphLayout,
   }
 }

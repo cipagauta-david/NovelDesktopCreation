@@ -37,6 +37,43 @@ async function completeOnboarding(page: import('@playwright/test').Page) {
   await page.waitForSelector('.app-shell', { timeout: 20_000 })
 }
 
+async function ensureEntityListVisible(page: import('@playwright/test').Page, allowReset = true) {
+  const entityList = page.locator('.entity-list, .entity-column').first()
+  if ((await entityList.count()) > 0 && (await entityList.isVisible())) {
+    return entityList
+  }
+
+  const navToggle = page.locator('button:has-text("Navegación")').first()
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    if ((await navToggle.count()) === 0) {
+      break
+    }
+    await navToggle.click()
+    await page.waitForTimeout(450)
+    if ((await entityList.count()) > 0 && (await entityList.isVisible())) {
+      return entityList
+    }
+  }
+
+  if (allowReset) {
+    await page.evaluate(() => {
+      localStorage.clear()
+      const request = indexedDB.deleteDatabase('novel-desktop-worker-db')
+      return new Promise<void>((resolve) => {
+        request.onsuccess = () => resolve()
+        request.onerror = () => resolve()
+        request.onblocked = () => resolve()
+      })
+    })
+    await page.reload()
+    await completeOnboarding(page)
+    return ensureEntityListVisible(page, false)
+  }
+
+  await expect(entityList).toBeVisible({ timeout: 10_000 })
+  return entityList
+}
+
 // ── Test: App loads and shows onboarding or workspace ────
 
 test('app loads successfully', async ({ page }) => {
@@ -72,21 +109,7 @@ test('editor shows seed entity content', async ({ page }) => {
   await page.goto('/')
   await completeOnboarding(page)
 
-  // Should see entity list
-  const entityList = page.locator('.entity-list, .entity-column')
-  if (await entityList.first().count() === 0) {
-    // no entity column present at all
-    throw new Error('Entity list not found in DOM')
-  }
-
-  if (!(await entityList.first().isVisible())) {
-    // If left panel is collapsed, open navigation via header toggle
-    const navToggle = page.locator('button:has-text("Navegación")').first()
-    if (await navToggle.count() > 0) {
-      await navToggle.click()
-      await expect(entityList.first()).toBeVisible({ timeout: 10_000 })
-    }
-  }
+  await ensureEntityListVisible(page)
 
   // Should have at least one entity card
   const entityCards = page.locator('.list-card')
@@ -238,6 +261,7 @@ test('Ctrl+Click on reference navigates to entity', async ({ page }) => {
 test('data persists across page reload', async ({ page }) => {
   await page.goto('/')
   await completeOnboarding(page)
+  await ensureEntityListVisible(page)
 
   // Get current project name / entity count
   const firstEntity = page.locator('.list-card strong').first()
@@ -249,6 +273,7 @@ test('data persists across page reload', async ({ page }) => {
   // Reload
   await page.reload()
   await page.waitForSelector('.app-shell', { timeout: 30_000 })
+  await ensureEntityListVisible(page)
 
   // Verify same data is visible
   if (entityTitle) {

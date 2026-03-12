@@ -1,8 +1,8 @@
 import { memo, useState } from 'react'
 
-import type { AppSettings, EntityTemplate, Project } from '../types/workspace'
-import { ActionMenu } from './common/ActionMenu'
-import { PanelSection } from './common/PanelSection'
+import type { AppSettings, EntityTemplate, Project } from '../../types/workspace'
+import { ActionMenu } from '../common/ActionMenu'
+import { PanelSection } from '../common/PanelSection'
 
 type SidebarProps = {
   settings: AppSettings

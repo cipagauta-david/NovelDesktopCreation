@@ -1,50 +1,16 @@
-/**
- * Import/Export de proyectos con validación y recuperación segura.
- */
+import type { Project } from '../../types/workspace'
+import { createHistoryEvent, isoNow, uid } from '../workspace'
+import type { ImportResult } from './types'
 
-import type { ExportedProject, Project } from '../types/workspace'
-import { uid, isoNow, createHistoryEvent } from './workspace'
-
-const CURRENT_EXPORT_VERSION = 1
-
-// ── Export ──────────────────────────────────────────────────
-
-export function exportProject(project: Project): string {
-  const exported: ExportedProject = {
-    version: CURRENT_EXPORT_VERSION,
-    exportedAt: isoNow(),
-    project,
-  }
-  return JSON.stringify(exported, null, 2)
+function remapReferences(content: string, idMap: Map<string, string>): string {
+  return content.replace(
+    /\{\{entity:([^|}]+)\|([^}]+)\}\}/g,
+    (_match, oldId: string, label: string) => {
+      const newId = idMap.get(oldId) ?? oldId
+      return `{{entity:${newId}|${label}}}`
+    },
+  )
 }
-
-export function downloadProjectAsJson(project: Project): void {
-  const json = exportProject(project)
-  const blob = new Blob([json], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${sanitizeFilename(project.name)}-${Date.now()}.json`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-}
-
-function sanitizeFilename(name: string): string {
-  return name
-    .replace(/[<>:"/\\|?*]+/g, '_')
-    .replace(/\s+/g, '-')
-    .toLowerCase()
-    .slice(0, 80)
-}
-
-// ── Import ──────────────────────────────────────────────────
-
-export type ImportResult =
-  | { ok: true; project: Project }
-  | { ok: false; error: string }
 
 export function parseImportedProject(rawJson: string): ImportResult {
   let parsed: unknown
@@ -60,7 +26,6 @@ export function parseImportedProject(rawJson: string): ImportResult {
 
   const candidate = parsed as Record<string, unknown>
 
-  // Detect format: ExportedProject wrapper or raw Project
   let project: Record<string, unknown>
   if (typeof candidate.version === 'number' && candidate.project) {
     project = candidate.project as Record<string, unknown>
@@ -70,7 +35,6 @@ export function parseImportedProject(rawJson: string): ImportResult {
     return { ok: false, error: 'El archivo no contiene un proyecto válido. Se esperan campos name, tabs, entities.' }
   }
 
-  // Validate required fields
   const errors: string[] = []
   if (typeof project.name !== 'string' || !project.name.trim()) errors.push('Falta el nombre del proyecto')
   if (!Array.isArray(project.tabs) || project.tabs.length === 0) errors.push('Falta al menos una colección (tab)')
@@ -80,7 +44,6 @@ export function parseImportedProject(rawJson: string): ImportResult {
     return { ok: false, error: `Validación fallida: ${errors.join('; ')}` }
   }
 
-  // Re-assign IDs to avoid collisions on import
   const idMap = new Map<string, string>()
 
   const tabs = (project.tabs as Array<Record<string, unknown>>).map((tab) => {
@@ -146,7 +109,6 @@ export function parseImportedProject(rawJson: string): ImportResult {
       })
     : []
 
-  // Remap entity references in content: {{entity:OLD_ID|Label}} → {{entity:NEW_ID|Label}}
   for (const entity of entities) {
     entity.content = remapReferences(entity.content, idMap)
   }
@@ -169,19 +131,6 @@ export function parseImportedProject(rawJson: string): ImportResult {
   return { ok: true, project: importedProject }
 }
 
-function remapReferences(content: string, idMap: Map<string, string>): string {
-  return content.replace(
-    /\{\{entity:([^|}]+)\|([^}]+)\}\}/g,
-    (_match, oldId: string, label: string) => {
-      const newId = idMap.get(oldId) ?? oldId
-      return `{{entity:${newId}|${label}}}`
-    },
-  )
-}
-
-/**
- * Abre un file input y lee el proyecto importado.
- */
 export function promptFileImport(): Promise<ImportResult> {
   return new Promise((resolve) => {
     const input = document.createElement('input')
