@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 
 const shortcuts: { keys: string; description: string }[] = [
   { keys: 'Ctrl + K', description: 'Abrir búsqueda / Command Palette' },
+  { keys: 'Ctrl + M', description: 'Alternar God Mode (Editor / Mapa)' },
   { keys: 'Ctrl + \\', description: 'Mostrar / ocultar Inspector' },
   { keys: 'F11 / Ctrl + Shift + F', description: 'Activar / desactivar modo Zen' },
   { keys: 'Escape', description: 'Salir del modo Zen / Cerrar búsqueda' },

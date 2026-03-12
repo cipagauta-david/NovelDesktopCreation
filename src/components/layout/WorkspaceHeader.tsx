@@ -4,11 +4,13 @@ type WorkspaceHeaderProps = {
   project: Project | undefined
   searchResultsCount: number
   workspaceView: WorkspaceView
+  godMode: boolean
   leftPanelOpen: boolean
   inspectorOpen: boolean
   hasActiveSearch: boolean
   onOpenSearch: () => void
   onViewChange: (view: WorkspaceView) => void
+  onToggleGodMode: () => void
   onToggleLeftPanel: () => void
   onToggleInspector: () => void
 }
@@ -17,11 +19,13 @@ export function WorkspaceHeader({
   project,
   searchResultsCount,
   workspaceView,
+  godMode,
   leftPanelOpen,
   inspectorOpen,
   hasActiveSearch,
   onOpenSearch,
   onViewChange,
+  onToggleGodMode,
   onToggleLeftPanel,
   onToggleInspector,
 }: WorkspaceHeaderProps) {
@@ -68,6 +72,15 @@ export function WorkspaceHeader({
             onClick={onToggleInspector}
           >
             Contexto
+          </button>
+
+          <button
+            type="button"
+            className={godMode ? 'mode-switch-pill active' : 'mode-switch-pill'}
+            onClick={onToggleGodMode}
+            aria-pressed={godMode}
+          >
+            {godMode ? 'Salir God Mode' : 'God Mode'}
           </button>
 
           <button

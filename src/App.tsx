@@ -42,7 +42,7 @@ function AppContent() {
 
   if (!worker || !initialData) {
     return (
-      <div data-resolved-theme={resolvedTheme} className="surface-panel empty-state" style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <div data-resolved-theme={resolvedTheme} className="surface-panel empty-state app-loading-state">
         <h3>Iniciando Motor Off-Thread...</h3>
         <p>Cargando índices FTS5 y base de datos local</p>
       </div>

@@ -20,6 +20,14 @@ function buildLiveDecorations(view: EditorView): DecorationSet {
     for (let lineNumber = startLine; lineNumber <= endLine; lineNumber += 1) {
       const line = view.state.doc.line(lineNumber)
       if (line.number === activeLineNumber) {
+        decorations.push(
+          Decoration.line({
+            attributes: { class: 'cm-live-line cm-live-line-active' },
+          }).range(line.from),
+        )
+      }
+
+      if (line.number === activeLineNumber) {
         continue
       }
 

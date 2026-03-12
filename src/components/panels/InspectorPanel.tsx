@@ -242,8 +242,10 @@ export const InspectorPanel = memo(function InspectorPanel({
       {activePanelTab === 'context' && (
         <InspectorAssistantComposer
           value={assistantDraft}
+          streamStatus={streamStatus}
           onChange={setAssistantDraft}
           onSubmit={handleAssistantSubmit}
+          onStopGeneration={onStopGeneration}
         />
       )}
     </aside>

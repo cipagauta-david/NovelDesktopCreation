@@ -2551,3 +2551,231 @@ svg {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* ===== ARIS Roadmap Execution Overrides ===== */
+
+.app-loading-state {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  background: var(--surface-float);
+  border: 1px solid var(--border-subtle);
+}
+
+button,
+input,
+select,
+textarea {
+  background: var(--surface-glass);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+label,
+.eyebrow,
+.template-card small,
+.history-item small,
+.search-result small,
+.list-card small,
+.section-meta,
+.tab-tree-copy small,
+.sidebar-identity small,
+.search-results-empty,
+.empty-mini-state,
+.workspace-status,
+.shortcut-desc {
+  color: var(--text-muted);
+}
+
+.hero-panel p,
+.workspace-title p,
+.brand-card p,
+.template-card span,
+.list-card span,
+.search-result span,
+.history-item p,
+.proposal-card p,
+.doc-paragraph,
+.doc-list-item,
+.plain-chunk,
+.reference-card-mini p,
+.entity-hover-popover p {
+  color: var(--text-body);
+}
+
+.primary-button {
+  background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 55%, #7c3aed));
+  color: var(--text-heading);
+}
+
+:root.dark .primary-button {
+  color: #04101c;
+}
+
+.workspace-header,
+.left-workspace-panel,
+.inspector-column,
+.assistant-composer,
+.command-palette,
+.action-menu-popover,
+.shortcuts-overlay,
+.entity-hover-popover {
+  background: var(--surface-glass);
+  border-color: var(--border-subtle);
+  box-shadow: var(--shadow-glass);
+}
+
+.workspace-header,
+.left-workspace-panel,
+.inspector-column {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.app-shell {
+  background-image:
+    radial-gradient(ellipse at 12% 8%, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 46%),
+    radial-gradient(ellipse at 86% 84%, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 40%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-base) 92%, transparent), var(--surface-base));
+}
+
+.app-shell.god-mode .main-column {
+  transform: scale(0.992) translateY(0);
+}
+
+.workspace-stage.god-mode .left-workspace-panel.open,
+.workspace-stage.god-mode .inspector-panel-shell.open {
+  flex-basis: 380px;
+}
+
+.mode-switch-pill {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--surface-glass) 90%, transparent);
+  border-color: var(--border-subtle);
+}
+
+.mode-switch-pill.active {
+  background: var(--color-primary-dim);
+  border-color: var(--border-active);
+  color: var(--text-heading);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+
+.app-shell.is-spectral .workspace-header-shell,
+.app-shell.is-spectral .ghosting-panel,
+.main-column.is-spectral {
+  opacity: 0.65;
+}
+
+.main-column.is-spectral {
+  transition: opacity var(--motion-fast), transform var(--motion-fast);
+}
+
+.editor-preview-pane,
+.doc-block,
+.doc-heading,
+.doc-paragraph,
+.doc-list-item {
+  font-family: var(--font-serif);
+}
+
+.title-inline-input,
+.doc-heading {
+  color: var(--text-heading);
+}
+
+.doc-active-raw-line {
+  color: var(--text-heading);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.writing-lane .cm-cursor {
+  border-left-color: var(--color-primary) !important;
+  animation: ai-stream-cursor-blink 1s infinite;
+  filter: drop-shadow(0 0 6px var(--color-primary-glow));
+}
+
+.cm-live-line-active {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 42%);
+}
+
+.suggestions-popover-title-neural {
+  font-family: var(--font-sans);
+  color: var(--text-ghost);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  padding: 0.2rem 0.4rem 0.4rem;
+  border-bottom: 1px solid var(--border-divider);
+}
+
+.floating-suggestions-popover {
+  border-color: var(--border-active);
+  box-shadow:
+    0 22px 48px rgba(2, 6, 23, 0.36),
+    0 0 24px var(--color-primary-glow);
+}
+
+.assistant-composer-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.assistant-stop-button {
+  border-color: color-mix(in srgb, #f87171 24%, transparent);
+  background: color-mix(in srgb, #ef4444 16%, transparent);
+  color: #fecaca;
+}
+
+.assistant-stop-button:hover {
+  border-color: color-mix(in srgb, #f87171 36%, transparent);
+  background: color-mix(in srgb, #ef4444 24%, transparent);
+}
+
+.graph-canvas {
+  background:
+    radial-gradient(circle at center, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 56%),
+    var(--surface-base);
+}
+
+.graph-node-halo {
+  opacity: 0.72;
+  animation: neural-pulse 1.8s ease-in-out infinite;
+}
+
+.graph-node text {
+  fill: var(--text-body);
+}
+
+.destructive-text {
+  color: #fca5a5 !important;
+}
+
+.shortcuts-overlay-backdrop {
+  background: rgba(8, 17, 31, 0.62);
+}
+
+.shortcuts-overlay {
+  background: var(--surface-glass);
+  border-color: var(--border-subtle);
+}
+
+.shortcut-keys,
+.shortcuts-footer kbd {
+  background: color-mix(in srgb, var(--surface-float) 90%, transparent);
+  border-color: var(--border-subtle);
+  color: var(--color-primary);
+}
+
+@media (max-width: 1200px) {
+  .app-shell.is-spectral .workspace-header-shell,
+  .app-shell.is-spectral .ghosting-panel,
+  .main-column.is-spectral {
+    opacity: 1;
+  }
+}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type DragEvent } from 'react'
+import { useState, useEffect, useCallback, useRef, type DragEvent } from 'react'
 import { EditorPanel } from '../panels/EditorPanel'
 import { EntityList } from '../panels/EntityList'
 import { GraphPanel } from '../panels/GraphPanel'
@@ -20,11 +20,14 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   const [searchPaletteOpen, setSearchPaletteOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [globalDragging, setGlobalDragging] = useState(false)
+  const [spectralMode, setSpectralMode] = useState(false)
+  const spectralTimerRef = useRef<number | null>(null)
+  const godMode = workspace.workspaceView === 'graph'
   const hasLeftPanel = !zenMode && (workspace.panels.sidebar || workspace.panels.entities)
   const hasInspectorPanel = !zenMode && workspace.panels.inspector
 
   // Destructure stable callbacks to avoid re-running effect on every render
-  const { togglePanel, panels, selectEntity, attachImages } = workspace
+  const { togglePanel, panels, selectEntity, attachImages, setWorkspaceView } = workspace
 
   useEffect(() => {
     function handleKeydown(e: KeyboardEvent) {
@@ -34,6 +37,12 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
       if (e.key === 'Escape' && searchPaletteOpen) { e.preventDefault(); setSearchPaletteOpen(false); return }
       if (e.key === 'Escape' && shortcutsOpen) { e.preventDefault(); setShortcutsOpen(false); return }
       if (e.key === 'F11' || (usesCommand && e.shiftKey && key === 'f')) { e.preventDefault(); setZenMode(c => !c); return }
+      if (usesCommand && key === 'm') {
+        e.preventDefault()
+        setZenMode(false)
+        setWorkspaceView(godMode ? 'editor' : 'graph')
+        return
+      }
       if (usesCommand && key === 'k') { e.preventDefault(); setSearchPaletteOpen(true); return }
       if (usesCommand && key === '\\') { e.preventDefault(); togglePanel('inspector') }
       // ? key (not inside an input / textarea / contenteditable)
@@ -43,7 +52,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
     }
     window.addEventListener('keydown', handleKeydown)
     return () => window.removeEventListener('keydown', handleKeydown)
-  }, [searchPaletteOpen, shortcutsOpen, togglePanel, zenMode])
+  }, [godMode, searchPaletteOpen, setWorkspaceView, shortcutsOpen, togglePanel, zenMode])
 
   const handleToggleNav = useCallback(() => {
     if (panels.sidebar || panels.entities) {
@@ -68,11 +77,27 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
     if (!zenMode && !panels.inspector) togglePanel('inspector')
   }, [selectEntity, zenMode, panels.inspector, togglePanel])
 
+  const handleMainColumnScroll = useCallback(() => {
+    setSpectralMode(true)
+    if (spectralTimerRef.current != null) {
+      window.clearTimeout(spectralTimerRef.current)
+    }
+    spectralTimerRef.current = window.setTimeout(() => {
+      setSpectralMode(false)
+    }, 220)
+  }, [])
+
+  useEffect(() => () => {
+    if (spectralTimerRef.current != null) {
+      window.clearTimeout(spectralTimerRef.current)
+    }
+  }, [])
+
   if (!workspace.onboardingReady) return <OnboardingScreen onSubmit={workspace.completeOnboarding} />
 
   return (
     <main
-      className={globalDragging ? 'app-shell global-dragging' : 'app-shell'}
+      className={[globalDragging ? 'app-shell global-dragging' : 'app-shell', godMode ? 'god-mode' : '', spectralMode ? 'is-spectral' : ''].filter(Boolean).join(' ')}
       onDragOver={(event) => {
         if (!Array.from(event.dataTransfer.items).some((item) => item.kind === 'file')) {
           return
@@ -90,11 +115,11 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
       }}
       onDrop={handleGlobalDrop}
     >
-      <div className={zenMode ? 'workspace-header-shell is-hidden' : 'workspace-header-shell'}>
-        <WorkspaceHeader project={workspace.activeProject} searchResultsCount={workspace.searchResults.length} workspaceView={workspace.workspaceView} leftPanelOpen={hasLeftPanel} inspectorOpen={hasInspectorPanel} hasActiveSearch={workspace.searchQuery.trim().length > 0} onOpenSearch={() => setSearchPaletteOpen(true)} onViewChange={workspace.setWorkspaceView} onToggleLeftPanel={handleToggleNav} onToggleInspector={() => workspace.togglePanel('inspector')} />
+    <div className={[zenMode ? 'workspace-header-shell is-hidden' : 'workspace-header-shell', spectralMode ? 'is-spectral' : ''].filter(Boolean).join(' ')}>
+        <WorkspaceHeader project={workspace.activeProject} searchResultsCount={workspace.searchResults.length} workspaceView={workspace.workspaceView} godMode={godMode} leftPanelOpen={hasLeftPanel} inspectorOpen={hasInspectorPanel} hasActiveSearch={workspace.searchQuery.trim().length > 0} onOpenSearch={() => setSearchPaletteOpen(true)} onViewChange={workspace.setWorkspaceView} onToggleGodMode={() => { setZenMode(false); setWorkspaceView(godMode ? 'editor' : 'graph') }} onToggleLeftPanel={handleToggleNav} onToggleInspector={() => workspace.togglePanel('inspector')} />
       </div>
 
-      <section className={zenMode ? 'workspace-stage focus-mode' : 'workspace-stage'}>
+      <section className={[zenMode ? 'workspace-stage focus-mode' : 'workspace-stage', godMode ? 'god-mode' : ''].filter(Boolean).join(' ')}>
         <section className="workspace-grid">
           {!zenMode && (
             <aside className={hasLeftPanel ? 'left-workspace-panel open' : 'left-workspace-panel'}>
@@ -111,7 +136,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
             </aside>
           )}
 
-          <div className={zenMode ? 'main-column focus-mode' : 'main-column'}>
+          <div className={[zenMode ? 'main-column focus-mode' : 'main-column', godMode ? 'god-mode' : '', spectralMode ? 'is-spectral' : ''].filter(Boolean).join(' ')} onScroll={handleMainColumnScroll}>
             {workspace.workspaceView === 'graph' ? <GraphPanel graphModel={workspace.graphModel} activeEntityId={workspace.activeEntity?.id} onSelectEntity={handleGraphSelectEntity} onNodePositionChange={workspace.updateGraphNodePosition} onResetLayout={workspace.resetGraphLayout} /> : workspace.activeEntity && workspace.activeDraft ? <EditorPanel entity={workspace.activeEntity} draft={workspace.activeDraft} templates={workspace.activeTemplates} allEntities={workspace.activeProject?.entities ?? []} editorViewRef={workspace.editorViewRef} referenceSuggestionActive={Boolean(workspace.referenceSuggestion)} suggestionOptions={workspace.suggestionOptions} saveStatus={workspace.saveStatus} streamStatus={workspace.streamStatus} zenMode={zenMode} onOpenEntity={workspace.selectEntity} onDraftChange={workspace.setDraft} onHandleEditorChange={workspace.handleEditorChange} onInsertReference={workspace.insertReference} onAttachImages={workspace.attachImages} onAddField={workspace.addField} onUpdateField={workspace.updateField} onRemoveField={workspace.removeField} onApplyTemplate={workspace.applyActiveTemplate} onDuplicate={workspace.duplicateActiveEntity} onArchive={workspace.archiveActiveEntity} onDelete={workspace.deleteActiveEntity} onGenerateAiProposal={workspace.generateAiProposal} onToggleZenMode={() => setZenMode(c => !c)} /> : <div className="panel surface-panel empty-state">Vacio</div>}
           </div>
 

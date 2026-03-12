@@ -37,11 +37,29 @@ export function useAiStreaming({
   setToast,
 }: UseAiStreamingArgs) {
   const abortControllerRef = useRef<AbortController | null>(null)
+  const bufferedTextRef = useRef('')
+  const frameRef = useRef<number | null>(null)
+
+  const flushStreamingText = useCallback(() => {
+    frameRef.current = null
+    setStreamingText(bufferedTextRef.current)
+  }, [setStreamingText])
+
+  const queueStreamingFlush = useCallback(() => {
+    if (frameRef.current != null) {
+      return
+    }
+    frameRef.current = window.requestAnimationFrame(flushStreamingText)
+  }, [flushStreamingText])
 
   const stopGeneration = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
       abortControllerRef.current = null
+    }
+    if (frameRef.current != null) {
+      window.cancelAnimationFrame(frameRef.current)
+      frameRef.current = null
     }
     setStreamStatus('cancelled')
     setToast('Generación IA cancelada.')
@@ -59,6 +77,7 @@ export function useAiStreaming({
     abortControllerRef.current = controller
 
     setStreamStatus('streaming')
+    bufferedTextRef.current = ''
     setStreamingText('')
 
     const fallback = buildFallbackProposal(activeEntity, activeTab)
@@ -87,9 +106,16 @@ export function useAiStreaming({
       await requestLlmStreaming(input, controller.signal, {
         onToken(chunk) {
           accumulatedText += chunk
-          setStreamingText(accumulatedText)
+          bufferedTextRef.current = accumulatedText
+          queueStreamingFlush()
         },
         onDone(fullText) {
+          if (frameRef.current != null) {
+            window.cancelAnimationFrame(frameRef.current)
+            frameRef.current = null
+          }
+          setStreamingText(accumulatedText)
+
           if (!fullText.trim() || !fallback) {
             if (fallback) {
               setPendingProposal(fallback)
@@ -110,6 +136,12 @@ export function useAiStreaming({
           setToast('Propuesta IA generada con streaming. Revisa y confirma.')
         },
         onError(error) {
+          if (frameRef.current != null) {
+            window.cancelAnimationFrame(frameRef.current)
+            frameRef.current = null
+          }
+          setStreamingText(accumulatedText)
+
           if (error instanceof LlmError && error.category === 'cancelled') {
             setStreamStatus('cancelled')
             return
@@ -136,6 +168,10 @@ export function useAiStreaming({
         },
       })
     } catch {
+      if (frameRef.current != null) {
+        window.cancelAnimationFrame(frameRef.current)
+        frameRef.current = null
+      }
       if (fallback) {
         setPendingProposal(fallback)
       }

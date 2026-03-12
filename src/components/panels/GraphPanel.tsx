@@ -76,6 +76,7 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
       </div>
 
       <svg
+        className="graph-canvas"
         ref={svgRef}
         viewBox="0 0 520 440"
         role="img"
@@ -140,11 +141,22 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
           return (
             <g
                 key={node.id}
-                className="graph-node"
+                className={isActive ? 'graph-node active' : isConnected ? 'graph-node related' : 'graph-node'}
                 opacity={isActive || isConnected ? 1 : activeEntityId ? 0.22 : 1}
                 onClick={() => onSelectEntity(node.id, node.tabId)}
                 onPointerDown={() => setDraggingNodeId(node.id)}
               >
+              {(isActive || isConnected) && (
+                <circle
+                  cx={node.x}
+                  cy={node.y}
+                  r={isActive ? 24 : 17}
+                  fill="none"
+                  stroke="var(--color-primary-glow)"
+                  strokeWidth={isActive ? '1.6' : '1.1'}
+                  className="graph-node-halo"
+                />
+              )}
               <circle
                 cx={node.x}
                 cy={node.y}
