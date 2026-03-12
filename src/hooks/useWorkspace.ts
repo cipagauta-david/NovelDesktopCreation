@@ -1,8 +1,7 @@
 import { useMemo, useState, useCallback, useEffect } from 'react'
 
 import { providerModels } from '../data/constants'
-import type { AppSettings, DraftState, OnboardingPayload, PanelKey, PanelVisibility, PersistedState, WorkspaceView } from '../types/workspace'
-import { getReferenceTokens } from '../utils/references'
+import type { AppSettings, DraftState, OnboardingPayload, PanelKey, PanelVisibility, PersistedGraphLayouts, PersistedState, WorkspaceView } from '../types/workspace'
 import { draftStateFromEntity } from '../utils/workspace'
 
 import { useProjectManagement } from './workspace/useProjectManagement'
@@ -11,6 +10,9 @@ import { useEntityManagement } from './workspace/useEntityManagement'
 import { useAiManagement } from './workspace/useAiManagement'
 import { useSearchManagement } from './workspace/useSearchManagement'
 import { usePersistenceManagement } from './workspace/usePersistenceManagement'
+import { useGraphManagement } from './workspace/workspaceCore/useGraphManagement'
+import { useWorkspaceOrdering } from './workspace/workspaceCore/useWorkspaceOrdering'
+import { useWorkspaceTransfer } from './workspace/workspaceCore/useWorkspaceTransfer'
 import * as Comlink from 'comlink'
 import type { AppWorker } from '../data/worker'
 
@@ -27,6 +29,7 @@ export function useWorkspace(
   const [draft, setDraft] = useState<DraftState | null>(null)
   const [referenceSuggestion, setReferenceSuggestion] = useState<{ start: number, end: number, query: string } | null>(null)
   const [panels, setPanels] = useState<PanelVisibility>(defaultPanels)
+  const [graphLayouts, setGraphLayouts] = useState<PersistedGraphLayouts>(initialData.graphLayouts ?? {})
 
   const activeProject = useMemo(() => data.projects.find((p) => p.id === data.activeProjectId) ?? data.projects[0], [data.activeProjectId, data.projects])
   const activeTab = useMemo(() => activeProject?.tabs.find((t) => t.id === data.activeTabId) ?? activeProject?.tabs[0] ?? null, [activeProject, data.activeTabId])
@@ -50,22 +53,31 @@ export function useWorkspace(
   const { searchQuery, setSearchQuery, searchResults } = useSearchManagement(activeProject, worker)
 
   const entityManagement = useEntityManagement(setData, activeProject, activeTab, activeEntity, activeDraft, tabEntities, setDraft, referenceSuggestion, setReferenceSuggestion, setWorkspaceView, projectManagement.withProjectUpdate, setToast)
-  const aiManagement = useAiManagement(activeProject, activeTab, activeEntity, projectManagement.withProjectUpdate, setToast)
+  const aiManagement = useAiManagement(
+    activeProject,
+    activeTab,
+    activeEntity,
+    data.settings,
+    projectManagement.withProjectUpdate,
+    setToast,
+  )
+
+  const setPendingProposal = aiManagement.setPendingProposal
 
   // Motor de persistencia optimista con el worker
   usePersistenceManagement(activeProject, activeEntity, draft, setData, setSaveStatus, saveStatus, worker)
 
-  const graphModel = useMemo(() => {
-    if (!activeProject) return { nodes: [], edges: [] }
-    const nodes = activeProject.entities.filter((e) => e.status === 'active').map((e, index, all) => {
-      const angle = (Math.PI * 2 * index) / Math.max(all.length, 1)
-      return { id: e.id, title: e.title, x: 260 + Math.cos(angle) * 180, y: 220 + Math.sin(angle) * 160, tabId: e.tabId }
+  const graphManagement = useGraphManagement({ activeProject, graphLayouts, setGraphLayouts })
+
+  // Persist graph layouts alongside data
+  useEffect(() => {
+    queueMicrotask(() => {
+      setData((current) => {
+        if (JSON.stringify(current.graphLayouts ?? {}) === JSON.stringify(graphLayouts)) return current
+        return { ...current, graphLayouts }
+      })
     })
-    const edges = activeProject.entities.flatMap((e) =>
-      getReferenceTokens(e.content).filter((token) => activeProject.entities.some((t) => t.id === token.entityId)).map((token) => ({ source: e.id, target: token.entityId }))
-    )
-    return { nodes, edges }
-  }, [activeProject])
+  }, [graphLayouts])
 
   const suggestionOptions = useMemo(() => {
     if (!referenceSuggestion || !activeProject) return []
@@ -80,7 +92,13 @@ export function useWorkspace(
   }, [toast, setToast])
 
   const completeOnboarding = useCallback((payload: OnboardingPayload) => {
-    const settings: AppSettings = { authorName: payload.authorName || 'Autor(a)', provider: payload.provider, model: payload.model, apiKeyHint: payload.apiKey ? `••••${payload.apiKey.slice(-4)}` : 'Modo local' }
+    const settings: AppSettings = {
+      authorName: payload.authorName || 'Autor(a)',
+      provider: payload.provider,
+      model: payload.model,
+      apiKeyHint: payload.apiKey ? `••••${payload.apiKey.slice(-4)}` : 'Modo local',
+      apiKey: payload.apiKey || undefined,
+    }
     setData((c) => ({ ...c, settings }))
     setToast('Workspace configurado. Todo listo para escribir.')
   }, [setData, setToast])
@@ -88,12 +106,19 @@ export function useWorkspace(
   const clearWorkspace = useCallback(() => {
     // TODO: delegate to worker reset
     setSearchQuery('')
-    aiManagement.setPendingProposal(null)
+    setPendingProposal(null)
     setPanels(defaultPanels)
     setToast('Workspace reiniciado.')
-  }, [setSearchQuery, aiManagement, setToast])
+  }, [setSearchQuery, setPendingProposal, setToast])
 
   const togglePanel = useCallback((panel: PanelKey) => setPanels((c) => ({ ...c, [panel]: !c[panel] })), [])
+
+  const transfer = useWorkspaceTransfer({ activeProject, setData, setToast })
+  const ordering = useWorkspaceOrdering({
+    activeProject,
+    activeTab,
+    withProjectUpdate: projectManagement.withProjectUpdate,
+  })
 
   return {
     providerModels, data, toast, setToast, saveStatus, workspaceView, setWorkspaceView, searchQuery, setSearchQuery,
@@ -102,12 +127,17 @@ export function useWorkspace(
     newTabName: tabManagement.newTabName, setNewTabName: tabManagement.setNewTabName,
     newEntityTemplateId: entityManagement.newEntityTemplateId, setNewEntityTemplateId: entityManagement.setNewEntityTemplateId,
     activeProject, activeTab, activeEntity, activeDraft, activeTemplates: activeProject?.templates ?? [], activeTabEntities: tabEntities, selectedNewEntityTemplateId: entityManagement.selectedNewEntityTemplateId,
-    searchResults, graphModel, suggestionOptions, referenceSuggestion, pendingProposal: aiManagement.pendingProposal, panels, editorViewRef: entityManagement.editorViewRef, onboardingReady: Boolean(data.settings), completeOnboarding,
+    searchResults, graphModel: graphManagement.graphModel, suggestionOptions, referenceSuggestion, pendingProposal: aiManagement.pendingProposal, panels, editorViewRef: entityManagement.editorViewRef, onboardingReady: Boolean(data.settings), completeOnboarding,
+    // AI streaming
+    streamStatus: aiManagement.streamStatus, streamingText: aiManagement.streamingText, llmTraces: aiManagement.llmTraces, stopGeneration: aiManagement.stopGeneration,
     selectProject: projectManagement.selectProject, renameActiveProject: projectManagement.renameActiveProject, deleteActiveProject: projectManagement.deleteActiveProject, createProject: projectManagement.createProject, clearWorkspace,
     selectTab: tabManagement.selectTab, createTab: tabManagement.createTab, moveActiveTab: tabManagement.moveActiveTab, renameActiveTab: tabManagement.renameActiveTab, deleteActiveTab: tabManagement.deleteActiveTab, updateTabPrompt: tabManagement.updateTabPrompt,
     selectEntity: entityManagement.selectEntity, createEntity: entityManagement.createEntity, duplicateActiveEntity: entityManagement.duplicateActiveEntity, archiveActiveEntity: entityManagement.archiveActiveEntity, deleteActiveEntity: entityManagement.deleteActiveEntity,
     applyActiveTemplate: entityManagement.applyActiveTemplate, setDraft, addField: entityManagement.addField, updateField: entityManagement.updateField, removeField: entityManagement.removeField, attachImages: entityManagement.attachImages,
     insertReference: entityManagement.insertReference, handleEditorChange: entityManagement.handleEditorChange, navigateFromReference: entityManagement.navigateFromReference, saveCurrentAsTemplate: entityManagement.saveCurrentAsTemplate,
-    generateAiProposal: aiManagement.generateAiProposal, confirmAiProposal: aiManagement.confirmAiProposal, dismissProposal: aiManagement.dismissProposal, togglePanel, worker
+    generateAiProposal: aiManagement.generateAiProposal, confirmAiProposal: aiManagement.confirmAiProposal, dismissProposal: aiManagement.dismissProposal, togglePanel, worker,
+    // New features
+    exportActiveProject: transfer.exportActiveProject, importProject: transfer.importProject, reorderEntities: ordering.reorderEntities, reorderTabs: ordering.reorderTabs,
+    updateGraphNodePosition: graphManagement.updateGraphNodePosition, resetGraphLayout: graphManagement.resetGraphLayout,
   }
 }

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { PersistedState, Project } from '../../types/workspace'
 import { createHistoryEvent, isoNow, uid } from '../../utils/workspace'
-import { getDefaultPersistedState } from '../../data/seed'
+import { getDefaultPersistedState } from '../../data/seed/project'
 
 export function useProjectManagement(
   data: PersistedState,

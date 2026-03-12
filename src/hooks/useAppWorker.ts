@@ -2,35 +2,41 @@ import { useEffect, useState } from 'react'
 import * as Comlink from 'comlink'
 import type { AppWorker } from '../data/worker'
 
-// Singleton para asegurar que no se levanten multiples workers
-let workerProxyCache: Comlink.Remote<AppWorker> | null = null
-
 export function useAppWorker() {
-  const [worker, setWorker] = useState<Comlink.Remote<AppWorker> | null>(() => workerProxyCache)
-  const [isReady, setIsReady] = useState(() => !!workerProxyCache)
+  const [worker, setWorker] = useState<Comlink.Remote<AppWorker> | null>(null)
+  const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
-    if (workerProxyCache) {
-      return
-    }
-
-    // Instancia limpia del Web Worker nativo de Vite
     const rawWorker = new Worker(new URL('../data/worker.ts', import.meta.url), {
-      type: 'module'
+      type: 'module',
     })
-
     const proxy = Comlink.wrap<AppWorker>(rawWorker)
 
-    workerProxyCache = proxy
-    setWorker(() => proxy)
-    
-    // Inicializar DB off-thread si es necesario
-    proxy.init().then(() => {
-      setIsReady(true)
-    }).catch((err: unknown) => {
-      console.error('[Worker Error] Fallo al inicializar motor', err)
-      // Fallback fallback ...
-    })
+    let cancelled = false
+
+    proxy
+      .init()
+      .then(async () => {
+        // Health-check: garantiza que la API expuesta realmente tiene loadState()
+        // y evita errores tipo "worker.loadState is not a function" por proxies stale.
+        await proxy.loadState().catch(() => null)
+        if (!cancelled) {
+          window.requestAnimationFrame(() => {
+            setWorker(() => proxy)
+            setIsReady(true)
+          })
+        }
+      })
+      .catch((err: unknown) => {
+        console.error('[Worker Error] Fallo al inicializar motor', err)
+      })
+
+    return () => {
+      cancelled = true
+      setIsReady(false)
+      setWorker(null)
+      rawWorker.terminate()
+    }
   }, [])
 
   return { worker, isReady }

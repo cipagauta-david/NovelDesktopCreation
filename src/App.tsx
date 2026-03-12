@@ -1,23 +1,35 @@
 import { useEffect, useState } from 'react'
-import { AppShell } from './components/AppShell'
+import { AppShell } from './components/layout/AppShell'
 import { useAppWorker } from './hooks/useAppWorker'
-import { getDefaultPersistedState } from './data/seed'
+import { useTheme } from './hooks/useTheme'
+import { getDefaultPersistedState } from './data/seed/project'
 import type { PersistedState } from './types/workspace'
 
 function App() {
+  useTheme()
   const { worker, isReady } = useAppWorker()
   const [initialData, setInitialData] = useState<PersistedState | null>(null)
 
   useEffect(() => {
     if (!worker || !isReady) return
 
-    // Cargar estado inicial desde el worker off-main-thread
-    worker.loadState().then((saved: any) => {
-      setInitialData(saved ?? getDefaultPersistedState())
-    }).catch((err: unknown) => {
-      console.error('[App] Fallo recuperando data, inicializando fallback', err)
-      setInitialData(getDefaultPersistedState())
-    })
+    try {
+      if (typeof worker.loadState !== 'function') {
+        console.error('[App] Worker proxy inválido: loadState no es una función')
+        queueMicrotask(() => setInitialData(getDefaultPersistedState()))
+        return
+      }
+
+      worker.loadState().then((saved) => {
+        queueMicrotask(() => setInitialData(saved ?? getDefaultPersistedState()))
+      }).catch((err: unknown) => {
+        console.error('[App] Fallo recuperando data, inicializando fallback', err)
+        queueMicrotask(() => setInitialData(getDefaultPersistedState()))
+      })
+      } catch (err) {
+        console.error('[App] Error síncrono inicializando worker state, fallback activado', err)
+        queueMicrotask(() => setInitialData(getDefaultPersistedState()))
+      }
   }, [worker, isReady])
 
   if (!worker || !initialData) {

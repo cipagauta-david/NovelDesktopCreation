@@ -5,6 +5,7 @@ NovelDesktopCreation es un workspace narrativo **web-first, local-first y prepar
 ## Documento base del proyecto
 - PRD formal: [`docs/PRD-formal.md`](./docs/PRD-formal.md)
 - Arquitectura técnica inicial: [`docs/technical-architecture-initial.md`](./docs/technical-architecture-initial.md)
+- Roadmap de salida a producto final: [`docs/ROADMAP-final-product.md`](./docs/ROADMAP-final-product.md)
 
 ## MVP ejecutable
 Este repositorio ya incluye un MVP web-first/local-first implementado con React + Vite.
@@ -30,6 +31,13 @@ npm run dev
 - propuesta de IA con confirmación explícita,
 - y primera vista de grafo narrativa.
 
+## Estado actual (post-MVP)
+- persistencia de workspace en worker con IndexedDB (fallback en memoria),
+- conexión IA en modo real para OpenAI, OpenRouter, Anthropic, Google Gemini y Ollama (con fallback local),
+- mapa narrativo con nodos arrastrables y reordenamiento manual,
+- drag & drop de imágenes tanto en editor como a nivel global del workspace,
+- y roadmap explícito de cierre E2E hacia producto final.
+
 ## Organización del código
 La app quedó separada por responsabilidad:
 - `src/types`: tipos de dominio y UI,
@@ -40,9 +48,9 @@ La app quedó separada por responsabilidad:
 
 ## Decisiones actuales del MVP
 - editor híbrido de markdown enriquecido con referencias `{{}}`,
-- proyectos autocontenidos en disco con base local y carpeta de assets,
+- proyectos autocontenidos local-first en worker y carpeta de assets,
 - entidades con contenido libre + fields tipados,
-- búsqueda textual local con SQLite + FTS5,
+- búsqueda textual local inicial en worker (migración a SQLite + FTS5 planificada),
 - historial con revisiones incrementales por entidad,
 - drag & drop inicial de imágenes,
 - y primera vista de grafo/board.
