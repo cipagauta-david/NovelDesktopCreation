@@ -4,6 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NovelDesktopCreation MVP</title>
+    <script>
+      (() => {
+        try {
+          const storedTheme = localStorage.getItem('ndc-theme')
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+          const useDark = storedTheme === 'dark' || (storedTheme !== 'light' && prefersDark)
+          document.documentElement.classList.toggle('dark', useDark)
+        } catch {
+          // noop
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

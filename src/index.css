@@ -4,19 +4,19 @@
   --font-sans: 'Inter', 'Outfit', system-ui, -apple-system, sans-serif;
   --font-serif: 'Merriweather', 'Crimson Pro', Georgia, serif;
   
-  /* God Mode / Midnight (Default) */
-  --surface-base: #08111f;
-  --surface-glass: rgba(10, 16, 28, 0.88);
-  --surface-glass-hover: rgba(14, 23, 38, 0.95);
-  --text-primary: #e5eefb;
-  --text-secondary: #93a4bc;
-  --text-muted: #64748b;
-  --brand-accent: #2563eb;
-  --brand-accent-hover: #3b82f6;
-  --brand-gradient: linear-gradient(135deg, #2563eb, #7c3aed);
-  --border-subtle: rgba(148, 163, 184, 0.08);
-  --border-focus: rgba(125, 211, 252, 0.36);
-  --shadow-glass: 0 24px 80px rgba(2, 6, 23, 0.38);
+  /* Parchment (Default) */
+  --surface-base: #fcfbf9;
+  --surface-glass: rgba(252, 251, 249, 0.95);
+  --surface-glass-hover: rgba(245, 244, 241, 0.98);
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --brand-accent: #6366f1;
+  --brand-accent-hover: #4f46e5;
+  --brand-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-focus: rgba(99, 102, 241, 0.36);
+  --shadow-glass: 0 12px 40px rgba(15, 23, 42, 0.06);
   
   /* Interactions */
   --motion-fast: 150ms ease-out;
@@ -35,6 +35,22 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+}
+
+:root.dark {
+  --surface-base: #08111f;
+  --surface-glass: rgba(10, 16, 28, 0.88);
+  --surface-glass-hover: rgba(14, 23, 38, 0.95);
+  --text-primary: #e5eefb;
+  --text-secondary: #93a4bc;
+  --text-muted: #64748b;
+  --brand-accent: #2563eb;
+  --brand-accent-hover: #3b82f6;
+  --brand-gradient: linear-gradient(135deg, #2563eb, #7c3aed);
+  --border-subtle: rgba(148, 163, 184, 0.08);
+  --border-focus: rgba(125, 211, 252, 0.36);
+  --shadow-glass: 0 24px 80px rgba(2, 6, 23, 0.38);
   color-scheme: dark;
 }
 
@@ -58,6 +74,30 @@
 
 * {
   box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  transition:
+    background-color var(--motion-base),
+    border-color var(--motion-base),
+    color var(--motion-base),
+    opacity var(--motion-base),
+    box-shadow var(--motion-slow);
+}
+
+.transition-colors {
+  transition:
+    background-color var(--motion-base),
+    border-color var(--motion-base),
+    color var(--motion-base);
+}
+
+.shadow-glow {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--brand-accent) 22%, transparent),
+    0 0 18px color-mix(in srgb, var(--brand-accent) 26%, transparent);
 }
 
 body {

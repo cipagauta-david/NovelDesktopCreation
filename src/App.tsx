@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { AppShell } from './components/layout/AppShell'
 import { useAppWorker } from './hooks/useAppWorker'
+import { useTheme } from './hooks/useTheme'
 import { getDefaultPersistedState } from './data/seed/project'
 import type { PersistedState } from './types/workspace'
 
 function App() {
+  useTheme()
   const { worker, isReady } = useAppWorker()
   const [initialData, setInitialData] = useState<PersistedState | null>(null)
 
