@@ -1,8 +1,8 @@
 :root {
   /* MASTER UI TOKENS (TECH-05.1) */
   /* Typography Hierarchy */
-  --font-sans: 'Inter', 'Outfit', system-ui, -apple-system, sans-serif;
-  --font-serif: 'Merriweather', 'Crimson Pro', Georgia, serif;
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Crimson Pro Variable', 'Crimson Pro', Georgia, serif;
   
   /* Parchment (Default) */
   --surface-base: #fcfbf9;
@@ -1107,7 +1107,8 @@ label {
   position: relative;
   display: grid;
   gap: 1.15rem;
-  max-width: min(100%, 78ch);
+  max-width: min(100%, 48rem);
+  margin-inline: auto;
 }
 
 .editor-mode-switch {
@@ -1198,7 +1199,8 @@ label {
 .editor-preview-pane {
   color: var(--text-primary);
   font-family: var(--font-serif);
-  font-size: 1.15rem;
+  font-size: clamp(1.16rem, 1.1rem + 0.3vw, 1.28rem);
+  line-height: 1.72;
 }
 
 .editor-live-editor .cm-scroller {
@@ -1231,7 +1233,24 @@ label {
 .doc-heading-1 {
   font-size: clamp(2.2rem, 3vw, 3rem);
   line-height: 1.08;
+  position: relative;
+  padding-bottom: 0.35rem;
   margin-bottom: 0.35rem;
+}
+
+.doc-heading-1::after {
+  content: '';
+  display: block;
+  width: 5rem;
+  height: 0.2rem;
+  margin-top: 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-accent) 30%, transparent);
+}
+
+:root.dark .doc-heading-1::after {
+  background: rgba(0, 212, 238, 0.4);
+  box-shadow: 0 0 12px rgba(0, 212, 238, 0.2);
 }
 
 .doc-heading-2 {
@@ -1249,6 +1268,31 @@ label {
 
 .doc-paragraph {
   color: #dbe6f5;
+  line-height: 1.7;
+}
+
+.cm-source-heading-1,
+.cm-live-heading-1 {
+  position: relative;
+  padding-bottom: 0.28rem;
+  margin-bottom: 0.25rem;
+}
+
+.cm-source-heading-1::after,
+.cm-live-heading-1::after {
+  content: '';
+  display: block;
+  width: 5rem;
+  height: 0.16rem;
+  margin-top: 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-accent) 30%, transparent);
+}
+
+:root.dark .cm-source-heading-1::after,
+:root.dark .cm-live-heading-1::after {
+  background: rgba(0, 212, 238, 0.4);
+  box-shadow: 0 0 12px rgba(0, 212, 238, 0.2);
 }
 
 .doc-list-item {
@@ -1938,6 +1982,35 @@ svg {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+}
+
+.heading-style-preview {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.78rem 0.85rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.heading-style-preview-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.24rem;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.heading-style-preview-line {
+  width: 4.25rem;
+  height: 0.18rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-accent) 30%, transparent);
+}
+
+:root.dark .heading-style-preview-line {
+  background: rgba(0, 212, 238, 0.4);
+  box-shadow: 0 0 12px rgba(0, 212, 238, 0.2);
 }
 
 .create-entity-button {

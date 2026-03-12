@@ -14,9 +14,9 @@ export const editorTheme = EditorView.theme(
       boxShadow: '0 0 0 4px rgba(59, 130, 246, 0.08)',
     },
     '.cm-scroller': {
-      fontFamily: 'inherit',
+      fontFamily: 'var(--font-serif)',
       minHeight: '420px',
-      lineHeight: '1.6',
+      lineHeight: '1.72',
     },
     '.cm-content, .cm-gutter': {
       minHeight: '420px',
@@ -24,6 +24,7 @@ export const editorTheme = EditorView.theme(
     '.cm-content': {
       padding: '1rem 1.1rem',
       caretColor: '#f8fafc',
+      fontFamily: 'var(--font-serif)',
     },
     '.cm-line': {
       padding: 0,

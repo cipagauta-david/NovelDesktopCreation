@@ -27,6 +27,11 @@ export function EditorProperties({
         </button>
       }
     >
+      <div className="heading-style-preview" aria-label="Estilo de títulos nivel 1">
+        <p className="heading-style-preview-title">Título Nivel 1</p>
+        <div className="heading-style-preview-line" aria-hidden="true" />
+      </div>
+
       {fields.map((field) => (
         <div key={field.id} className="field-row">
           <input

@@ -25,16 +25,16 @@ export const baseEditorTheme = EditorView.theme(
     '&': {
       backgroundColor: 'transparent',
       color: '#dbe6f5',
-      fontFamily: 'inherit',
-      fontSize: '1.05rem',
+      fontFamily: 'var(--font-serif)',
+      fontSize: '1.12rem',
     },
     '&.cm-focused': {
       outline: 'none',
     },
     '.cm-scroller': {
       overflow: 'auto',
-      fontFamily: 'inherit',
-      lineHeight: '1.6',
+      fontFamily: 'var(--font-serif)',
+      lineHeight: '1.72',
     },
     '.cm-content, .cm-gutter': {
       minHeight: '420px',
@@ -70,22 +70,25 @@ export const baseEditorTheme = EditorView.theme(
     },
     '.cm-source-heading-1, .cm-live-heading-1': {
       color: '#f8fafc',
-      fontSize: 'clamp(2rem, 2.6vw, 2.8rem)',
-      lineHeight: '1.06',
+      fontFamily: 'var(--font-serif)',
+      fontSize: 'clamp(2.1rem, 2.8vw, 2.95rem)',
+      lineHeight: '1.08',
       fontWeight: '700',
       letterSpacing: '-0.03em',
     },
     '.cm-source-heading-2, .cm-live-heading-2': {
       color: '#e2ebff',
+      fontFamily: 'var(--font-serif)',
       fontSize: 'clamp(1.34rem, 1.8vw, 1.72rem)',
-      lineHeight: '1.14',
+      lineHeight: '1.2',
       fontWeight: '700',
       letterSpacing: '-0.02em',
     },
     '.cm-source-heading-3, .cm-live-heading-3': {
       color: '#d8e7ff',
+      fontFamily: 'var(--font-serif)',
       fontSize: '1.1rem',
-      lineHeight: '1.22',
+      lineHeight: '1.28',
       fontWeight: '650',
     },
     '.cm-live-list-item': {
