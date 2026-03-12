@@ -11,8 +11,7 @@ function App() {
   useEffect(() => {
     if (!worker || !isReady) return
 
-    // Cargar estado inicial desde el worker off-main-thread
-    worker.loadState().then((saved: any) => {
+    worker.loadState().then((saved) => {
       setInitialData(saved ?? getDefaultPersistedState())
     }).catch((err: unknown) => {
       console.error('[App] Fallo recuperando data, inicializando fallback', err)

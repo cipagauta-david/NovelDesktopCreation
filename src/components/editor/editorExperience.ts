@@ -12,11 +12,16 @@ import {
 const REFERENCE_PATTERN = /\{\{entity:([^|}]+)\|([^}]+)\}\}/g
 
 class ReferenceWidget extends WidgetType {
+  private entityId: string
+  private label: string
+
   constructor(
-    private entityId: string,
-    private label: string,
+    entityId: string,
+    label: string,
   ) {
     super()
+    this.entityId = entityId
+    this.label = label
   }
 
   override eq(other: ReferenceWidget) {
@@ -214,7 +219,7 @@ function getEntityPillFromTarget(target: EventTarget | null): HTMLElement | null
 }
 
 export function createLiveEditorExtensions(interactions: LiveEditorInteractions = {}): Extension[] {
-  const { onEntityInteract, onEntityHover, onEntityHoverEnd } = interactions
+  const { onEntityHover, onEntityHoverEnd } = interactions
 
   return [
     createDynamicPlugin(buildLiveDecorations),
