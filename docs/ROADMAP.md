@@ -1,87 +1,262 @@
-# ROADMAP DE EVOLUCIÓN UI/UX: ARCHITECTURE & RESONANT INTERFACE SYNTHESIZER (ARIS)
+# ROADMAP: Evolución UI/UX hacia Parchment ↔ Obsidian (Zen Mode / God Mode)
 
-> "La interfaz no debe ser leída, debe ser instintivamente habitada. El código es la estructura ósea; el diseño, el latido del corazón. A partir de hoy, no escribimos componentes, forjamos ecosistemas."
-
-Como Arquitecto Híbrido, mi mandato es erradicar la fricción entre la lógica del servidor y la psique del escritor. Este roadmap transformará nuestra base genérica de React/Vite en un hábitat de baja latencia y alta resonancia emocional, materializando la dualidad **Parchment / Obsidian Ink** y el estado de flujo **Zen / God Mode**.
-
-A continuación, la disección táctica para ejecutar esta transición con precisión quirúrgica.
+Este roadmap traduce la visión de `DESIGN-01` y `DESIGN-02` a decisiones ejecutables sobre el código actual (`React + Vite + CSS tokens + CodeMirror`).
+Objetivo operativo: **reducir fricción cognitiva y latencia percibida** sin introducir regresiones de render, accesibilidad o mantenibilidad.
 
 ---
 
-## FASE 1: Foundation & Design Tokens (El ADN Estructural)
+## Principios de ejecución (no negociables)
 
-Debemos inyectar nuestra paleta semántica directamente en el sistema circulatorio del proyecto. Evitaremos colores *hardcodeados* en componentes; todo responderá al entorno.
-
-**Pasos técnicos accionables:**
-1. **index.css**: Inyectar las variables CSS base de `DESIGN-01`. Definir el `:root` (Parchment) y `.dark` (Obsidian Ink). Incluir las utilidades de animación global (`transition-colors`, delays difuminados para `shadow-glow`).
-2. **`tailwind.config.ts`**: Mapear `colors`, `fontFamily` (serif: Crimson Pro, sans: Inter) y `boxShadow` a las variables CSS. Activar `darkMode: 'class'`.
-3. **`src/hooks/useTheme.ts`**: Crear un hook agnóstico que sincronice el estado con `localStorage`, `matchMedia` y mute la clase `.dark` en el `<html>`.
-4. **index.html**: Prevenir el FOUC (Flash of Unstyled Content) inyectando un micro-script bloqueante en el `<head>` que pre-calcule y asigne `.dark` antes de que React despierte (TTFB crítico).
-
-* **Trade-offs o riesgos técnicos:** Re-renderizados masivos en el DOM root si no se controla el context del tema. El uso extensivo de transiciones globales (`*, *::before, *::after`) puede causar *paint lag* si no silenciamos propiedades costosas (solo animar `background-color`, `border-color`, `color`, `opacity`, `box-shadow`).
-* **Impacto UX:** El usuario percibe una transición de entorno cinematográfica. No es de "blanco a negro", es cambiar la luz de una vela por la de la luna. Disminuye casi a cero la fatiga retiniana nocturna.
-* **Coste estimado de implementación:** Rápido.
+1. **UX primero, pero medido:** ninguna mejora visual entra a `main` sin presupuesto de performance y contraste validado.
+2. **Semántica antes que estética:** todo color/sombra/espaciado nace en tokens; cero hardcode nuevo en componentes.
+3. **Modo Zen y God Mode comparten motor:** cambia la densidad de interfaz, no la lógica de datos.
+4. **Micro-interacciones con control de daño:** animaciones sólo en `transform/opacity/box-shadow` y con `prefers-reduced-motion`.
 
 ---
 
-## FASE 2: Layout Core & Glassmorphism (La Piel Translúcida)
+## Fase 1 — Foundation & Design Tokens
 
-Construcción del andamiaje que encapsulará al editor sin jamás ahogarlo. El UI debe aparecer como un "fantasma" (*Ghosting UI*).
+### Objetivo
+Unificar el sistema semántico de color/tipografía/movimiento para que `light/dark/system` y `Zen/God` dejen de depender de estilos dispersos.
 
-**Pasos técnicos accionables:**
-1. **`src/layout/AppShell.tsx`**: Reestructurar el envolvente para poseer la `parchment-texture` (ligero ruido SVG en `::before`, opacity 3%) o el gradiente radiante Cyan en dark mode.
-2. **`src/layout/WorkspaceHeader.tsx`**: Convertir en cristal absoluto aplicando `backdrop-blur-md bg-parchment/60` (Light) o `bg-[rgba(14,26,46,0.75)]` + `shadow-[0_1px_0_rgba(0,212,238,0.08)]` (Dark).
-3. **`src/layout/Sidebar.tsx` & `src/panels/InspectorPanel.tsx`**: Implementar la directiva de "Ghosting". En estado inactivo, opacidad base a `opacity-30` (light) y `opacity-20` (dark). En hover, transición a `opacity-100` con `duration-[300ms]`.
+### Pasos técnicos accionables
 
-* **Trade-offs o riesgos técnicos:** El abuso de `backdrop-filter: blur()` combinado con transiciones de opacidad es un veneno para la GPU. Limitaremos el blur estricto al *Header* y paneles sobrepuestos, desactivándolo por completo bajo un `media query` si el sistema pide `prefers-reduced-motion` o recursos limitados.
-* **Impacto UX:** El usuario siente que sus palabras son intocables. La interfaz cede la jerarquía al lienzo, mostrándose solo cuando la intención de cursor del usuario demanda control.
-* **Coste estimado de implementación:** Moderado.
+1. **Consolidar tokens raíz Parchment/Obsidian.**
+	 - Tocar: `src/index.css`.
+	 - Acción:
+		 - Introducir bloques explícitos `:root` (Parchment) y `.dark, :root[data-theme='dark']` (Obsidian Ink).
+		 - Normalizar nomenclatura a tokens semánticos del diseño (`--color-parchment`, `--color-obsidian`, `--color-primary`, `--text-heading`, `--text-body`, etc.).
+		 - Mantener alias backward-compatible durante transición (`--surface-base`, `--text-primary`, `--brand-accent`) para evitar ruptura masiva.
+
+2. **Hacer theme toggle determinista y observable.**
+	 - Tocar: `src/hooks/useTheme.ts`, `src/App.tsx`.
+	 - Acción:
+		 - Además de la clase `.dark`, setear `data-theme="dark|light"` en `document.documentElement`.
+		 - Exponer `resolvedTheme` desde un contexto simple de UI state (si aún no existe) para evitar `querySelector` y branches de tema en múltiples componentes.
+		 - Añadir protección SSR-safe (ya presente parcialmente) y sincronización con `matchMedia` sólo en modo `system`.
+
+3. **Introducir capa de utilidades de superficie (glass, border, glow).**
+	 - Tocar: `src/index.css`.
+	 - Acción:
+		 - Definir clases utilitarias estables (`.surface-glass`, `.surface-glass-hover`, `.border-spectral`, `.shadow-glow`).
+		 - Extraer transiciones globales para evitar `transition: all`; usar propiedades explícitas.
+
+4. **Preparar migración gradual a Tailwind tokens (sin big-bang).**
+	 - Tocar: `package.json`, nuevo `tailwind.config.ts` (si se decide activar Tailwind), `src/index.css`.
+	 - Acción:
+		 - Si el equipo adopta Tailwind en esta fase: instalar `tailwindcss`, mapear colores a CSS variables, activar `darkMode: 'class'`.
+		 - Si no: mantener estrategia CSS-first, pero con naming 1:1 listo para posterior mapeo.
+
+### Trade-offs / riesgos técnicos
+
+- **Riesgo de regresión visual** por renombre de variables: mitigación con alias temporales y checklist de pantallas críticas.
+- **Transiciones globales excesivas** pueden disparar repaints: limitar a elementos de superficie y excluir nodos calientes (`.cm-editor`, graph canvas).
+- **Tailwind migration scope creep:** si se mezcla refactor visual + framework al mismo tiempo, sube el riesgo de entrega tardía.
+
+### Impacto UX
+
+El usuario percibe consistencia inmediata entre vistas: misma jerarquía visual, misma semántica de estados y menor fatiga por cambios bruscos de contraste. El toggle de tema deja de sentirse “cosmético” y pasa a ser un cambio de materialidad confiable. Esta fase reduce deuda cognitiva para todo el roadmap posterior.
+
+### Coste estimado de implementación
+
+**Moderado**
 
 ---
 
-## FASE 3: Editor Zen & Tipografía (El Lienzo Respirable)
+## Fase 2 — Layout Core & Glassmorphism
 
-La zona neuro-crítica. Es el reactor primario de NovelDesktopCreation. Debe sentirse expansivo.
+### Objetivo
+Reestructurar shell y paneles para soportar dualidad Zen/God sin romper navegación ni penalizar render en equipos medios.
 
-**Pasos técnicos accionables:**
-1. **index.html o self-hosting de Assets**: Descargar e inyectar `Crimson Pro` (Variable Font) e `Inter` por preload `<link rel="preload">`. Cero Google Fonts bloqueantes. Usar `font-display: swap`.
-2. **theme.ts**: Inyectar extensiones al editor para re-escribir su hoja de estilo in-canvas. Forzar `leading-relaxed` (1.625 a 1.75), márgenes monstruosos (`max-w-3xl`, márgenes autoadaptables al viewport). 
-3. **`src/components/editor/EditorProperties.tsx`**: Crear el estilo para Títulos de Nivel 1. Subrayado base en línea `Cyan/30` en claro, y emisión de glow (`#00D4EE/40`) en modo oscuro.
+### Pasos técnicos accionables
 
-* **Trade-offs o riesgos técnicos:** Sincronizar clases de Tailwind con extensiones subyacentes del editor de Markdown (ProseMirror/CodeMirror) requiere manipulación DOM profunda. Una librería mal configurada puede colapsar el editor al superar las 15,000 palabras si los nodos tipográficos repintan ineficientemente.
-* **Impacto UX:** Erradicación del "síndrome del papel técnico". Escribir se vuelve una experiencia literaria instantánea; cada párrafo se acomoda a la retina sin exigir re-direccionamiento pesado del iris.
-* **Coste estimado de implementación:** Rápido (Visual core) / Moderado (Mapping de nodos del Editor).
+1. **Refactor del esqueleto de shell por capas de profundidad.**
+	 - Tocar: `src/components/layout/AppShell.tsx`, `src/index.css`.
+	 - Acción:
+		 - Separar niveles: `background layer` (ambient), `navigation layer`, `content layer`, `overlay layer`.
+		 - Definir clases de estado explícitas (`is-zen`, `is-god`, `is-dragging`) en raíz del shell para CSS predictivo.
+
+2. **Estandarizar App Bar glassmórfica y status pills.**
+	 - Tocar: `src/components/layout/WorkspaceHeader.tsx`, `src/index.css`.
+	 - Acción:
+		 - Migrar a una barra con `backdrop-filter` controlado, borde espectral y fallback sólido.
+		 - Unificar chips de navegación/búsqueda/contexto con un mismo sistema de hover/focus y contraste AA.
+
+3. **Sidebar e Inspector con ghosting progresivo y latencia visual baja.**
+	 - Tocar: `src/components/layout/Sidebar.tsx`, `src/components/panels/InspectorPanel.tsx`, `src/index.css`.
+	 - Acción:
+		 - Estados de opacidad por intención (`rest`, `hover`, `active`) y no por selector ad-hoc.
+		 - Usar `transform: translateX` para entradas/salidas; evitar animar `width` en paneles pesados.
+
+4. **Normalizar overlays del shell (Command Palette, Shortcuts, drag overlay).**
+	 - Tocar: `src/components/overlays/CommandPalette.tsx`, `src/components/overlays/ShortcutsOverlay.tsx`, `src/components/layout/AppShell.tsx`.
+	 - Acción:
+		 - Reusar misma superficie modal (`surface-float`) y misma política de `z-index`.
+		 - Evitar stacking bugs creando escala fija de z-layers documentada en CSS.
+
+### Trade-offs / riesgos técnicos
+
+- **`backdrop-filter` en múltiples paneles** puede subir uso de GPU y jank en scroll.
+	- Mitigación: limitar blur a 1–2 capas simultáneas y degradar a fondo opaco en hardware débil.
+- **Animaciones de paneles en layout denso** pueden gatillar reflow si se animan propiedades geométricas.
+	- Mitigación: sólo `transform/opacity` + `will-change` temporal.
+- **Complejidad de z-index** en overlays superpuestos.
+	- Mitigación: tokens de profundidad (`--z-nav`, `--z-popover`, `--z-modal`, `--z-toast`).
+
+### Impacto UX
+
+La interfaz deja de “pelear” con el texto: los paneles se sienten presentes cuando se necesitan e invisibles cuando estorban. El App Bar transmite estado global sin robar atención al lienzo. La consistencia de overlays reduce errores de orientación y mejora confianza del usuario experto.
+
+### Coste estimado de implementación
+
+**Moderado**
 
 ---
 
-## FASE 4: El Río Neuronal & Micro-interacciones (El Estado Máquina)
+## Fase 3 — Editor Zen & Tipografía
 
-Conectar la invocación `{{` y las transiciones macro (Zen vs God Mode). Aquí es donde el frontend cobra alma autómata.
+### Objetivo
+Convertir el editor en un lienzo de alto ancho de banda cognitivo: lectura prolongada cómoda, foco profundo y jerarquía tipográfica clara.
 
-**Pasos técnicos accionables:**
-1. **decorations.ts**: Implementar rastreo de cursor. Al detectar `{{`, calcular asíncronamente el bounding box (`x,y`) del *text-node* actual mediante Javascript puro acoplado al Framework.
-2. **CommandPalette.tsx (Adaptado para Popover {{)**: Usar un gestor de posicionamiento flotante (como `Floating UI` o equivalente nativo) para renderizar el menú de sugerencias con `Z-index: 100`, con CSS attributes de sombra abismal `shadow-2xl` y micro-borde luminiscente en dark mode.
-3. **request.ts y Editor**: Animar la respuesta. Todo texto insertado por la IA en stream gana un `border-r-2 border-[#00D4EE] animate-[blink_1s_infinite]` temporal.
-4. **ActionMenu.tsx (Botón The Switcher)**: Construir el `God Mode Pill`. Al pulsar, lanzar una transición orquestada usando `transform: scale() translate()` y `opacity` cruzada entre el componente Zen Editor y el Panel Relacional Tabular.
+### Pasos técnicos accionables
 
-* **Trade-offs o riesgos técnicos:** Calcular coordenadas (x,y) del cursor relativas al body puede desfasarse al hacer scroll o re-dimensionar la ventana. Usar estado React puro hiperactiva re-renders en teclado. Solución: Bypass de React, la extensión del editor actualizará un `DOM element` usando mutaciones directas y referencias, notificando a React con estrangulamiento (`throttle`).
-* **Impacto UX:** El usuario no detiene su escritura para usar la IA o ver metadatos. Lo invoca tangencialmente. El "Río Neuronal" recompensa visualmente su entrada de datos sin expulsarlo del contexto creativo.
-* **Coste estimado de implementación:** Alto (Seducción técnica extrema, requiere alta sincronización de estado y manipulación de coordenadas).
+1. **Separar tipografía narrativa vs tipografía estructural a nivel de layout.**
+	 - Tocar: `src/index.css`, `src/components/panels/EditorPanel.tsx`.
+	 - Acción:
+		 - Aplicar `--font-serif` a canvas narrativo (`title`, `body`, `preview`) y `--font-sans` a metadatos, tabs y controles.
+		 - Definir escala modular para `h1`, body y metadata con `clamp()` y line-height específico por modo.
+
+2. **Canvas expansivo con límites de legibilidad.**
+	 - Tocar: `src/components/panels/EditorPanel.tsx`, `src/index.css`.
+	 - Acción:
+		 - En Zen: anchura máxima de lectura (`max-width` controlado), márgenes respirables, reducción de ruido lateral.
+		 - En God: volver a densidad de información sin cambiar semántica de comandos del editor.
+
+3. **Ajustar tema de CodeMirror a tokens globales.**
+	 - Tocar: `src/components/editor/editorThemes.ts`, `src/components/editor/markdown/theme.ts`, `src/index.css`.
+	 - Acción:
+		 - Sustituir colores hardcode del editor por variables (`--text-body`, `--color-primary`, `--border-active`).
+		 - Garantizar contraste de cursor, selección y tokens markdown en ambos temas.
+
+4. **Unificar barra de metadatos inferior (Saved, words, reading time).**
+	 - Tocar: `src/components/editor/panel/EditorMetadata.tsx`, `src/index.css`.
+	 - Acción:
+		 - Usar pills de estado con feedback optimista y latencia visual baja (`saved` aparece inmediato, persistencia real continúa off-thread).
+
+### Trade-offs / riesgos técnicos
+
+- **Tipografía grande + line-height alto** mejora lectura, pero reduce densidad de edición para power users.
+	- Mitigación: escala adaptable por modo, no por preferencia global.
+- **CodeMirror theming profundo** puede introducir inconsistencias entre extensiones.
+	- Mitigación: snapshot visual de estados críticos (selección, hover, referencia, suggestion-active).
+- **Canvas muy ancho** fatiga micro-sacadas oculares.
+	- Mitigación: ancho óptimo fijo en Zen, no full-bleed real.
+
+### Impacto UX
+
+El usuario entra en flujo con menos saltos atencionales y menos fricción perceptiva entre lectura y edición. La tipografía deja de ser decoración y pasa a ser una interfaz cognitiva. En sesiones largas, se reduce fatiga visual y mejora el ritmo de escritura sostenida.
+
+### Coste estimado de implementación
+
+**Moderado / Alto**
 
 ---
 
-## AUDITORÍA ARIS: Checklist de Performance y Accesibilidad Final
+## Fase 4 — El Río Neuronal & Micro-interacciones
 
-Ningún componente pasará a main si incumple este protocolo. La belleza visual que sacrifica la fluidez es un crimen arquitectónico.
+### Objetivo
+Implementar interacciones de alto valor narrativo (`{{}}`, streaming, transición Zen↔God) con precisión posicional y presupuesto estricto de frame time.
 
-### ⚡ Performance & Engine Check
-- [ ] **TTFB y FCP Sagrados:** La carga inicial visual (*First Contentful Paint*) no depende de hidratación de estados complejos de React. La estructura base y texturas cargan con el puro HTML + CSS generado.
-- [ ] **Aislamiento de Pintura (Layer Promotion):** Todo panel flotante (`CommandPalette`, `Sidebar` si es colapsable) y popovers mágicos `{{}}` poseen `will-change: transform, opacity` para empujar a la GPU. **Nunca** animar `top`, `left`, `width` o `height`.  
-- [ ] **DOM Throttling en AI Streaming:** Durante una generación de texto masiva por IA, los `decorations` del cursor actúan fuera del árbol reactivo mediante manipulaciones DOM optimizadas (CodeMirror/ProseMirror Plugins) para evitar colapsar los frames a < 20fps.
-- [ ] **Carga de Tipografías Oculta (FOIT prevention):** `font-display: swap` en activo. Se utiliza subsetting vectorial (woff2 purgado a latin chars esenciales) limitando los requests tipográficos < 80kb totales.
+### Pasos técnicos accionables
 
-### 🛡️ Accesibilidad (La Empatía Real)
-- [ ] **Ratios WCAG Blindados:** El `--text-body` Dark (`#CBD5E1`) sobre base `--color-obsidian` (`#08111F`) arroja un score riguroso superior a 9:1. El glow Cyan jamás diluye legibilidad. No hay excusas matemáticas.
-- [ ] **Micro-interacciones Seguras (Vestibular check):** Si el navegador clama `prefers-reduced-motion: reduce`, la constante de transición cinematográfica pasa instintivamente a `0ms`. El Popover *aparece*, no *flota*.
-- [ ] **Foco Cíclico Inquebrantable:** El teclado no es un ciudadano de segunda. Todos los botones fantasma y paneles flotantes ganan un contorno imperativo al ser enfocados (`focus-visible:ring-2 focus:ring-[#00D4EE]/25`).
-- [ ] **Screen Readers & Cortisol:** Todo Streaming de IA utiliza anclajes ARIA como `aria-live="polite"` o `assertive` para notificar cuándo la Inteligencia comenzó, y cuándo detuvo su torrente creador, mitigando la ansiedad de las herramientas no-deterministas.
+1. **Popover neural `{{` con anclaje robusto al caret.**
+	 - Tocar: `src/components/panels/EditorPanel.tsx`, `src/components/editor/panel/EditorSuggestions.tsx`, `src/index.css`.
+	 - Acción:
+		 - Reutilizar la lógica existente de `coordsAtPos` y endurecerla contra resize/scroll/viewport shifts.
+		 - Mover cálculo pesado a `requestAnimationFrame` + throttling por frame.
+		 - Definir variante visual dark con borde cyan + glow sutil, sin depender sólo de color para selección.
+
+2. **Streaming IA con señales de estado no intrusivas.**
+	 - Tocar: `src/components/editor/panel/EditorHeader.tsx`, `src/components/editor/panel/EditorMetadata.tsx`, `src/components/inspector/InspectorAssistantComposer.tsx`, `src/index.css`.
+	 - Acción:
+		 - Cursor de streaming (`blink`) y botón `Abort` con jerarquía clara de riesgo.
+		 - Estado `idle/saving/saved/streaming/error` visible en un único canal visual consistente.
+
+3. **Transición Zen ↔ God como cambio de densidad, no cambio de app.**
+	 - Tocar: `src/components/layout/AppShell.tsx`, `src/components/panels/EditorPanel.tsx`, `src/index.css`.
+	 - Acción:
+		 - Añadir coreografía de 200–300ms: collapse/expand de paneles por `transform + opacity`.
+		 - Evitar remount de paneles críticos para no perder estado de scroll o foco.
+
+4. **Política de motion/accessibility para micro-interacciones.**
+	 - Tocar: `src/index.css`.
+	 - Acción:
+		 - `@media (prefers-reduced-motion: reduce)` con desactivación de pulses/blinks decorativos.
+		 - `@media (forced-colors: active)` con fallback de bordes y eliminación de blur no legible.
+
+### Trade-offs / riesgos técnicos
+
+- **Anclaje de popover al caret** es sensible a zoom, scroll anidado y fuentes variables.
+	- Mitigación: pruebas en breakpoints y validación en Windows scaling 125%/150%.
+- **Demasiada animación simultánea** puede romper 60fps durante streaming.
+	- Mitigación: priorizar señal funcional sobre ornamento; no más de una animación prominente por zona.
+- **Glow/shadow acumulativos** en dark pueden encarecer composición.
+	- Mitigación: reducir blur radius y aplicar glow solo a foco activo.
+
+### Impacto UX
+
+La IA deja de sentirse como proceso externo y se integra al flujo mental del autor sin invadir su atención. El popover `{{` se vuelve un gesto natural de memoria asistida, no un modal disruptivo. El salto Zen/God comunica poder de control sin romper continuidad emocional de la escritura.
+
+### Coste estimado de implementación
+
+**Alto**
+
+---
+
+## Orden recomendado de entrega (sprints)
+
+1. **Sprint A (1–1.5 semanas):** Fase 1 completa + smoke visual en editor y header.
+2. **Sprint B (1–2 semanas):** Fase 2 completa + overlays unificados + deuda de z-index cerrada.
+3. **Sprint C (1.5–2 semanas):** Fase 3 con focus en editor + CodeMirror theme semántico.
+4. **Sprint D (2 semanas):** Fase 4 completa + hardening de performance/accesibilidad + polishing.
+
+Dependencia crítica: no iniciar Fase 4 sin tokens y layout estabilizados (Fase 1/2), o se duplica retrabajo.
+
+---
+
+## Auditoría Final — Performance y Accesibilidad (Gate de release)
+
+### A. Performance (no degradar TTFB ni rendering)
+
+- [ ] **TTFB** no se altera por cambios de UI (confirmar que no se agregaron cargas bloqueantes en bootstrap).
+- [ ] **FCP/LCP** en arranque no empeoran >10% frente a baseline actual.
+- [ ] **Interacciones clave** (`Ctrl+K`, toggle Zen/God, abrir inspector, `{{` popover) responden en <100ms percibidos.
+- [ ] **Frame budget**: transiciones se sostienen cerca de 60fps en hardware medio (sin picos prolongados >16ms).
+- [ ] **Blur/glass budget**: máximo 2 superficies con `backdrop-filter` activas en simultáneo.
+- [ ] **CodeMirror hot path** libre de transiciones globales costosas (`background`, `box-shadow`) en cada repaint.
+- [ ] **Graph panel** aislado de transiciones de tema global para evitar jank en canvas/WebGL.
+
+### B. Accesibilidad (no negociable)
+
+- [ ] Contraste mínimo **AA 4.5:1** en body text y controles interactivos principales.
+- [ ] Focus visible consistente en light/dark con `:focus-visible` real (sin eliminar outline sin reemplazo).
+- [ ] Navegación completa por teclado en header, sidebars, palette, popover de sugerencias y modales.
+- [ ] `prefers-reduced-motion` desactiva animaciones no esenciales sin romper feedback de estado.
+- [ ] `forced-colors: active` mantiene bordes/labels legibles y neutraliza superficies glass no interpretables.
+- [ ] Estados de sistema (`saving/saved/error/streaming`) no dependen exclusivamente del color.
+
+### C. Calidad operativa
+
+- [ ] Checklist visual comparativa Light (Parchment) vs Dark (Obsidian) en vistas: onboarding, editor, graph, inspector, command palette.
+- [ ] E2E smoke actualizado para validar apertura del editor, navegación de paneles y estado base de tema.
+- [ ] Documentación de tokens y capas de layout actualizada en `docs/` antes de cerrar milestone.
+
+---
+
+## Veredicto operativo
+
+Este plan minimiza retrabajo porque ataca primero la semántica (tokens + estado de tema), luego la estructura (layout), después el corazón cognitivo (editor), y finalmente el brillo neuronal (micro-interacciones). El resultado esperado no es “una UI más bonita”; es una interfaz que reduce decisiones inútiles por minuto y sostiene sesiones creativas largas con menor fricción mental.
+
+**Impacto UX:** El usuario percibe continuidad, control y calma en cada transición; escribir vuelve a sentirse primario y administrar complejidad se vuelve secundario, como debe ser. La dualidad Zen/God deja de ser un toggle y se convierte en un lenguaje operacional.
+
+**Coste estimado de implementación:** **Moderado → Alto** (según profundidad de Fase 4 y migración opcional a Tailwind).
