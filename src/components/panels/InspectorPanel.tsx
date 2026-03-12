@@ -84,7 +84,7 @@ export const InspectorPanel = memo(function InspectorPanel({
   }
 
   return (
-    <aside className="inspector-column">
+    <aside className="inspector-column ghosting-panel">
       <div className="inspector-sticky-head">
         <div className="panel-dock-header panel-dock-header-right">
           <button type="button" className="panel-dock-toggle" aria-label="Ocultar contexto" onClick={onCollapse}>

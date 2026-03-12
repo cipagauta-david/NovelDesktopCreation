@@ -347,6 +347,8 @@ label {
 }
 
 .app-shell {
+  position: relative;
+  isolation: isolate;
   height: 100vh;
   min-height: 100vh;
   display: flex;
@@ -354,6 +356,21 @@ label {
   gap: 0.75rem;
   padding: 0.75rem;
   overflow: hidden;
+  background-color: transparent;
+  background-image:
+    radial-gradient(circle at 16% 8%, rgba(99, 102, 241, 0.05), transparent 36%),
+    radial-gradient(circle at 84% 86%, rgba(14, 165, 233, 0.05), transparent 32%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size: auto, auto, 220px 220px;
+  background-repeat: no-repeat, no-repeat, repeat;
+}
+
+:root.dark .app-shell {
+  background-image:
+    radial-gradient(ellipse at 15% 5%, rgba(0, 212, 238, 0.06), transparent 42%),
+    radial-gradient(ellipse at 85% 90%, rgba(99, 102, 241, 0.08), transparent 36%),
+    linear-gradient(180deg, rgba(8, 17, 31, 0.95), rgba(8, 17, 31, 1));
+  background-size: auto, auto, auto;
 }
 
 .workspace-stage {
@@ -371,6 +388,20 @@ label {
   border: 1px solid rgba(148, 163, 184, 0.08);
   border-radius: 24px;
   background: rgba(8, 14, 25, 0.72);
+}
+
+.workspace-header {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(246, 244, 239, 0.6);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03);
+}
+
+:root.dark .workspace-header {
+  background: rgba(14, 26, 46, 0.75);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 1px 0 rgba(0, 212, 238, 0.08);
 }
 
 .workspace-header-shell {
@@ -417,14 +448,14 @@ label {
 
 .workspace-project-meta strong {
   font-size: 0.98rem;
-  color: #f8fafc;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .workspace-project-meta small {
-  color: rgba(159, 176, 201, 0.72);
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -454,7 +485,7 @@ label {
 }
 
 .workspace-status {
-  color: #9fb0c9;
+  color: var(--text-secondary);
   font-size: 0.74rem;
   white-space: nowrap;
 }
@@ -464,7 +495,9 @@ label {
   min-width: 144px;
   padding: 0.45rem 0.8rem;
   border-radius: 999px;
-  background: rgba(17, 24, 39, 0.68);
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: var(--text-primary);
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
@@ -472,7 +505,7 @@ label {
 }
 
 .search-trigger small {
-  color: #8ea0b9;
+  color: var(--text-secondary);
 }
 
 .search-trigger.active {
@@ -485,16 +518,38 @@ label {
   gap: 0.35rem;
   padding: 0.26rem;
   border-radius: 16px;
-  background: rgba(14, 23, 38, 0.78);
+  background: rgba(15, 23, 42, 0.06);
   border: 0;
-  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
 }
 
 .segmented-control button {
   padding: 0.5rem 0.85rem;
   border: 0;
   background: transparent;
-  color: #91a4bf;
+  color: var(--text-secondary);
+}
+
+:root.dark .workspace-project-meta strong {
+  color: #f8fafc;
+}
+
+:root.dark .workspace-project-meta small,
+:root.dark .workspace-status,
+:root.dark .search-trigger small,
+:root.dark .segmented-control button {
+  color: #9fb0c9;
+}
+
+:root.dark .search-trigger {
+  background: rgba(17, 24, 39, 0.68);
+  border-color: rgba(148, 163, 184, 0.12);
+  color: #f8fafc;
+}
+
+:root.dark .segmented-control {
+  background: rgba(14, 23, 38, 0.78);
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.06);
 }
 
 .segmented-control .active {
@@ -726,6 +781,23 @@ label {
 .inspector-column {
   display: grid;
   gap: 0.75rem;
+}
+
+.ghosting-panel {
+  opacity: 0.3;
+  transition:
+    opacity 300ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ghosting-panel:hover,
+.ghosting-panel:focus-within {
+  opacity: 1;
+  filter: saturate(1);
+}
+
+:root.dark .ghosting-panel {
+  opacity: 0.2;
 }
 
 .sidebar,
@@ -1726,6 +1798,22 @@ svg {
   border-radius: 24px;
   background: rgba(8, 14, 25, 0.72);
   border: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+:root.dark .inspector-column {
+  background: rgba(14, 26, 46, 0.72);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-header {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .ghosting-panel {
+    transition-duration: 0ms;
+  }
 }
 
 .inspector-sticky-head {

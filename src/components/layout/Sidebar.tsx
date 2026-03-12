@@ -44,7 +44,7 @@ export const Sidebar = memo(function Sidebar({
   const [showProjectForm, setShowProjectForm] = useState(false)
 
   return (
-    <aside className="sidebar sidebar-compact">
+    <aside className="sidebar sidebar-compact ghosting-panel">
       <div className="sidebar-identity">
         <span className="eyebrow">Espacio narrativo</span>
         <strong>{settings.authorName}</strong>
