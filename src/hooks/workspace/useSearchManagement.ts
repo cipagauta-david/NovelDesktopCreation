@@ -20,7 +20,7 @@ export function useSearchManagement(
   // Off-main-thread FTS search (índice invertido BM25)
   useEffect(() => {
     if (!activeProject || !searchQuery.trim() || !worker) {
-      setSearchResults([])
+      queueMicrotask(() => setSearchResults([]))
       return
     }
     

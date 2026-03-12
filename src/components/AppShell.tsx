@@ -24,7 +24,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   const hasInspectorPanel = !zenMode && workspace.panels.inspector
 
   // Destructure stable callbacks to avoid re-running effect on every render
-  const { togglePanel } = workspace
+  const { togglePanel, panels, selectEntity, attachImages } = workspace
 
   useEffect(() => {
     function handleKeydown(e: KeyboardEvent) {
@@ -46,13 +46,13 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   }, [searchPaletteOpen, shortcutsOpen, togglePanel, zenMode])
 
   const handleToggleNav = useCallback(() => {
-    if (workspace.panels.sidebar || workspace.panels.entities) {
-      if (workspace.panels.sidebar) togglePanel('sidebar')
-      if (workspace.panels.entities) togglePanel('entities')
+    if (panels.sidebar || panels.entities) {
+      if (panels.sidebar) togglePanel('sidebar')
+      if (panels.entities) togglePanel('entities')
     } else { togglePanel('sidebar'); togglePanel('entities') }
-  }, [workspace.panels.sidebar, workspace.panels.entities, togglePanel])
+  }, [panels.sidebar, panels.entities, togglePanel])
 
-  const handleSelectResult = useCallback((entityId: string, tabId: string) => { workspace.selectEntity(entityId, tabId); setSearchPaletteOpen(false) }, [workspace.selectEntity])
+  const handleSelectResult = useCallback((entityId: string, tabId: string) => { selectEntity(entityId, tabId); setSearchPaletteOpen(false) }, [selectEntity])
   const handleGlobalDrop = useCallback((event: DragEvent<HTMLElement>) => {
     event.preventDefault()
     setGlobalDragging(false)
@@ -60,13 +60,13 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
     if (!files || files.length === 0) {
       return
     }
-    void workspace.attachImages(files)
-  }, [workspace.attachImages])
+    void attachImages(files)
+  }, [attachImages])
 
   const handleGraphSelectEntity = useCallback((eId: string, tId: string) => {
-    workspace.selectEntity(eId, tId)
-    if (!zenMode && !workspace.panels.inspector) togglePanel('inspector')
-  }, [workspace.selectEntity, zenMode, workspace.panels.inspector, togglePanel])
+    selectEntity(eId, tId)
+    if (!zenMode && !panels.inspector) togglePanel('inspector')
+  }, [selectEntity, zenMode, panels.inspector, togglePanel])
 
   if (!workspace.onboardingReady) return <OnboardingScreen onSubmit={workspace.completeOnboarding} />
 

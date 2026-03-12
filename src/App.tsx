@@ -14,20 +14,20 @@ function App() {
     try {
       if (typeof worker.loadState !== 'function') {
         console.error('[App] Worker proxy inválido: loadState no es una función')
-        setInitialData(getDefaultPersistedState())
+        queueMicrotask(() => setInitialData(getDefaultPersistedState()))
         return
       }
 
       worker.loadState().then((saved) => {
-        setInitialData(saved ?? getDefaultPersistedState())
+        queueMicrotask(() => setInitialData(saved ?? getDefaultPersistedState()))
       }).catch((err: unknown) => {
         console.error('[App] Fallo recuperando data, inicializando fallback', err)
-        setInitialData(getDefaultPersistedState())
+        queueMicrotask(() => setInitialData(getDefaultPersistedState()))
       })
-    } catch (err) {
-      console.error('[App] Error síncrono inicializando worker state, fallback activado', err)
-      setInitialData(getDefaultPersistedState())
-    }
+      } catch (err) {
+        console.error('[App] Error síncrono inicializando worker state, fallback activado', err)
+        queueMicrotask(() => setInitialData(getDefaultPersistedState()))
+      }
   }, [worker, isReady])
 
   if (!worker || !initialData) {

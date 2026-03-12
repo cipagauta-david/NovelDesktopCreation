@@ -62,6 +62,8 @@ export function useWorkspace(
     setToast,
   )
 
+  const setPendingProposal = aiManagement.setPendingProposal
+
   // Motor de persistencia optimista con el worker
   usePersistenceManagement(activeProject, activeEntity, draft, setData, setSaveStatus, saveStatus, worker)
 
@@ -107,9 +109,11 @@ export function useWorkspace(
 
   // Persist graph layouts alongside data
   useEffect(() => {
-    setData((current) => {
-      if (JSON.stringify(current.graphLayouts ?? {}) === JSON.stringify(graphLayouts)) return current
-      return { ...current, graphLayouts }
+    queueMicrotask(() => {
+      setData((current) => {
+        if (JSON.stringify(current.graphLayouts ?? {}) === JSON.stringify(graphLayouts)) return current
+        return { ...current, graphLayouts }
+      })
     })
   }, [graphLayouts])
 
@@ -140,10 +144,10 @@ export function useWorkspace(
   const clearWorkspace = useCallback(() => {
     // TODO: delegate to worker reset
     setSearchQuery('')
-    aiManagement.setPendingProposal(null)
+    setPendingProposal(null)
     setPanels(defaultPanels)
     setToast('Workspace reiniciado.')
-  }, [setSearchQuery, aiManagement.setPendingProposal, setToast])
+  }, [setSearchQuery, setPendingProposal, setToast])
 
   const togglePanel = useCallback((panel: PanelKey) => setPanels((c) => ({ ...c, [panel]: !c[panel] })), [])
 

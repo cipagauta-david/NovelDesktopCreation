@@ -7,7 +7,13 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ci": "playwright test --reporter=dot",
+    "test": "npm run lint && npm run test:e2e:ci",
+    "test:report": "playwright test --reporter=html && playwright show-report",
+    "test:inspect": "playwright test --debug"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.1",

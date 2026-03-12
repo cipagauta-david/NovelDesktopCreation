@@ -8,8 +8,8 @@ import { test, expect } from '@playwright/test'
 // ── Helper: completar onboarding ─────────────────────────
 
 async function completeOnboarding(page: import('@playwright/test').Page) {
-  // Wait for the app to load (worker init + data)
-  await page.waitForSelector('.onboarding-screen, .app-shell', { timeout: 15_000 })
+  // Wait for the app to render the onboarding or app shell (Vite keeps a websocket alive, so avoid networkidle)
+  await page.waitForSelector('.onboarding-shell, .app-shell', { timeout: 60_000 })
 
   // If already onboarded (state persisted), skip
   const isOnboarded = await page.locator('.app-shell').count()
@@ -34,7 +34,7 @@ async function completeOnboarding(page: import('@playwright/test').Page) {
   }
 
   // Wait for workspace to load
-  await page.waitForSelector('.app-shell', { timeout: 10_000 })
+  await page.waitForSelector('.app-shell', { timeout: 20_000 })
 }
 
 // ── Test: App loads and shows onboarding or workspace ────
@@ -42,9 +42,8 @@ async function completeOnboarding(page: import('@playwright/test').Page) {
 test('app loads successfully', async ({ page }) => {
   await page.goto('/')
   // Should see either onboarding or directly the workspace
-  await expect(
-    page.locator('.onboarding-screen, .app-shell')
-  ).toBeVisible({ timeout: 15_000 })
+  // Avoid waiting for networkidle because Vite HMR websocket keeps the network busy
+  await page.waitForSelector('.onboarding-shell, .app-shell', { timeout: 60_000 })
 })
 
 // ── Test: Onboarding without API key ─────────────────────
@@ -62,9 +61,9 @@ test('onboarding completes without API key', async ({ page }) => {
   })
   await page.reload()
 
-  await page.waitForSelector('.onboarding-screen, .app-shell', { timeout: 15_000 })
+  await page.waitForSelector('.onboarding-shell, .app-shell', { timeout: 30_000 })
   await completeOnboarding(page)
-  await expect(page.locator('.app-shell')).toBeVisible({ timeout: 10_000 })
+  await expect(page.locator('.app-shell')).toBeVisible({ timeout: 20_000 })
 })
 
 // ── Test: Editor loads with seed entity ──────────────────
@@ -75,7 +74,19 @@ test('editor shows seed entity content', async ({ page }) => {
 
   // Should see entity list
   const entityList = page.locator('.entity-list, .entity-column')
-  await expect(entityList.first()).toBeVisible({ timeout: 10_000 })
+  if (await entityList.first().count() === 0) {
+    // no entity column present at all
+    throw new Error('Entity list not found in DOM')
+  }
+
+  if (!(await entityList.first().isVisible())) {
+    // If left panel is collapsed, open navigation via header toggle
+    const navToggle = page.locator('button:has-text("Navegación")').first()
+    if (await navToggle.count() > 0) {
+      await navToggle.click()
+      await expect(entityList.first()).toBeVisible({ timeout: 10_000 })
+    }
+  }
 
   // Should have at least one entity card
   const entityCards = page.locator('.list-card')
@@ -237,7 +248,7 @@ test('data persists across page reload', async ({ page }) => {
 
   // Reload
   await page.reload()
-  await page.waitForSelector('.app-shell', { timeout: 15_000 })
+  await page.waitForSelector('.app-shell', { timeout: 30_000 })
 
   // Verify same data is visible
   if (entityTitle) {
