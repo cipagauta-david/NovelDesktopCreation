@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import type { SearchResult } from '../../types/workspace'
+import type { Project, SearchResult } from '../../types/workspace'
 import type { AppWorker } from '../../data/worker'
 import * as Comlink from 'comlink'
 
 export function useSearchManagement(
-  activeProject: any,
+  activeProject: Project | undefined,
   worker: Comlink.Remote<AppWorker> | null
 ) {
   const [searchQuery, setSearchQuery] = useState('')
@@ -13,15 +13,14 @@ export function useSearchManagement(
   // Off-main-thread search (Simulador de FTS5)
   useEffect(() => {
     if (!activeProject || !searchQuery.trim() || !worker) {
-      setSearchResults([])
       return
     }
     
     // Delegamos la búsqueda al worker
     const timeoutId = setTimeout(() => {
-      const activeEntities = activeProject.entities.filter((e: any) => e.status === 'active')
+      const activeEntities = activeProject.entities.filter((e) => e.status === 'active')
       worker.searchEntities(searchQuery, activeEntities)
-        .then((results: any[]) => {
+        .then((results) => {
            const mapped = results.map((entity) => ({
              entityId: entity.id,
              tabId: entity.tabId,
@@ -37,9 +36,11 @@ export function useSearchManagement(
     return () => clearTimeout(timeoutId)
   }, [activeProject, searchQuery, worker])
   
+  const visibleSearchResults = searchQuery.trim() ? searchResults : []
+
   return {
     searchQuery,
     setSearchQuery,
-    searchResults
+    searchResults: visibleSearchResults
   }
 }

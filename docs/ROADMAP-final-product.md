@@ -17,7 +17,8 @@ Estado a 2026-03-12, basado en implementación real del repositorio.
 ### Fase A — Estabilización funcional (inmediata)
 - [ ] Endurecer manejo de errores/red en llamadas LLM y trazas UX por proveedor.
 - [ ] Agregar tests de humo E2E (onboarding → edición → autosave → recarga).
-- [ ] Normalizar lint de hooks/refs en módulos legacy para tener CI verde consistente.
+- [x] Normalizar lint de hooks/refs en módulos legacy para tener CI verde consistente.
+- [x] Validación manual no-IA con Playwright (onboarding sin API key, editor, Ctrl/Cmd+click entre tabs y mapa dinámico).
 
 ### Fase B — Motor de datos definitivo
 - [ ] Activar SQLite WASM + índices FTS5 reales en worker.

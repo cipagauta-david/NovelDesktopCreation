@@ -6,32 +6,41 @@ import type { AppWorker } from '../data/worker'
 let workerProxyCache: Comlink.Remote<AppWorker> | null = null
 
 export function useAppWorker() {
-  const [worker, setWorker] = useState<Comlink.Remote<AppWorker> | null>(() => workerProxyCache)
   const [isReady, setIsReady] = useState(() => !!workerProxyCache)
+  const [worker] = useState<Comlink.Remote<AppWorker> | null>(() => {
+    if (workerProxyCache) {
+      return workerProxyCache
+    }
+
+    const rawWorker = new Worker(new URL('../data/worker.ts', import.meta.url), {
+      type: 'module',
+    })
+    const proxy = Comlink.wrap<AppWorker>(rawWorker)
+    workerProxyCache = proxy
+    return proxy
+  })
 
   useEffect(() => {
-    if (workerProxyCache) {
+    if (!worker) {
       return
     }
 
-    // Instancia limpia del Web Worker nativo de Vite
-    const rawWorker = new Worker(new URL('../data/worker.ts', import.meta.url), {
-      type: 'module'
-    })
+    let cancelled = false
+    worker
+      .init()
+      .then(() => {
+        if (!cancelled) {
+          setIsReady(true)
+        }
+      })
+      .catch((err: unknown) => {
+        console.error('[Worker Error] Fallo al inicializar motor', err)
+      })
 
-    const proxy = Comlink.wrap<AppWorker>(rawWorker)
-
-    workerProxyCache = proxy
-    setWorker(() => proxy)
-    
-    // Inicializar DB off-thread si es necesario
-    proxy.init().then(() => {
-      setIsReady(true)
-    }).catch((err: unknown) => {
-      console.error('[Worker Error] Fallo al inicializar motor', err)
-      // Fallback fallback ...
-    })
-  }, [])
+    return () => {
+      cancelled = true
+    }
+  }, [worker])
 
   return { worker, isReady }
 }
