@@ -334,8 +334,8 @@ label {
 }
 
 .workspace-header-shell {
-  overflow: hidden;
-  max-height: 88px;
+  overflow: visible; /* Cambiado de hidden para permitir sombras y bordes */
+  max-height: 200px;
   opacity: 1;
   transform: translateY(0);
   transition:
@@ -353,13 +353,13 @@ label {
 }
 
 .workspace-header {
-  display: grid;
-  grid-template-columns: minmax(240px, 1fr) auto;
-  gap: 0.75rem;
+  display: flex; /* Cambiado a flex para mejor manejo de espacio */
+  justify-content: space-between;
+  gap: 1.5rem;
   align-items: center;
-  min-height: 52px;
-  padding: 0.45rem 0.7rem;
-  border-radius: 18px;
+  min-height: 72px;
+  padding: 0.8rem 1.5rem;
+  border-radius: 20px;
 }
 
 .workspace-header-title {
