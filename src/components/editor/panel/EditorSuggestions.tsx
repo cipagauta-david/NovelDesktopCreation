@@ -15,9 +15,18 @@ export function EditorSuggestions({ active, options, style, onInsertReference }:
   }
 
   return (
-    <div className="suggestions-popover floating-suggestions-popover" style={style}>
-      {options.map((option) => (
-        <button key={option.id} type="button" onClick={() => onInsertReference(option)}>
+    <div className="suggestions-popover floating-suggestions-popover" style={style} role="listbox" aria-label="Sugerencias de referencias">
+      <div className="suggestions-popover-title">Suggestions</div>
+      {options.map((option, index) => (
+        <button
+          key={option.id}
+          type="button"
+          role="option"
+          aria-selected={index === 0}
+          className={index === 0 ? 'suggestion-item active' : 'suggestion-item'}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => onInsertReference(option)}
+        >
           <strong>{option.title}</strong>
           <span>{option.aliases.join(', ') || 'Sin aliases'}</span>
         </button>

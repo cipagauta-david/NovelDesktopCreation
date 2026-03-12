@@ -14,7 +14,7 @@ import { EditorView, type ViewUpdate } from '@codemirror/view'
 import CodeMirror from '@uiw/react-codemirror'
 
 import type { EditorMode } from '../../types/editor'
-import type { DraftState, EntityRecord, EntityTemplate, FieldValue } from '../../types/workspace'
+import type { DraftState, EntityRecord, EntityTemplate, FieldValue, LlmStreamStatus } from '../../types/workspace'
 import { PanelSection } from '../common/PanelSection'
 import {
   type EntityHoverPayload,
@@ -41,6 +41,7 @@ type EditorPanelProps = {
   referenceSuggestionActive: boolean
   suggestionOptions: EntityRecord[]
   saveStatus: 'idle' | 'saving' | 'saved'
+  streamStatus: LlmStreamStatus
   zenMode: boolean
   onOpenEntity: (entityId: string, tabId?: string) => void
   onDraftChange: (next: DraftState) => void
@@ -67,6 +68,7 @@ export function EditorPanel({
   referenceSuggestionActive,
   suggestionOptions,
   saveStatus,
+  streamStatus,
   zenMode,
   onOpenEntity,
   onDraftChange,
@@ -131,6 +133,7 @@ export function EditorPanel({
     [ghostTextProvider, handleEntityHover, hideEntityHover, handleReferenceNavigation],
   )
   const hoveredEntity = hoveredReference ? (entityById.get(hoveredReference.entityId) ?? null) : null
+  const isAiStreaming = streamStatus === 'streaming'
 
   function handleCursorActivity(selectionEnd: number | null) {
     setCursorPosition(Math.max(selectionEnd ?? 0, 0))
@@ -191,18 +194,29 @@ export function EditorPanel({
       return
     }
 
+    const estimatePopoverHeight = () => {
+      const rows = Math.min(suggestionOptions.length, 5)
+      return 52 + rows * 48
+    }
+
     const updatePosition = () => {
       const caret = view.coordsAtPos(view.state.selection.main.head)
       const laneRect = lane.getBoundingClientRect()
       const fallbackTop = 24
       const fallbackLeft = 24
+      const estimatedHeight = estimatePopoverHeight()
+
       if (!caret) {
         setSuggestionsStyle({ top: fallbackTop, left: fallbackLeft, width: Math.min(420, laneRect.width - 48) })
         return
       }
 
       const nextLeft = Math.max(20, Math.min(caret.left - laneRect.left - 12, laneRect.width - 380))
-      const nextTop = Math.max(20, caret.bottom - laneRect.top + 12)
+      const lowerTop = Math.max(20, caret.bottom - laneRect.top + 12)
+      const canFitBelow = lowerTop + estimatedHeight <= laneRect.height - 12
+      const upperTop = Math.max(12, caret.top - laneRect.top - estimatedHeight - 12)
+      const nextTop = canFitBelow ? lowerTop : upperTop
+
       setSuggestionsStyle({
         top: nextTop,
         left: nextLeft,
@@ -210,14 +224,36 @@ export function EditorPanel({
       })
     }
 
+    let rafId = 0
+    const requestPositionUpdate = () => {
+      if (rafId !== 0) {
+        return
+      }
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0
+        updatePosition()
+      })
+    }
+
     updatePosition()
     const scrollTarget = view.scrollDOM
-    window.addEventListener('resize', updatePosition)
-    scrollTarget.addEventListener('scroll', updatePosition, { passive: true })
+    window.addEventListener('resize', requestPositionUpdate)
+    window.addEventListener('scroll', requestPositionUpdate, { passive: true, capture: true })
+    scrollTarget.addEventListener('scroll', requestPositionUpdate, { passive: true })
+    lane.addEventListener('scroll', requestPositionUpdate, { passive: true })
+    window.visualViewport?.addEventListener('resize', requestPositionUpdate)
+    window.visualViewport?.addEventListener('scroll', requestPositionUpdate)
 
     return () => {
-      window.removeEventListener('resize', updatePosition)
-      scrollTarget.removeEventListener('scroll', updatePosition)
+      if (rafId !== 0) {
+        window.cancelAnimationFrame(rafId)
+      }
+      window.removeEventListener('resize', requestPositionUpdate)
+      window.removeEventListener('scroll', requestPositionUpdate, true)
+      scrollTarget.removeEventListener('scroll', requestPositionUpdate)
+      lane.removeEventListener('scroll', requestPositionUpdate)
+      window.visualViewport?.removeEventListener('resize', requestPositionUpdate)
+      window.visualViewport?.removeEventListener('scroll', requestPositionUpdate)
     }
   }, [cursorPosition, editorMode, editorViewRef, referenceSuggestionActive, suggestionOptions.length])
 
@@ -351,7 +387,19 @@ export function EditorPanel({
         </div>
       }
     >
-      <div ref={writingLaneRef} className={zenMode ? 'writing-lane zen-writing-lane' : 'writing-lane'}>
+      <div
+        ref={writingLaneRef}
+        className={[
+          zenMode ? 'writing-lane zen-writing-lane' : 'writing-lane',
+          isAiStreaming ? 'ai-streaming' : '',
+        ].filter(Boolean).join(' ')}
+        aria-live="polite"
+        aria-busy={isAiStreaming || undefined}
+      >
+        <span className="visually-hidden">
+          {isAiStreaming ? 'La inteligencia artificial está generando contenido.' : 'La generación de inteligencia artificial está detenida.'}
+        </span>
+
         {editorSurface}
 
         <EditorSuggestions

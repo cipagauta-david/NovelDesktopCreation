@@ -54,7 +54,7 @@ export function EditorHeader({
         <button className="ghost-button" type="button" onClick={onGenerateAiProposal}>
           Sugerencia IA
         </button>
-        <button className="ghost-button" type="button" onClick={onToggleZenMode}>
+        <button className="ghost-button mode-switch-pill" type="button" onClick={onToggleZenMode}>
           {zenMode ? 'Salir de foco' : 'Modo foco'}
         </button>
         <ActionMenu
