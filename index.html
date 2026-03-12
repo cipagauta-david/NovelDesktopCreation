@@ -9,7 +9,10 @@
         try {
           const storedTheme = localStorage.getItem('ndc-theme')
           const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-          const useDark = storedTheme === 'dark' || (storedTheme !== 'light' && prefersDark)
+          const useDark =
+            storedTheme === 'dark' ||
+            (storedTheme === 'system' && prefersDark) ||
+            (!storedTheme && prefersDark)
           document.documentElement.classList.toggle('dark', useDark)
         } catch {
           // noop
