@@ -45,8 +45,6 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
     return () => window.removeEventListener('keydown', handleKeydown)
   }, [searchPaletteOpen, shortcutsOpen, togglePanel, zenMode])
 
-  if (!workspace.onboardingReady) return <OnboardingScreen onSubmit={workspace.completeOnboarding} />
-
   const handleToggleNav = useCallback(() => {
     if (workspace.panels.sidebar || workspace.panels.entities) {
       if (workspace.panels.sidebar) togglePanel('sidebar')
@@ -69,6 +67,8 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
     workspace.selectEntity(eId, tId)
     if (!zenMode && !workspace.panels.inspector) togglePanel('inspector')
   }, [workspace.selectEntity, zenMode, workspace.panels.inspector, togglePanel])
+
+  if (!workspace.onboardingReady) return <OnboardingScreen onSubmit={workspace.completeOnboarding} />
 
   return (
     <main

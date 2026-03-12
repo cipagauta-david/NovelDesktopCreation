@@ -2,35 +2,29 @@ import { useEffect, useState } from 'react'
 import * as Comlink from 'comlink'
 import type { AppWorker } from '../data/worker'
 
-// Singleton para asegurar que no se levanten multiples workers
-let workerProxyCache: Comlink.Remote<AppWorker> | null = null
-
 export function useAppWorker() {
-  const [worker, setWorker] = useState<Comlink.Remote<AppWorker> | null>(() => workerProxyCache)
-  const [isReady, setIsReady] = useState(() => !!workerProxyCache)
+  const [worker, setWorker] = useState<Comlink.Remote<AppWorker> | null>(null)
+  const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
-    let proxy = workerProxyCache
-    if (!proxy) {
-      const rawWorker = new Worker(new URL('../data/worker.ts', import.meta.url), {
-        type: 'module',
-      })
-      proxy = Comlink.wrap<AppWorker>(rawWorker)
-      workerProxyCache = proxy
-    }
+    const rawWorker = new Worker(new URL('../data/worker.ts', import.meta.url), {
+      type: 'module',
+    })
+    const proxy = Comlink.wrap<AppWorker>(rawWorker)
 
     let cancelled = false
-    const frameId = window.requestAnimationFrame(() => {
-      if (!cancelled) {
-        setWorker(proxy)
-      }
-    })
 
     proxy
       .init()
-      .then(() => {
+      .then(async () => {
+        // Health-check: garantiza que la API expuesta realmente tiene loadState()
+        // y evita errores tipo "worker.loadState is not a function" por proxies stale.
+        await proxy.loadState().catch(() => null)
         if (!cancelled) {
-          window.requestAnimationFrame(() => setIsReady(true))
+          window.requestAnimationFrame(() => {
+            setWorker(() => proxy)
+            setIsReady(true)
+          })
         }
       })
       .catch((err: unknown) => {
@@ -39,7 +33,9 @@ export function useAppWorker() {
 
     return () => {
       cancelled = true
-      window.cancelAnimationFrame(frameId)
+      setIsReady(false)
+      setWorker(null)
+      rawWorker.terminate()
     }
   }, [])
 

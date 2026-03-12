@@ -11,12 +11,23 @@ function App() {
   useEffect(() => {
     if (!worker || !isReady) return
 
-    worker.loadState().then((saved) => {
-      setInitialData(saved ?? getDefaultPersistedState())
-    }).catch((err: unknown) => {
-      console.error('[App] Fallo recuperando data, inicializando fallback', err)
+    try {
+      if (typeof worker.loadState !== 'function') {
+        console.error('[App] Worker proxy inválido: loadState no es una función')
+        setInitialData(getDefaultPersistedState())
+        return
+      }
+
+      worker.loadState().then((saved) => {
+        setInitialData(saved ?? getDefaultPersistedState())
+      }).catch((err: unknown) => {
+        console.error('[App] Fallo recuperando data, inicializando fallback', err)
+        setInitialData(getDefaultPersistedState())
+      })
+    } catch (err) {
+      console.error('[App] Error síncrono inicializando worker state, fallback activado', err)
       setInitialData(getDefaultPersistedState())
-    })
+    }
   }, [worker, isReady])
 
   if (!worker || !initialData) {
