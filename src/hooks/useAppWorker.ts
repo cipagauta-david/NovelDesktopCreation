@@ -6,31 +6,31 @@ import type { AppWorker } from '../data/worker'
 let workerProxyCache: Comlink.Remote<AppWorker> | null = null
 
 export function useAppWorker() {
+  const [worker, setWorker] = useState<Comlink.Remote<AppWorker> | null>(() => workerProxyCache)
   const [isReady, setIsReady] = useState(() => !!workerProxyCache)
-  const [worker] = useState<Comlink.Remote<AppWorker> | null>(() => {
-    if (workerProxyCache) {
-      return workerProxyCache
-    }
-
-    const rawWorker = new Worker(new URL('../data/worker.ts', import.meta.url), {
-      type: 'module',
-    })
-    const proxy = Comlink.wrap<AppWorker>(rawWorker)
-    workerProxyCache = proxy
-    return proxy
-  })
 
   useEffect(() => {
-    if (!worker) {
-      return
+    let proxy = workerProxyCache
+    if (!proxy) {
+      const rawWorker = new Worker(new URL('../data/worker.ts', import.meta.url), {
+        type: 'module',
+      })
+      proxy = Comlink.wrap<AppWorker>(rawWorker)
+      workerProxyCache = proxy
     }
 
     let cancelled = false
-    worker
+    const frameId = window.requestAnimationFrame(() => {
+      if (!cancelled) {
+        setWorker(proxy)
+      }
+    })
+
+    proxy
       .init()
       .then(() => {
         if (!cancelled) {
-          setIsReady(true)
+          window.requestAnimationFrame(() => setIsReady(true))
         }
       })
       .catch((err: unknown) => {
@@ -39,8 +39,9 @@ export function useAppWorker() {
 
     return () => {
       cancelled = true
+      window.cancelAnimationFrame(frameId)
     }
-  }, [worker])
+  }, [])
 
   return { worker, isReady }
 }

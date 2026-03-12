@@ -240,8 +240,8 @@ export function createLiveEditorExtensions(interactions: LiveEditorInteractions 
       mousedown(event) {
         return handleEntityNavigationClick(event)
       },
-      click(event) {
-        return handleEntityNavigationClick(event)
+      click() {
+        return false
       },
       mousemove(event) {
         const pill = getEntityPillFromTarget(event.target)

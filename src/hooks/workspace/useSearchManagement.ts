@@ -36,7 +36,8 @@ export function useSearchManagement(
     return () => clearTimeout(timeoutId)
   }, [activeProject, searchQuery, worker])
   
-  const visibleSearchResults = searchQuery.trim() ? searchResults : []
+  const canShowResults = Boolean(activeProject && worker && searchQuery.trim())
+  const visibleSearchResults = canShowResults ? searchResults : []
 
   return {
     searchQuery,
