@@ -1,13 +1,15 @@
-import { useMemo, useRef, useState, type PointerEvent } from 'react'
+import { memo, useCallback, useMemo, useRef, useState, type PointerEvent } from 'react'
 import type { GraphModel } from '../types/workspace'
 
 type GraphPanelProps = {
   graphModel: GraphModel
   activeEntityId?: string
   onSelectEntity: (entityId: string, tabId: string) => void
+  onNodePositionChange?: (entityId: string, x: number, y: number) => void
+  onResetLayout?: () => void
 }
 
-export function GraphPanel({ graphModel, activeEntityId, onSelectEntity }: GraphPanelProps) {
+export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId, onSelectEntity, onNodePositionChange, onResetLayout }: GraphPanelProps) {
   const svgRef = useRef<SVGSVGElement | null>(null)
   const [nodeOverrides, setNodeOverrides] = useState<Record<string, { x: number; y: number }>>({})
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null)
@@ -43,11 +45,12 @@ export function GraphPanel({ graphModel, activeEntityId, onSelectEntity }: Graph
     return { x: transformed.x, y: transformed.y }
   }
 
-  function resetLayout() {
+  const resetLayout = useCallback(() => {
     setNodeOverrides({})
-  }
+    onResetLayout?.()
+  }, [onResetLayout])
 
-  const connectedNodeIds = activeEntityId
+  const connectedNodeIds = useMemo(() => activeEntityId
     ? new Set(
         graphModel.edges.flatMap((edge) =>
           edge.source === activeEntityId || edge.target === activeEntityId
@@ -55,7 +58,7 @@ export function GraphPanel({ graphModel, activeEntityId, onSelectEntity }: Graph
             : [],
         ),
       )
-    : null
+    : null, [activeEntityId, graphModel.edges])
 
   return (
     <section className="panel surface-panel">
@@ -93,8 +96,24 @@ export function GraphPanel({ graphModel, activeEntityId, onSelectEntity }: Graph
             },
           }))
         }}
-        onPointerUp={() => setDraggingNodeId(null)}
-        onPointerLeave={() => setDraggingNodeId(null)}
+        onPointerUp={() => {
+          if (draggingNodeId) {
+            const pos = nodeOverrides[draggingNodeId]
+            if (pos && onNodePositionChange) {
+              onNodePositionChange(draggingNodeId, pos.x, pos.y)
+            }
+          }
+          setDraggingNodeId(null)
+        }}
+        onPointerLeave={() => {
+          if (draggingNodeId) {
+            const pos = nodeOverrides[draggingNodeId]
+            if (pos && onNodePositionChange) {
+              onNodePositionChange(draggingNodeId, pos.x, pos.y)
+            }
+          }
+          setDraggingNodeId(null)
+        }}
       >
         {graphModel.edges.map((edge) => {
           const source = nodeById.get(edge.source)
@@ -143,4 +162,4 @@ export function GraphPanel({ graphModel, activeEntityId, onSelectEntity }: Graph
       </svg>
     </section>
   )
-}
+})

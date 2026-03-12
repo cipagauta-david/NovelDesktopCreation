@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
 
 import type { AppSettings, EntityTemplate, Project } from '../types/workspace'
 import { ActionMenu } from './common/ActionMenu'
@@ -19,9 +19,11 @@ type SidebarProps = {
   onDeleteProject: () => void
   onClearWorkspace: () => void
   onSaveTemplate: () => void
+  onExportProject: () => void
+  onImportProject: () => void
 }
 
-export function Sidebar({
+export const Sidebar = memo(function Sidebar({
   settings,
   projects,
   activeProjectId,
@@ -36,6 +38,8 @@ export function Sidebar({
   onDeleteProject,
   onClearWorkspace,
   onSaveTemplate,
+  onExportProject,
+  onImportProject,
 }: SidebarProps) {
   const [showProjectForm, setShowProjectForm] = useState(false)
 
@@ -65,6 +69,8 @@ export function Sidebar({
               label="Opciones de proyecto"
               items={[
                 { label: 'Renombrar proyecto activo', onSelect: onRenameProject },
+                { label: 'Exportar proyecto (JSON)', onSelect: onExportProject },
+                { label: 'Importar proyecto (JSON)', onSelect: onImportProject },
                 {
                   label: 'Eliminar proyecto activo',
                   onSelect: onDeleteProject,
@@ -142,4 +148,4 @@ export function Sidebar({
       </PanelSection>
     </aside>
   )
-}
+})

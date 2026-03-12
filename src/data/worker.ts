@@ -1,11 +1,17 @@
 import * as Comlink from 'comlink'
 import type { EntityRecord, PersistedState } from '../types/workspace'
+import { SearchIndex, type FtsSearchResult } from './searchIndex'
 
 export interface AppWorker {
   init(): Promise<void>
   persistState(state: PersistedState): Promise<void>
   loadState(): Promise<PersistedState | null>
   searchEntities(query: string, entities: EntityRecord[]): Promise<EntityRecord[]>
+  // ── FTS5 index API ──────────────────────────────────
+  ftsIndex(entities: EntityRecord[]): Promise<number>
+  ftsSearch(query: string): Promise<FtsSearchResult[]>
+  ftsUpsert(entity: EntityRecord): Promise<void>
+  ftsRemove(entityId: string): Promise<void>
 }
 
 const DB_NAME = 'novel-desktop-worker-db'
@@ -14,6 +20,9 @@ const STATE_STORE = 'workspace-state'
 const STATE_ID = 'latest'
 
 let fallbackState: PersistedState | null = null
+
+// Instancia singleton del índice FTS
+const searchIndex = new SearchIndex()
 
 type PersistedStateRecord = {
   id: string
@@ -77,9 +86,9 @@ async function loadStateFromIndexedDb(): Promise<PersistedState | null> {
   return result
 }
 
-const workerObj = {
+const workerObj: AppWorker = {
   async init(): Promise<void> {
-    console.log('[Worker] Initializing SQLite / OPFS Engine...')
+    console.log('[Worker] Initializing FTS Index Engine + IndexedDB...')
     if (typeof indexedDB === 'undefined') {
       console.warn('[Worker] IndexedDB no disponible, usando fallback en memoria')
       return
@@ -88,12 +97,24 @@ const workerObj = {
     try {
       const db = await openDatabase()
       db.close()
+
+      // Intentar cargar estado y construir el índice FTS de inmediato
+      const savedState = await loadStateFromIndexedDb()
+      if (savedState) {
+        const allEntities = savedState.projects.flatMap((p) => p.entities)
+        searchIndex.buildFromEntities(allEntities)
+        console.log(`[Worker] FTS Index built: ${searchIndex.indexedCount} entities indexed`)
+      }
     } catch (error) {
-      console.warn('[Worker] Fallo inicializando IndexedDB, usando fallback en memoria', error)
+      console.warn('[Worker] Fallo inicializando IndexedDB/FTS, usando fallback en memoria', error)
     }
   },
 
   async persistState(state: PersistedState): Promise<void> {
+    // Actualizar índice FTS con las entidades del estado
+    const allEntities = state.projects.flatMap((p) => p.entities)
+    searchIndex.buildFromEntities(allEntities)
+
     if (typeof indexedDB === 'undefined') {
       fallbackState = state
       return
@@ -121,6 +142,7 @@ const workerObj = {
     }
   },
 
+  // Mantener compatibilidad con el API original (filtro lineal)
   async searchEntities(query: string, entities: EntityRecord[]): Promise<EntityRecord[]> {
     const normalized = query.trim().toLowerCase()
     if (!normalized) return []
@@ -130,7 +152,26 @@ const workerObj = {
       e.aliases.some((alias: string) => alias.toLowerCase().includes(normalized)) ||
       e.content.toLowerCase().includes(normalized)
     )
-  }
+  },
+
+  // ── FTS5 Index API ──────────────────────────────────
+
+  async ftsIndex(entities: EntityRecord[]): Promise<number> {
+    searchIndex.buildFromEntities(entities)
+    return searchIndex.indexedCount
+  },
+
+  async ftsSearch(query: string): Promise<FtsSearchResult[]> {
+    return searchIndex.search(query)
+  },
+
+  async ftsUpsert(entity: EntityRecord): Promise<void> {
+    searchIndex.upsertEntity(entity)
+  },
+
+  async ftsRemove(entityId: string): Promise<void> {
+    searchIndex.removeEntity(entityId)
+  },
 }
 
 Comlink.expose(workerObj)

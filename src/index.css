@@ -1881,3 +1881,200 @@ svg {
     grid-column: auto;
   }
 }
+
+/* ── Streaming / AI indicator ──────────────────────────── */
+
+.streaming-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.streaming-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--brand-accent);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.streaming-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand-accent);
+  animation: streaming-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes streaming-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.7); }
+}
+
+.streaming-preview {
+  font-family: var(--font-serif);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  padding: 0.5rem;
+  background: var(--surface-glass);
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+}
+
+.destructive-text {
+  color: #ef4444 !important;
+}
+
+/* ── Drag & Drop entity list sortable ──────────────────── */
+
+.sortable-entity-wrapper {
+  touch-action: none;
+}
+
+.entity-list .list-card {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.entity-list .list-card .drag-handle {
+  cursor: grab;
+  opacity: 0.35;
+  font-size: 1rem;
+  line-height: 1;
+  user-select: none;
+  flex-shrink: 0;
+  padding: 0.15rem 0;
+  transition: opacity 0.15s;
+}
+.entity-list .list-card .drag-handle:hover {
+  opacity: 0.85;
+}
+.entity-list .list-card .drag-handle:active {
+  cursor: grabbing;
+}
+.list-card-content {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.entity-list .list-card.dragging {
+  opacity: 0.5;
+  outline: 2px dashed var(--brand-accent);
+}
+
+.entity-list .list-card.drop-target {
+  border-top: 2px solid var(--brand-accent);
+}
+
+/* ── Import/Export badge ───────────────────────────────── */
+
+.import-export-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.import-export-actions button {
+  font-size: 0.72rem;
+}
+
+/* ── Keyboard Shortcuts Overlay ────────────────────────── */
+
+.shortcuts-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fade-in 0.15s ease;
+}
+
+.shortcuts-overlay {
+  background: var(--surface-elevated, #1e1e2e);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1.5rem 2rem;
+  min-width: 340px;
+  max-width: 500px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.shortcuts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.shortcuts-header h2 {
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.shortcuts-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.shortcut-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.shortcut-row:last-child {
+  border-bottom: none;
+}
+
+.shortcut-keys {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.78rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 0.2rem 0.55rem;
+  white-space: nowrap;
+  color: var(--brand-accent, #7dd3fc);
+}
+
+.shortcut-desc {
+  font-size: 0.82rem;
+  opacity: 0.85;
+  text-align: right;
+}
+
+.shortcuts-footer {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.72rem;
+  opacity: 0.5;
+}
+.shortcuts-footer kbd {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.68rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 
 import type {
   Project,
@@ -6,10 +6,13 @@ import type {
   EntityRecord,
   AiProposal,
   AppSettings,
+  LlmStreamStatus,
+  LlmTraceEntry,
 } from '../../types/workspace'
 import { buildStructuredReference } from '../../utils/references'
 import { createHistoryEvent, isoNow, uid } from '../../utils/workspace'
-import { requestLlmProposal } from '../../services/llm'
+import { requestLlmStreaming, type LlmRequestInput } from '../../services/llm'
+import { LlmError } from '../../services/llmErrors'
 
 export function useAiManagement(
   activeProject: Project | undefined,
@@ -20,7 +23,10 @@ export function useAiManagement(
   setToast: (msg: string) => void
 ) {
   const [pendingProposal, setPendingProposal] = useState<AiProposal | null>(null)
-  const [isGeneratingProposal, setIsGeneratingProposal] = useState(false)
+  const [streamStatus, setStreamStatus] = useState<LlmStreamStatus>('idle')
+  const [streamingText, setStreamingText] = useState('')
+  const [llmTraces, setLlmTraces] = useState<LlmTraceEntry[]>([])
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   function buildFallbackProposal() {
     if (!activeEntity || !activeTab) {
@@ -48,48 +54,115 @@ export function useAiManagement(
     } satisfies AiProposal
   }
 
+  const stopGeneration = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+    setStreamStatus('cancelled')
+    setToast('Generación IA cancelada.')
+  }, [setToast])
+
   async function generateAiProposal() {
     if (!activeEntity || !activeTab) return
-    if (isGeneratingProposal) return
-    setIsGeneratingProposal(true)
+    if (streamStatus === 'streaming') return
+
+    // Cancelar cualquier petición anterior
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
+    setStreamStatus('streaming')
+    setStreamingText('')
+
     const fallback = buildFallbackProposal()
-    try {
-      const llmText =
-        settings === null
-          ? ''
-          : await requestLlmProposal({
-              provider: settings.provider,
-              model: settings.model,
-              apiKey: settings.apiKey,
-              tabPrompt: activeTab.prompt,
-              entityTitle: activeEntity.title,
-              entityContent: activeEntity.content,
-            })
 
-      if (!llmText.trim() || !fallback) {
-        if (fallback) {
-          setPendingProposal(fallback)
-          setToast('Sin respuesta remota, se cargó propuesta local.')
-        } else {
-          setToast('No hay entidad activa para generar propuesta IA.')
-        }
-        return
+    if (!settings) {
+      if (fallback) {
+        setPendingProposal(fallback)
+        setToast('Sin proveedor configurado, se cargó propuesta local.')
       }
+      setStreamStatus('idle')
+      return
+    }
 
-      setPendingProposal({
-        ...fallback,
-        summary: `Propuesta generada con ${settings?.provider ?? 'motor local'}. Revisa antes de aplicar.`,
-        contentAppend: `\n\n## Sugerencia IA\n${llmText.trim()}`,
+    const input: LlmRequestInput = {
+      provider: settings.provider,
+      model: settings.model,
+      apiKey: settings.apiKey,
+      tabPrompt: activeTab.prompt,
+      entityTitle: activeEntity.title,
+      entityContent: activeEntity.content,
+    }
+
+    let accumulatedText = ''
+
+    try {
+      await requestLlmStreaming(input, controller.signal, {
+        onToken(chunk) {
+          accumulatedText += chunk
+          setStreamingText(accumulatedText)
+        },
+        onDone(fullText) {
+          if (!fullText.trim() || !fallback) {
+            if (fallback) {
+              setPendingProposal(fallback)
+              setToast('Sin respuesta útil del proveedor, se cargó propuesta local.')
+            } else {
+              setToast('No hay entidad activa para generar propuesta IA.')
+            }
+            setStreamStatus('done')
+            return
+          }
+
+          setPendingProposal({
+            ...fallback,
+            summary: `Propuesta generada con ${settings.provider} (streaming). Revisa antes de aplicar.`,
+            contentAppend: `\n\n## Sugerencia IA\n${fullText.trim()}`,
+          })
+          setStreamStatus('done')
+          setToast('Propuesta IA generada con streaming. Revisa y confirma.')
+        },
+        onError(error) {
+          console.error('[AI] Error en streaming:', error)
+
+          if (error instanceof LlmError && error.category === 'cancelled') {
+            setStreamStatus('cancelled')
+            return
+          }
+
+          // Usar fallback en caso de error
+          if (fallback) {
+            // Si tenemos texto parcial de streaming, usarlo
+            if (accumulatedText.trim()) {
+              setPendingProposal({
+                ...fallback,
+                summary: `Propuesta parcial (${error.userMessage}). Revisa antes de aplicar.`,
+                contentAppend: `\n\n## Sugerencia IA (parcial)\n${accumulatedText.trim()}`,
+              })
+            } else {
+              setPendingProposal(fallback)
+            }
+          }
+
+          const userMsg = error instanceof LlmError ? error.userMessage : 'Error inesperado con IA.'
+          setToast(userMsg)
+          setStreamStatus('error')
+        },
+        onTrace(trace) {
+          setLlmTraces((prev) => [trace, ...prev].slice(0, 50))
+        },
       })
-      setToast('Propuesta IA generada. Revisa y confirma antes de aplicar.')
     } catch (error) {
-      console.error('[AI] Error generando propuesta remota, usando fallback local', error)
+      console.error('[AI] Error no capturado en streaming:', error)
       if (fallback) {
         setPendingProposal(fallback)
       }
-      setToast('No se pudo conectar al proveedor IA. Se mantiene propuesta local.')
-    } finally {
-      setIsGeneratingProposal(false)
+      setToast('Error inesperado. Se mantiene propuesta local.')
+      setStreamStatus('error')
     }
   }
 
@@ -144,19 +217,26 @@ export function useAiManagement(
     }))
 
     setPendingProposal(null)
+    setStreamingText('')
+    setStreamStatus('idle')
     setToast('Propuesta IA confirmada y aplicada con trazabilidad.')
   }
 
   function dismissProposal() {
     setPendingProposal(null)
+    setStreamingText('')
+    setStreamStatus('idle')
   }
 
   return {
     pendingProposal,
-    isGeneratingProposal,
+    streamStatus,
+    streamingText,
+    llmTraces,
     setPendingProposal,
     generateAiProposal,
     confirmAiProposal,
     dismissProposal,
+    stopGeneration,
   }
 }
