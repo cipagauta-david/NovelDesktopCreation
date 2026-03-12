@@ -356,7 +356,7 @@ label {
   display: flex; /* Cambiado a flex para mejor manejo de espacio */
   justify-content: space-between;
   gap: 1.5rem;
-  align-items: center;
+  align-items: flex-start;
   min-height: 72px;
   padding: 0.8rem 1.5rem;
   border-radius: 20px;
@@ -398,16 +398,24 @@ label {
 }
 
 .workspace-header-actions {
+  display: grid;
+  justify-items: end;
+  align-content: center;
+  justify-self: end;
+  gap: 0.32rem;
+}
+
+.workspace-header-primary-actions {
   display: flex;
   align-items: center;
-  justify-self: end;
+  justify-content: flex-end;
   gap: 0.55rem;
   flex-wrap: wrap;
 }
 
 .workspace-status {
   color: #9fb0c9;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   white-space: nowrap;
 }
 
@@ -631,9 +639,11 @@ label {
 }
 
 .left-panel-lower {
-  flex: 1 1 70%;
+  flex: 1 1 auto;
   min-height: 0;
-  display: flex;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.85rem;
 }
 
 .left-panel-lower > .entity-column {
@@ -1805,7 +1815,15 @@ svg {
 
   .workspace-header-actions {
     justify-self: stretch;
-    flex-wrap: wrap;
+    justify-items: stretch;
+  }
+
+  .workspace-header-primary-actions {
+    justify-content: flex-start;
+  }
+
+  .workspace-status {
+    text-align: left;
   }
 
   .context-tabs {
