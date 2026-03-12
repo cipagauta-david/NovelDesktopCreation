@@ -1,12 +1,12 @@
 import { useEffect } from 'react'
 import { draftPayload, draftFromEntity, createHistoryEvent, isoNow } from '../../utils/workspace'
-import type { DraftState, EntityRecord, PersistedState } from '../../types/workspace'
+import type { DraftState, EntityRecord, PersistedState, Project } from '../../types/workspace'
 import type { AppWorker } from '../../data/worker'
 import * as Comlink from 'comlink'
 
 export function usePersistenceManagement(
-  activeProject: any,
-  activeEntity: any,
+  activeProject: Project | undefined,
+  activeEntity: EntityRecord | null,
   draft: DraftState | null,
   setData: React.Dispatch<React.SetStateAction<PersistedState>>,
   setSaveStatus: React.Dispatch<React.SetStateAction<'idle' | 'saving' | 'saved'>>,

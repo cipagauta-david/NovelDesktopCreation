@@ -15,6 +15,7 @@ export type AppSettings = {
   provider: Provider
   model: string
   apiKeyHint: string
+  apiKey?: string
 }
 
 export type OnboardingPayload = {
@@ -94,6 +95,8 @@ export type PersistedState = {
   activeProjectId: string
   activeTabId: string
   activeEntityId: string
+  graphLayouts?: PersistedGraphLayouts
+  llmTraces?: LlmTraceEntry[]
 }
 
 export type EntityDraft = {
@@ -159,3 +162,46 @@ export type GraphModel = {
 }
 
 export type PanelVisibility = Record<PanelKey, boolean>
+
+// ── Streaming & AI traceability ─────────────────────────────
+export type LlmErrorCategory =
+  | 'auth'
+  | 'rate-limit'
+  | 'network'
+  | 'server'
+  | 'timeout'
+  | 'cancelled'
+  | 'unknown'
+
+export type LlmStreamStatus =
+  | 'idle'
+  | 'streaming'
+  | 'done'
+  | 'error'
+  | 'cancelled'
+
+export type LlmTraceEntry = {
+  id: string
+  timestamp: string
+  provider: Provider
+  model: string
+  promptSnippet: string
+  responseSnippet: string
+  durationMs: number
+  tokenEstimate: number
+  status: 'ok' | 'error' | 'fallback' | 'cancelled'
+  errorDetail?: string
+}
+
+// ── Graph layout persistence ────────────────────────────────
+export type GraphLayoutMap = Record<string, { x: number; y: number }>
+
+// ── Import / Export ─────────────────────────────────────────
+export type ExportedProject = {
+  version: number
+  exportedAt: string
+  project: Project
+}
+
+// ── Extended PersistedState ─────────────────────────────────
+export type PersistedGraphLayouts = Record<string, GraphLayoutMap>

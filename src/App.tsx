@@ -11,13 +11,23 @@ function App() {
   useEffect(() => {
     if (!worker || !isReady) return
 
-    // Cargar estado inicial desde el worker off-main-thread
-    worker.loadState().then((saved: any) => {
-      setInitialData(saved ?? getDefaultPersistedState())
-    }).catch((err: unknown) => {
-      console.error('[App] Fallo recuperando data, inicializando fallback', err)
-      setInitialData(getDefaultPersistedState())
-    })
+    try {
+      if (typeof worker.loadState !== 'function') {
+        console.error('[App] Worker proxy inválido: loadState no es una función')
+        queueMicrotask(() => setInitialData(getDefaultPersistedState()))
+        return
+      }
+
+      worker.loadState().then((saved) => {
+        queueMicrotask(() => setInitialData(saved ?? getDefaultPersistedState()))
+      }).catch((err: unknown) => {
+        console.error('[App] Fallo recuperando data, inicializando fallback', err)
+        queueMicrotask(() => setInitialData(getDefaultPersistedState()))
+      })
+      } catch (err) {
+        console.error('[App] Error síncrono inicializando worker state, fallback activado', err)
+        queueMicrotask(() => setInitialData(getDefaultPersistedState()))
+      }
   }, [worker, isReady])
 
   if (!worker || !initialData) {

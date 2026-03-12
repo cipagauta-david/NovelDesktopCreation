@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
 
 import type { CollectionTab } from '../types/workspace'
 import { ActionMenu } from './common/ActionMenu'
@@ -15,7 +15,7 @@ type TabBarProps = {
   onDeleteTab: () => void
 }
 
-export function TabBar({
+export const TabBar = memo(function TabBar({
   tabs,
   activeTab,
   newTabName,
@@ -93,4 +93,4 @@ export function TabBar({
       </div>
     </section>
   )
-}
+})

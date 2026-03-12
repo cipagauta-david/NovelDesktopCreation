@@ -196,9 +196,16 @@ export function useEntityManagement(
   }
 
   async function attachImages(files: FileList | null) {
-    if (!files || !activeProject || !activeEntity) return
+    if (!files || !activeProject) return
+    if (!activeEntity) {
+      setToast('Selecciona una entidad antes de soltar imágenes en el workspace.')
+      return
+    }
     const imageFiles = Array.from(files).filter((file) => file.type.startsWith('image/'))
-    if (!imageFiles.length) return
+    if (!imageFiles.length) {
+      setToast('Solo se admiten archivos de imagen para assets.')
+      return
+    }
 
     const assets = await Promise.all(
       imageFiles.map(

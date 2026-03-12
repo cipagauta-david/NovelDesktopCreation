@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { memo, useMemo, useState, type FormEvent } from 'react'
 
 import type {
   AiProposal,
@@ -7,6 +7,8 @@ import type {
   EntityRecord,
   EntityTemplate,
   HistoryEvent,
+  LlmStreamStatus,
+  LlmTraceEntry,
   Project,
 } from '../types/workspace'
 import { getReferenceTokens } from '../utils/references'
@@ -21,9 +23,13 @@ type InspectorPanelProps = {
   activeProject?: Project
   activeTemplates: EntityTemplate[]
   pendingProposal: AiProposal | null
+  streamStatus: LlmStreamStatus
+  streamingText: string
+  llmTraces: LlmTraceEntry[]
   onUpdateTabPrompt: (prompt: string) => void
   onConfirmProposal: () => void
   onDismissProposal: () => void
+  onStopGeneration: () => void
   onCollapse: () => void
 }
 
@@ -43,16 +49,20 @@ function renderHistory(items: HistoryEvent[]) {
   )
 }
 
-export function InspectorPanel({
+export const InspectorPanel = memo(function InspectorPanel({
   activeTab,
   activeEntity,
   activeDraft,
   activeProject,
   activeTemplates,
   pendingProposal,
+  streamStatus,
+  streamingText,
+  llmTraces,
   onUpdateTabPrompt,
   onConfirmProposal,
   onDismissProposal,
+  onStopGeneration,
   onCollapse,
 }: InspectorPanelProps) {
   const [activePanelTab, setActivePanelTab] = useState<'context' | 'meta' | 'history'>('context')
@@ -161,6 +171,39 @@ export function InspectorPanel({
               </PanelSection>
             )}
 
+            {streamStatus === 'streaming' && (
+              <PanelSection title="Generando con IA…" meta="Streaming activo">
+                <div className="proposal-card streaming-card">
+                  <div className="streaming-indicator">
+                    <span className="streaming-dot" />
+                    <span>Recibiendo tokens…</span>
+                  </div>
+                  {streamingText && (
+                    <p className="streaming-preview">{streamingText.slice(-400)}</p>
+                  )}
+                  <button type="button" className="ghost-button destructive-text" onClick={onStopGeneration}>
+                    ■ Detener generación
+                  </button>
+                </div>
+              </PanelSection>
+            )}
+
+            {llmTraces.length > 0 && (
+              <PanelSection title="Trazas de IA" meta={`${llmTraces.length} registros`} defaultOpen={false}>
+                <div className="history-list">
+                  {llmTraces.slice(0, 10).map((trace) => (
+                    <article key={trace.id} className="history-item">
+                      <strong>{trace.provider} · {trace.model}</strong>
+                      <p>{trace.responseSnippet.slice(0, 120) || '(sin respuesta)'}</p>
+                      <small>
+                        {trace.status} · {trace.durationMs}ms · ~{trace.tokenEstimate} tokens · {formatTimestamp(trace.timestamp)}
+                      </small>
+                    </article>
+                  ))}
+                </div>
+              </PanelSection>
+            )}
+
             <PanelSection title="Referencias en este documento" meta={`${referencedEntities.length} enlazadas`}>
               {referencedEntities.length > 0 ? (
                 <div className="reference-card-list">
@@ -249,4 +292,4 @@ export function InspectorPanel({
       )}
     </aside>
   )
-}
+})

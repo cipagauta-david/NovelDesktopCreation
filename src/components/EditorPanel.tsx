@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -37,7 +38,7 @@ type EditorPanelProps = {
   suggestionOptions: EntityRecord[]
   saveStatus: 'idle' | 'saving' | 'saved'
   zenMode: boolean
-  onOpenEntity: (entityId: string) => void
+  onOpenEntity: (entityId: string, tabId?: string) => void
   onDraftChange: (next: DraftState) => void
   onHandleEditorChange: (value: string, selectionEnd: number | null) => void
   onInsertReference: (entity: EntityRecord) => void
@@ -87,40 +88,26 @@ export function EditorPanel({
     left: number
     top: number
   } | null>(null)
+  const [hoverPayload, setHoverPayload] = useState<EntityHoverPayload | null>(null)
   const previewPaneRef = useRef<HTMLDivElement | null>(null)
   const writingLaneRef = useRef<HTMLDivElement | null>(null)
   const entityById = useMemo(() => new Map(allEntities.map((entry) => [entry.id, entry])), [allEntities])
 
   const ghostTextProvider = useMemo(() => createNarrativeGhostTextProvider(draft.title), [draft.title])
-  const handleEntityHover = useMemo(
-    () => (payload: EntityHoverPayload) => {
-      const lane = writingLaneRef.current
-      if (!lane) {
-        return
-      }
-
-      const laneRect = lane.getBoundingClientRect()
-      const top = Math.max(12, payload.rect.bottom - laneRect.top + 10)
-      const left = Math.max(12, Math.min(payload.rect.left - laneRect.left, laneRect.width - 320))
-      setHoveredReference((current) => {
-        if (
-          current?.entityId === payload.entityId &&
-          Math.abs(current.left - left) < 1 &&
-          Math.abs(current.top - top) < 1
-        ) {
-          return current
-        }
-
-        return {
-          entityId: payload.entityId,
-          left,
-          top,
-        }
-      })
+  const handleEntityHover = useCallback((payload: EntityHoverPayload) => {
+    setHoverPayload(payload)
+  }, [])
+  const hideEntityHover = useCallback(() => {
+    setHoverPayload(null)
+    setHoveredReference(null)
+  }, [])
+  const handleReferenceNavigation = useCallback(
+    (entityId: string) => {
+      const targetEntity = entityById.get(entityId)
+      onOpenEntity(entityId, targetEntity?.tabId)
     },
-    [],
+    [entityById, onOpenEntity],
   )
-  const hideEntityHover = useMemo(() => () => setHoveredReference(null), [])
   const sourceEditorExtensions = useMemo(
     () => [markdown(), EditorView.lineWrapping, baseEditorTheme, ...createSourceEditorExtensions(), ...createGhostTextExtensions(ghostTextProvider)],
     [ghostTextProvider],
@@ -131,13 +118,13 @@ export function EditorPanel({
       EditorView.lineWrapping,
       baseEditorTheme,
       ...createLiveEditorExtensions({
-        onEntityInteract: onOpenEntity,
+        onEntityInteract: handleReferenceNavigation,
         onEntityHover: handleEntityHover,
         onEntityHoverEnd: hideEntityHover,
       }),
       ...createGhostTextExtensions(ghostTextProvider),
     ],
-    [ghostTextProvider, handleEntityHover, hideEntityHover, onOpenEntity],
+    [ghostTextProvider, handleEntityHover, hideEntityHover, handleReferenceNavigation],
   )
   const hoveredEntity = hoveredReference ? (entityById.get(hoveredReference.entityId) ?? null) : null
 
@@ -146,22 +133,52 @@ export function EditorPanel({
   }
 
   useEffect(() => {
-    setPreviewContent(draft.content)
-  }, [draft.entityId])
-
-  useEffect(() => {
     const timeoutId = window.setTimeout(() => setPreviewContent(draft.content), 32)
     return () => window.clearTimeout(timeoutId)
   }, [draft.content])
 
   useEffect(() => {
-    setHoveredReference(null)
+    const frameId = window.requestAnimationFrame(() => {
+      setHoveredReference(null)
+      setHoverPayload(null)
+    })
+    return () => window.cancelAnimationFrame(frameId)
   }, [draft.entityId, editorMode])
 
   useLayoutEffect(() => {
-    if (!referenceSuggestionActive || suggestionOptions.length === 0) {
-      setSuggestionsStyle(undefined)
+    if (!hoverPayload) {
       return
+    }
+
+    const lane = writingLaneRef.current
+    if (!lane) {
+      return
+    }
+
+    const laneRect = lane.getBoundingClientRect()
+    const top = Math.max(12, hoverPayload.rect.bottom - laneRect.top + 10)
+    const left = Math.max(12, Math.min(hoverPayload.rect.left - laneRect.left, laneRect.width - 320))
+    setHoveredReference((current) => {
+      if (
+        current?.entityId === hoverPayload.entityId &&
+        Math.abs(current.left - left) < 1 &&
+        Math.abs(current.top - top) < 1
+      ) {
+        return current
+      }
+
+      return {
+        entityId: hoverPayload.entityId,
+        left,
+        top,
+      }
+    })
+  }, [hoverPayload])
+
+  useLayoutEffect(() => {
+    if (!referenceSuggestionActive || suggestionOptions.length === 0) {
+      const frameId = window.requestAnimationFrame(() => setSuggestionsStyle(undefined))
+      return () => window.cancelAnimationFrame(frameId)
     }
 
     const view = editorViewRef.current

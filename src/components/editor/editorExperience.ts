@@ -12,11 +12,16 @@ import {
 const REFERENCE_PATTERN = /\{\{entity:([^|}]+)\|([^}]+)\}\}/g
 
 class ReferenceWidget extends WidgetType {
+  private entityId: string
+  private label: string
+
   constructor(
-    private entityId: string,
-    private label: string,
+    entityId: string,
+    label: string,
   ) {
     super()
+    this.entityId = entityId
+    this.label = label
   }
 
   override eq(other: ReferenceWidget) {
@@ -216,20 +221,26 @@ function getEntityPillFromTarget(target: EventTarget | null): HTMLElement | null
 export function createLiveEditorExtensions(interactions: LiveEditorInteractions = {}): Extension[] {
   const { onEntityInteract, onEntityHover, onEntityHoverEnd } = interactions
 
+  function handleEntityNavigationClick(event: MouseEvent) {
+    if (event.button !== 0 || (!event.ctrlKey && !event.metaKey)) {
+      return false
+    }
+    const pill = getEntityPillFromTarget(event.target)
+    if (pill?.dataset.entityId) {
+      event.preventDefault()
+      onEntityInteract?.(pill.dataset.entityId)
+      return true
+    }
+    return false
+  }
+
   return [
     createDynamicPlugin(buildLiveDecorations),
     EditorView.domEventHandlers({
-      click(event) {
-        if (event.button !== 0 || (!event.ctrlKey && !event.metaKey)) {
-          return false
-        }
-
-        const pill = getEntityPillFromTarget(event.target)
-        if (pill && pill.dataset.entityId) {
-          event.preventDefault()
-          interactions.onEntityInteract?.(pill.dataset.entityId)
-          return true
-        }
+      mousedown(event) {
+        return handleEntityNavigationClick(event)
+      },
+      click() {
         return false
       },
       mousemove(event) {

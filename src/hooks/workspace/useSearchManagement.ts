@@ -1,45 +1,62 @@
 import { useState, useEffect } from 'react'
-import type { SearchResult } from '../../types/workspace'
+import type { Project, SearchResult } from '../../types/workspace'
 import type { AppWorker } from '../../data/worker'
 import * as Comlink from 'comlink'
 
 export function useSearchManagement(
-  activeProject: any,
+  activeProject: Project | undefined,
   worker: Comlink.Remote<AppWorker> | null
 ) {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   
-  // Off-main-thread search (Simulador de FTS5)
+  // Ensure FTS index is up-to-date when project entities change
+  useEffect(() => {
+    if (!activeProject || !worker) return
+    const activeEntities = activeProject.entities.filter((e) => e.status === 'active')
+    worker.ftsIndex(activeEntities).catch(console.error)
+  }, [activeProject, activeProject?.entities.length, worker])
+
+  // Off-main-thread FTS search (índice invertido BM25)
   useEffect(() => {
     if (!activeProject || !searchQuery.trim() || !worker) {
-      setSearchResults([])
+      queueMicrotask(() => setSearchResults([]))
       return
     }
     
-    // Delegamos la búsqueda al worker
     const timeoutId = setTimeout(() => {
-      const activeEntities = activeProject.entities.filter((e: any) => e.status === 'active')
-      worker.searchEntities(searchQuery, activeEntities)
-        .then((results: any[]) => {
-           const mapped = results.map((entity) => ({
-             entityId: entity.id,
-             tabId: entity.tabId,
-             title: entity.title,
-             snippet: '', // To-Do: implementar logica FTS5 highlight
-             score: 1,
-           })).slice(0, 8)
-           setSearchResults(mapped)
+      worker.ftsSearch(searchQuery)
+        .then((results) => {
+           setSearchResults(results.slice(0, 12))
         })
-        .catch(console.error)
-    }, 150) // Debounce para no saturar IPC
+        .catch((err) => {
+          console.error('[Search] FTS search failed, falling back to linear', err)
+          // Fallback a búsqueda lineal si FTS falla
+          const activeEntities = activeProject.entities.filter((e) => e.status === 'active')
+          worker.searchEntities(searchQuery, activeEntities)
+            .then((entities) => {
+               const mapped = entities.map((entity) => ({
+                 entityId: entity.id,
+                 tabId: entity.tabId,
+                 title: entity.title,
+                 snippet: '',
+                 score: 1,
+               })).slice(0, 8)
+               setSearchResults(mapped)
+            })
+            .catch(console.error)
+        })
+    }, 120) // Debounce reducido gracias al índice
     
     return () => clearTimeout(timeoutId)
   }, [activeProject, searchQuery, worker])
   
+  const canShowResults = Boolean(activeProject && worker && searchQuery.trim())
+  const visibleSearchResults = canShowResults ? searchResults : []
+
   return {
     searchQuery,
     setSearchQuery,
-    searchResults
+    searchResults: visibleSearchResults
   }
 }

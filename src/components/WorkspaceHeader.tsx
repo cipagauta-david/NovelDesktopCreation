@@ -28,14 +28,6 @@ export function WorkspaceHeader({
   return (
     <header className="workspace-header">
       <div className="workspace-header-title">
-        <button
-          type="button"
-          className={leftPanelOpen ? 'toggle-chip active' : 'toggle-chip'}
-          onClick={onToggleLeftPanel}
-        >
-          Navegación
-        </button>
-
         <div className="workspace-project-meta">
           <span className="eyebrow">Proyecto</span>
           <strong>{project?.name ?? 'Proyecto narrativo'}</strong>
@@ -44,6 +36,50 @@ export function WorkspaceHeader({
       </div>
 
       <div className="workspace-header-actions">
+        <div className="workspace-header-primary-actions">
+          <button
+            type="button"
+            className={leftPanelOpen ? 'toggle-chip active' : 'toggle-chip'}
+            onClick={onToggleLeftPanel}
+          >
+            Navegación
+          </button>
+
+          <div className="segmented-control">
+            <button
+              type="button"
+              className={workspaceView === 'editor' ? 'active' : ''}
+              onClick={() => onViewChange('editor')}
+            >
+              Escritura
+            </button>
+            <button
+              type="button"
+              className={workspaceView === 'graph' ? 'active' : ''}
+              onClick={() => onViewChange('graph')}
+            >
+              Mapa
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className={inspectorOpen ? 'toggle-chip active' : 'toggle-chip'}
+            onClick={onToggleInspector}
+          >
+            Contexto
+          </button>
+
+          <button
+            type="button"
+            className={hasActiveSearch ? 'search-trigger active' : 'search-trigger'}
+            onClick={onOpenSearch}
+          >
+            <span>Buscar…</span>
+            <small>Ctrl+K</small>
+          </button>
+        </div>
+
         <div className="workspace-status">
           {hasActiveSearch
             ? `${searchResultsCount} coincidencia${searchResultsCount === 1 ? '' : 's'}`
@@ -51,40 +87,6 @@ export function WorkspaceHeader({
               ? 'Todo en contexto'
               : 'Listo para escribir'}
         </div>
-
-        <button
-          type="button"
-          className={hasActiveSearch ? 'search-trigger active' : 'search-trigger'}
-          onClick={onOpenSearch}
-        >
-          <span>Buscar…</span>
-          <small>Ctrl+K</small>
-        </button>
-
-        <div className="segmented-control">
-          <button
-            type="button"
-            className={workspaceView === 'editor' ? 'active' : ''}
-            onClick={() => onViewChange('editor')}
-          >
-            Escritura
-          </button>
-          <button
-            type="button"
-            className={workspaceView === 'graph' ? 'active' : ''}
-            onClick={() => onViewChange('graph')}
-          >
-            Mapa
-          </button>
-        </div>
-
-        <button
-          type="button"
-          className={inspectorOpen ? 'toggle-chip active' : 'toggle-chip'}
-          onClick={onToggleInspector}
-        >
-          Contexto
-        </button>
       </div>
     </header>
   )
