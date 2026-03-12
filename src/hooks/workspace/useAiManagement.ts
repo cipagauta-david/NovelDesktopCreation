@@ -55,7 +55,7 @@ export function useAiManagement(
     const fallback = buildFallbackProposal()
     try {
       const llmText =
-        settings == null
+        settings === null
           ? ''
           : await requestLlmProposal({
               provider: settings.provider,
@@ -67,8 +67,12 @@ export function useAiManagement(
             })
 
       if (!llmText.trim() || !fallback) {
-        setPendingProposal(fallback)
-        setToast('Sin respuesta remota, se cargó propuesta local.')
+        if (fallback) {
+          setPendingProposal(fallback)
+          setToast('Sin respuesta remota, se cargó propuesta local.')
+        } else {
+          setToast('No hay entidad activa para generar propuesta IA.')
+        }
         return
       }
 

@@ -221,33 +221,27 @@ function getEntityPillFromTarget(target: EventTarget | null): HTMLElement | null
 export function createLiveEditorExtensions(interactions: LiveEditorInteractions = {}): Extension[] {
   const { onEntityInteract, onEntityHover, onEntityHoverEnd } = interactions
 
+  function handleEntityNavigationClick(event: MouseEvent) {
+    if (event.button !== 0 || (!event.ctrlKey && !event.metaKey)) {
+      return false
+    }
+    const pill = getEntityPillFromTarget(event.target)
+    if (pill?.dataset.entityId) {
+      event.preventDefault()
+      onEntityInteract?.(pill.dataset.entityId)
+      return true
+    }
+    return false
+  }
+
   return [
     createDynamicPlugin(buildLiveDecorations),
     EditorView.domEventHandlers({
       mousedown(event) {
-        if (event.button !== 0 || (!event.ctrlKey && !event.metaKey)) {
-          return false
-        }
-        const pill = getEntityPillFromTarget(event.target)
-        if (pill?.dataset.entityId) {
-          event.preventDefault()
-          onEntityInteract?.(pill.dataset.entityId)
-          return true
-        }
-        return false
+        return handleEntityNavigationClick(event)
       },
       click(event) {
-        if (event.button !== 0 || (!event.ctrlKey && !event.metaKey)) {
-          return false
-        }
-
-        const pill = getEntityPillFromTarget(event.target)
-        if (pill && pill.dataset.entityId) {
-          event.preventDefault()
-          onEntityInteract?.(pill.dataset.entityId)
-          return true
-        }
-        return false
+        return handleEntityNavigationClick(event)
       },
       mousemove(event) {
         const pill = getEntityPillFromTarget(event.target)

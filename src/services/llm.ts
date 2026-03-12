@@ -11,13 +11,16 @@ type LlmProposalInput = {
 
 const SYSTEM_PROMPT =
   'Eres un asistente editorial para narrativa. Debes proponer mejoras concretas y breves en español.'
+const MAX_ENTITY_CONTENT_LENGTH = 4000
+const MAX_ERROR_DETAIL_LENGTH = 240
+const ANTHROPIC_MAX_TOKENS = 700
 
 function buildUserPrompt(input: LlmProposalInput) {
   return [
     `Entidad: ${input.entityTitle}`,
     `Contexto de tab: ${input.tabPrompt || 'Sin prompt definido.'}`,
     'Contenido actual:',
-    input.entityContent.slice(0, 4000) || '(vacío)',
+    input.entityContent.slice(0, MAX_ENTITY_CONTENT_LENGTH) || '(vacío)',
     '',
     'Devuelve 3 bullets de mejora narrativa y una nota breve de continuidad.',
   ].join('\n')
@@ -67,7 +70,7 @@ async function postJson(url: string, init: RequestInit): Promise<unknown> {
   const response = await fetch(url, init)
   if (!response.ok) {
     const detail = await response.text()
-    throw new Error(`LLM ${response.status}: ${detail.slice(0, 240)}`)
+    throw new Error(`LLM ${response.status}: ${detail.slice(0, MAX_ERROR_DETAIL_LENGTH)}`)
   }
   return response.json()
 }
@@ -126,7 +129,7 @@ export async function requestLlmProposal(input: LlmProposalInput): Promise<strin
       },
       body: JSON.stringify({
         model: input.model,
-        max_tokens: 700,
+        max_tokens: ANTHROPIC_MAX_TOKENS,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
       }),
