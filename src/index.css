@@ -1,39 +1,82 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════
+   ARIS TOKEN SYSTEM — Tailwind v4 Dark Variant (class-based)
+   ═══════════════════════════════════════════════════════════ */
+@variant dark (&:where(.dark, .dark *));
+
+/* ═══════════════════════════════════════════════════════════
+   TAILWIND CUSTOM THEME — CSS-first configuration (v4)
+   ═══════════════════════════════════════════════════════════ */
+@theme {
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Crimson Pro Variable', 'Crimson Pro', Georgia, serif;
+  --font-display: 'Inter Variable', 'Inter', system-ui, sans-serif;
+
+  --color-parchment: var(--color-parchment);
+  --color-obsidian: var(--color-obsidian);
+  --color-midnight: var(--color-midnight);
+  --color-primary: var(--color-primary);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LIGHT MODE (PARCHMENT) — Pergamino bajo luz de vela
+   ═══════════════════════════════════════════════════════════ */
 :root,
 :root[data-theme='light'] {
-  /* MASTER UI TOKENS (TECH-05.1) */
-  /* Typography Hierarchy */
+  /* MASTER TYPOGRAPHY */
   --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: 'Crimson Pro Variable', 'Crimson Pro', Georgia, serif;
 
-  /* Parchment Foundation (Semantic) */
-  --color-parchment: #fcfbf9;
-  --color-background-light: #faf9f6;
-  --color-midnight: #0f172a;
-  --color-obsidian: #08111f;
-  --color-primary: #00e5ff;
-  --color-primary-hover: #22d3ee;
+  /* SUPERFICIES INMERSIVAS — El Pergamino */
+  --color-parchment: #F6F4EF;
+  --color-background-light: #FAF9F6;
+  --color-midnight: #0F172A;
+  --color-obsidian: #08111F;
+  --color-obsidian-raised: #F6F4EF;
+  --color-obsidian-float: rgba(255, 255, 255, 0.9);
+
+  /* EL RÍO NEURONAL — Acciones, AI, Focus */
+  --color-primary: #00E5FF;
+  --color-primary-hover: #22D3EE;
   --color-primary-dim: rgba(0, 229, 255, 0.14);
   --color-primary-glow: rgba(0, 229, 255, 0.22);
 
-  --text-heading: #0f172a;
-  --text-body: #1e293b;
-  --text-muted: #64748b;
-  --text-ghost: #94a3b8;
+  /* TEXTOS Y CONTRASTE — Escala Pizarra */
+  --text-heading: #0F172A;
+  --text-body: #1E293B;
+  --text-muted: #64748B;
+  --text-ghost: #94A3B8;
 
+  /* SUPERFICIES FLOTANTES — Glassmorphism */
   --surface-glass: rgba(252, 251, 249, 0.95);
   --surface-glass-hover: rgba(245, 244, 241, 0.98);
+  --surface-glass-dark: rgba(15, 23, 42, 0.85);
   --surface-float: rgba(255, 255, 255, 0.9);
 
+  /* BORDES Y SEPARADORES */
   --border-subtle: rgba(15, 23, 42, 0.08);
   --border-divider: rgba(15, 23, 42, 0.06);
   --border-active: rgba(0, 229, 255, 0.28);
-  --shadow-glass: 0 12px 40px rgba(15, 23, 42, 0.06);
+  --border-focus: rgba(0, 229, 255, 0.28);
 
+  /* SOMBRAS */
+  --shadow-glass: 0 12px 40px rgba(15, 23, 42, 0.06);
+  --shadow-popover: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 20px rgba(0, 229, 255, 0.12);
+
+  /* MOTION TOKENS */
   --motion-fast: 150ms ease-out;
   --motion-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
   --motion-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Backward-compat aliases during transition */
+  /* FEEDBACK SEMÁNTICO — Estados del Sistema */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+
+  /* BACKWARD-COMPAT ALIASES */
   --surface-base: var(--color-parchment);
   --text-primary: var(--text-body);
   --text-secondary: #475569;
@@ -57,38 +100,65 @@
   color-scheme: light;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   DARK MODE (OBSIDIAN INK) — Tinta sobre obsidiana pulida
+   bajo luz de luna. No es una inversión mecánica: es un 
+   cambio de MATERIAL PSICOLÓGICO.
+   ═══════════════════════════════════════════════════════════ */
 :root.dark,
 :root[data-theme='dark'] {
-  --color-parchment: #08111f;
-  --color-background-light: #08111f;
-  --color-obsidian: #08111f;
-  --color-primary: #00d4ee;
-  --color-primary-hover: #22d3ee;
+  /* SUPERFICIES INMERSIVAS — La Obsidiana */
+  --color-parchment: #08111F;
+  --color-background-light: #08111F;
+  --color-obsidian: #08111F;
+  --color-obsidian-raised: #0E1A2E;
+  --color-obsidian-float: #132035;
+  --color-midnight: #0F172A;
+
+  /* EL RÍO NEURONAL — Cyan Recalibrado (luminosidad -7, glow +) */
+  --color-primary: #00D4EE;
+  --color-primary-hover: #22D3EE;
   --color-primary-dim: rgba(0, 212, 238, 0.12);
   --color-primary-glow: rgba(0, 212, 238, 0.25);
 
-  --text-heading: #f1f5f9;
-  --text-body: #cbd5e1;
-  --text-muted: #64748b;
+  /* TEXTOS Y CONTRASTE — Escala Selenita */
+  --text-heading: #F1F5F9;
+  --text-body: #CBD5E1;
+  --text-muted: #64748B;
   --text-ghost: #475569;
 
-  --surface-glass: rgba(10, 16, 28, 0.88);
-  --surface-glass-hover: rgba(14, 23, 38, 0.95);
+  /* SUPERFICIES FLOTANTES — Glassmorphism Invertido */
+  --surface-glass: rgba(14, 26, 46, 0.92);
+  --surface-glass-hover: rgba(19, 32, 53, 0.95);
+  --surface-glass-dark: rgba(8, 17, 31, 0.96);
   --surface-float: rgba(19, 32, 53, 0.92);
 
+  /* BORDES — Líneas Espectrales */
   --border-subtle: rgba(148, 163, 184, 0.08);
   --border-divider: rgba(148, 163, 184, 0.06);
   --border-active: rgba(0, 212, 238, 0.3);
-  --shadow-glass: 0 24px 80px rgba(2, 6, 23, 0.38);
+  --border-focus: rgba(0, 212, 238, 0.3);
 
-  /* Backward-compat aliases during transition */
+  /* SOMBRAS — Abismo Controlado + Glow Bioluminiscente */
+  --shadow-glass: 0 24px 80px rgba(0, 0, 0, 0.50);
+  --shadow-popover: 0 12px 48px rgba(0, 0, 0, 0.6), 0 0 1px rgba(148, 163, 184, 0.10);
+  --shadow-glow: 0 0 20px rgba(0, 212, 238, 0.15);
+
+  /* FEEDBACK SEMÁNTICO — Ajustados para dark */
+  --color-success: #34D399;
+  --color-warning: #FBBF24;
+  --color-error: #F87171;
+  --color-info: #60A5FA;
+
+  /* BACKWARD-COMPAT ALIASES */
   --surface-base: var(--color-obsidian);
   --text-primary: var(--text-body);
-  --text-secondary: #93a4bc;
+  --text-secondary: #93A4BC;
   --brand-accent: var(--color-primary);
   --brand-accent-hover: var(--color-primary-hover);
-  --brand-gradient: linear-gradient(135deg, #00d4ee, #7c3aed);
+  --brand-gradient: linear-gradient(135deg, #00D4EE, #7C3AED);
   --border-focus: var(--border-active);
+
   color-scheme: dark;
 }
 
@@ -2552,7 +2622,7 @@ svg {
   to { opacity: 1; }
 }
 
-/* ===== ARIS Roadmap Execution Overrides ===== */
+/* ===== Semantic Token Binding (inherited from ARIS tokens) ===== */
 
 .app-loading-state {
   height: 100vh;
@@ -2615,11 +2685,7 @@ label,
   color: #04101c;
 }
 
-.workspace-header,
-.left-workspace-panel,
-.inspector-column,
 .assistant-composer,
-.command-palette,
 .action-menu-popover,
 .shortcuts-overlay,
 .entity-hover-popover {
@@ -2628,50 +2694,10 @@ label,
   box-shadow: var(--shadow-glass);
 }
 
-.workspace-header,
-.left-workspace-panel,
-.inspector-column {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-.app-shell {
-  background-image:
-    radial-gradient(ellipse at 12% 8%, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 46%),
-    radial-gradient(ellipse at 86% 84%, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 40%),
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-base) 92%, transparent), var(--surface-base));
-}
-
-.app-shell.god-mode .main-column {
-  transform: scale(0.992) translateY(0);
-}
-
-.workspace-stage.god-mode .left-workspace-panel.open,
-.workspace-stage.god-mode .inspector-panel-shell.open {
-  flex-basis: 380px;
-}
-
 .mode-switch-pill {
   color: var(--text-primary);
   background: color-mix(in srgb, var(--surface-glass) 90%, transparent);
   border-color: var(--border-subtle);
-}
-
-.mode-switch-pill.active {
-  background: var(--color-primary-dim);
-  border-color: var(--border-active);
-  color: var(--text-heading);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 28%, transparent);
-}
-
-.app-shell.is-spectral .workspace-header-shell,
-.app-shell.is-spectral .ghosting-panel,
-.main-column.is-spectral {
-  opacity: 0.65;
-}
-
-.main-column.is-spectral {
-  transition: opacity var(--motion-fast), transform var(--motion-fast);
 }
 
 .editor-preview-pane,
@@ -2713,43 +2739,10 @@ label,
   border-bottom: 1px solid var(--border-divider);
 }
 
-.floating-suggestions-popover {
-  border-color: var(--border-active);
-  box-shadow:
-    0 22px 48px rgba(2, 6, 23, 0.36),
-    0 0 24px var(--color-primary-glow);
-}
-
 .assistant-composer-buttons {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.assistant-stop-button {
-  border-color: color-mix(in srgb, #f87171 24%, transparent);
-  background: color-mix(in srgb, #ef4444 16%, transparent);
-  color: #fecaca;
-}
-
-.assistant-stop-button:hover {
-  border-color: color-mix(in srgb, #f87171 36%, transparent);
-  background: color-mix(in srgb, #ef4444 24%, transparent);
-}
-
-.graph-canvas {
-  background:
-    radial-gradient(circle at center, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 56%),
-    var(--surface-base);
-}
-
-.graph-node-halo {
-  opacity: 0.72;
-  animation: neural-pulse 1.8s ease-in-out infinite;
-}
-
-.graph-node text {
-  fill: var(--text-body);
 }
 
 .destructive-text {
@@ -2757,7 +2750,7 @@ label,
 }
 
 .shortcuts-overlay-backdrop {
-  background: rgba(8, 17, 31, 0.62);
+  background: color-mix(in srgb, var(--color-obsidian) 62%, transparent);
 }
 
 .shortcuts-overlay {
@@ -2772,10 +2765,658 @@ label,
   color: var(--color-primary);
 }
 
+/* ═══════════════════════════════════════════════════════════
+   FASE 1: THEME SWITCHER — Sol/Luna cinematographic toggle
+   ═══════════════════════════════════════════════════════════ */
+.theme-switcher-pill {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-glass) 90%, transparent);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  transition:
+    background var(--motion-base),
+    border-color var(--motion-base),
+    color var(--motion-base),
+    box-shadow var(--motion-slow),
+    transform var(--motion-fast);
+}
+
+.theme-switcher-pill:hover {
+  color: var(--color-primary);
+  border-color: var(--border-active);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-1px) rotate(15deg);
+}
+
+.theme-switcher-icon {
+  display: inline-block;
+  transition: transform var(--motion-slow);
+}
+
+.theme-switcher-pill:hover .theme-switcher-icon {
+  transform: scale(1.15);
+}
+
+:root.dark .theme-switcher-pill {
+  box-shadow: inset 0 0 0 1px rgba(0, 212, 238, 0.06);
+}
+
+:root.dark .theme-switcher-pill:hover {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 212, 238, 0.12),
+    0 0 16px rgba(0, 212, 238, 0.2);
+}
+
+/* Staggered glow for dark mode transition */
+:root.dark .shadow-glow,
+:root.dark [class*="drop-shadow"] {
+  transition-delay: 100ms;
+  transition-duration: 400ms;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FASE 2: PARCHMENT TEXTURE — Papel sintético cálido (light)
+   ═══════════════════════════════════════════════════════════ */
+.parchment-texture {
+  position: relative;
+}
+
+.parchment-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  background-repeat: repeat;
+  opacity: 1;
+  transition: opacity var(--motion-slow);
+}
+
+:root.dark .parchment-texture::before {
+  opacity: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FASE 2: APP-SHELL — Background refuerzo Parchment / Obsidian
+   ═══════════════════════════════════════════════════════════ */
+.app-shell {
+  background-color: var(--surface-base);
+  background-image:
+    radial-gradient(ellipse at 12% 8%, color-mix(in srgb, var(--color-primary) 6%, transparent), transparent 46%),
+    radial-gradient(ellipse at 86% 84%, rgba(124, 58, 237, 0.06), transparent 40%);
+}
+
+:root.dark .app-shell {
+  background-color: var(--color-obsidian);
+  background-image:
+    radial-gradient(ellipse at 15% 5%, rgba(0, 212, 238, 0.06), transparent 42%),
+    radial-gradient(ellipse at 85% 90%, rgba(99, 102, 241, 0.08), transparent 36%),
+    linear-gradient(180deg, rgba(8, 17, 31, 0.95), rgba(8, 17, 31, 1));
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FASE 2: WORKSPACE HEADER — Glassmorphism Flotante
+   ═══════════════════════════════════════════════════════════ */
+.workspace-header {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(246, 244, 239, 0.65);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03);
+}
+
+:root.dark .workspace-header {
+  background: rgba(14, 26, 46, 0.78);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 1px 12px rgba(0, 212, 238, 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FASE 2: SIDEBAR GHOSTING — Revelación Progresiva
+   ═══════════════════════════════════════════════════════════ */
+.ghosting-panel {
+  opacity: 0.4;
+  filter: saturate(0.92);
+  transition:
+    opacity 300ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ghosting-panel:hover,
+.ghosting-panel:focus-within {
+  opacity: 1;
+  filter: saturate(1);
+}
+
+:root.dark .ghosting-panel {
+  opacity: 0.2;
+}
+
+:root.dark .ghosting-panel:hover,
+:root.dark .ghosting-panel:focus-within {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FASE 2: LEFT PANEL — Glass Obsidian raised 
+   ═══════════════════════════════════════════════════════════ */
+.left-workspace-panel {
+  background: var(--surface-glass);
+  border-color: var(--border-subtle);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+:root.dark .left-workspace-panel {
+  background: rgba(14, 26, 46, 0.72);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FASE 3: GOD MODE — Clase `is-god-mode` a nivel workspace
+   ═══════════════════════════════════════════════════════════ */
+.app-shell.god-mode {
+  --god-mode-transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 220ms ease;
+}
+
+.app-shell.god-mode .main-column {
+  transform: scale(0.992) translateY(0);
+  transition: var(--god-mode-transition);
+}
+
+.workspace-stage.god-mode .left-workspace-panel.open,
+.workspace-stage.god-mode .inspector-panel-shell.open {
+  flex-basis: 380px;
+}
+
+/* God Mode: Editor retrocede, paneles se expanden */
+.app-shell.god-mode .workspace-header {
+  border-color: var(--border-active);
+}
+
+:root.dark .app-shell.god-mode .workspace-header {
+  box-shadow:
+    0 1px 12px rgba(0, 212, 238, 0.12),
+    inset 0 0 0 1px rgba(0, 212, 238, 0.06);
+}
+
+/* God Mode indicator (subtle glow on header's god-mode pill) */
+.app-shell.god-mode .mode-switch-pill.active {
+  background: var(--color-primary-dim);
+  border-color: var(--border-active);
+  color: var(--text-heading);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-primary) 28%, transparent),
+    0 0 14px var(--color-primary-glow);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FASE 3: EDITOR ZEN TYPOGRAPHY — Crimson Pro + leading-relaxed
+   ═══════════════════════════════════════════════════════════ */
+.editor-preview-pane {
+  font-family: var(--font-serif);
+  font-size: clamp(1.18rem, 1.1rem + 0.35vw, 1.32rem);
+  line-height: 1.78;
+  color: var(--text-body);
+  letter-spacing: -0.005em;
+}
+
+.rendered-document {
+  font-family: var(--font-serif);
+  font-size: clamp(1.14rem, 1rem + 0.3vw, 1.28rem);
+  line-height: 1.75;
+  color: var(--text-body);
+}
+
+/* Editor title: large serif in zen, sans in god mode */
+.title-inline-input {
+  font-family: var(--font-serif);
+  color: var(--text-heading);
+  font-size: clamp(1.7rem, 2.1vw, 2.55rem);
+  line-height: 0.98;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.app-shell.god-mode .title-inline-input {
+  font-family: var(--font-sans);
+  font-size: clamp(1.3rem, 1.6vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Heading underline accent */
+.doc-heading-1::after {
+  background: color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+:root.dark .doc-heading-1::after {
+  background: rgba(0, 212, 238, 0.4);
+  box-shadow: 0 0 12px rgba(0, 212, 238, 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FASE 4: SUGGESTIONS POPOVER — Glassmorphic Neural Trigger
+   ═══════════════════════════════════════════════════════════ */
+.suggestions-popover {
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-active);
+  border-radius: 16px;
+  box-shadow: var(--shadow-popover);
+}
+
+:root.dark .suggestions-popover {
+  background: var(--surface-glass);
+  border-color: var(--border-active);
+  box-shadow:
+    var(--shadow-popover),
+    0 0 24px var(--color-primary-glow);
+}
+
+.floating-suggestions-popover {
+  border-color: var(--border-active);
+  box-shadow:
+    var(--shadow-popover),
+    0 0 24px var(--color-primary-glow);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FASE 4: AI STREAMING — Cursor Blink + Stream Bar
+   ═══════════════════════════════════════════════════════════ */
+@keyframes ai-cursor-blink {
+  0%, 100% { border-color: transparent; }
+  50% { border-color: var(--color-primary); }
+}
+
+.writing-lane.ai-streaming::after {
+  background: var(--color-primary);
+  box-shadow: 0 0 12px var(--color-primary-glow);
+  animation: ai-stream-cursor-blink 1s infinite;
+}
+
+.editor-panel.is-streaming::before {
+  background: linear-gradient(90deg,
+    transparent,
+    var(--color-primary-glow),
+    var(--color-primary),
+    var(--color-primary-hover),
+    var(--color-primary-glow),
+    transparent
+  );
+  background-size: 200% 100%;
+  box-shadow: 0 4px 12px var(--color-primary-dim);
+}
+
+/* AI stop button: red translucent shadow */
+.assistant-stop-button {
+  border-color: color-mix(in srgb, var(--color-error) 24%, transparent);
+  background: color-mix(in srgb, var(--color-error) 16%, transparent);
+  color: #FCA5A5;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-error) 12%, transparent);
+}
+
+.assistant-stop-button:hover {
+  border-color: color-mix(in srgb, var(--color-error) 36%, transparent);
+  background: color-mix(in srgb, var(--color-error) 24%, transparent);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--color-error) 18%, transparent);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FASE 4: COMMAND PALETTE — Magnetic modal from above
+   ═══════════════════════════════════════════════════════════ */
+@keyframes command-palette-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes command-palette-backdrop-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.command-palette-backdrop {
+  background: color-mix(in srgb, var(--color-obsidian) 58%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: command-palette-backdrop-enter var(--motion-fast);
+}
+
+.command-palette {
+  background: var(--surface-glass-dark, var(--surface-glass));
+  border: 1px solid var(--border-active);
+  box-shadow:
+    var(--shadow-popover),
+    0 0 40px var(--color-primary-glow);
+  animation: command-palette-enter var(--motion-slow);
+  will-change: transform, opacity;
+}
+
+:root:not(.dark) .command-palette {
+  background: rgba(252, 251, 249, 0.98);
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 32px 100px rgba(15, 23, 42, 0.18);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FASE 5: GRAPH CANVAS — El Mapa Estelar
+   ═══════════════════════════════════════════════════════════ */
+.graph-canvas {
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  background:
+    radial-gradient(circle at center, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 56%),
+    var(--surface-base);
+}
+
+:root.dark .graph-canvas {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(0, 212, 238, 0.06), transparent 50%),
+    radial-gradient(circle at 70% 70%, rgba(99, 102, 241, 0.04), transparent 50%),
+    var(--color-obsidian);
+  box-shadow: inset 0 0 80px rgba(0, 212, 238, 0.03);
+}
+
+.graph-node circle {
+  transition: r 120ms ease, fill 120ms ease, stroke 120ms ease;
+}
+
+.graph-node-halo {
+  opacity: 0.72;
+  animation: neural-pulse 1.8s ease-in-out infinite;
+}
+
+.graph-node text {
+  fill: var(--text-body);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+/* Star clusters: tab-based color coding */
+.graph-node.active circle {
+  filter: drop-shadow(0 0 8px var(--color-primary-glow));
+}
+
+.graph-node.related circle {
+  filter: drop-shadow(0 0 4px var(--color-primary-dim));
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FASE 5: TIME TRAVEL — Stasis Blue Tinting
+   ═══════════════════════════════════════════════════════════ */
+.history-item {
+  position: relative;
+  border-left: 3px solid transparent;
+  transition:
+    border-color var(--motion-fast),
+    background var(--motion-fast);
+}
+
+.history-item:hover {
+  border-left-color: var(--color-primary);
+  background: var(--color-primary-dim);
+}
+
+/* Actor-type visual differentiation */
+.history-actor-icon {
+  display: inline-block;
+  margin-right: 0.35rem;
+  font-size: 0.85em;
+}
+
+.history-actor-ai {
+  border-left-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+
+.history-actor-ai .history-actor-icon {
+  color: var(--color-primary);
+  filter: drop-shadow(0 0 3px var(--color-primary-glow));
+}
+
+.history-actor-system {
+  border-left-color: color-mix(in srgb, var(--text-ghost) 30%, transparent);
+}
+
+.history-actor-system .history-actor-icon {
+  color: var(--text-ghost);
+}
+
+.history-actor-user .history-actor-icon {
+  color: var(--text-muted);
+}
+
+/* Diff colors: insertions green, deletions red */
+.history-diff-insert {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  padding: 0 0.2rem;
+  border-radius: 4px;
+}
+
+.history-diff-delete {
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  padding: 0 0.2rem;
+  border-radius: 4px;
+  text-decoration: line-through;
+}
+
+/* Time travel mode: freeze tint on the entire layout */
+.app-shell.time-travel-mode {
+  filter: hue-rotate(-8deg) saturate(0.85);
+}
+
+.app-shell.time-travel-mode .main-column {
+  box-shadow: inset 0 0 60px color-mix(in srgb, var(--color-info) 8%, transparent);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FASE 5: GPU PURIFICATION — Hardware Compositing Hints
+   transform-gpu ensures panels use compositor layers
+   ═══════════════════════════════════════════════════════════ */
+.left-workspace-panel,
+.inspector-panel-shell,
+.workspace-header-shell,
+.command-palette,
+.floating-suggestions-popover,
+.editor-topbar-shell,
+.editor-meta-shell,
+.editor-side-shell {
+  will-change: transform, opacity;
+  transform: translateZ(0); /* Force GPU layer */
+}
+
+.left-workspace-panel {
+  transform: translate3d(-8px, 0, 0);
+}
+
+.left-workspace-panel.open {
+  transform: translate3d(0, 0, 0);
+}
+
+.inspector-panel-shell {
+  transform: translate3d(8px, 0, 0);
+}
+
+.inspector-panel-shell.open {
+  transform: translate3d(0, 0, 0);
+}
+
+/* Smooth 60fps panel collapse — hardware accelerated */
+.left-workspace-panel,
+.inspector-panel-shell {
+  transition:
+    flex-basis 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.18s ease,
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Workspace grid: flex container for 60fps layout */
+.workspace-grid {
+  contain: layout style;
+}
+
+/* Main column: optimize scroll performance */
+.main-column {
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+
+/* Editor container: prevent layout thrashing during keystrokes */
+.editor-code-mirror .cm-editor {
+  contain: layout style;
+}
+
+/* Canvas: direct GPU compositing */
+.graph-canvas {
+  contain: layout style;
+  transform: translateZ(0);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FASE 5: Spectral Mode (scroll-based ghosting)
+   ═══════════════════════════════════════════════════════════ */
+.app-shell.is-spectral .workspace-header-shell {
+  opacity: 0.65;
+  transition: opacity var(--motion-fast);
+}
+
+.app-shell.is-spectral .ghosting-panel {
+  opacity: 0.15;
+  transition: opacity var(--motion-fast);
+}
+
+.main-column.is-spectral {
+  opacity: 0.65;
+  transition: opacity var(--motion-fast), transform var(--motion-fast);
+}
+
 @media (max-width: 1200px) {
   .app-shell.is-spectral .workspace-header-shell,
   .app-shell.is-spectral .ghosting-panel,
   .main-column.is-spectral {
     opacity: 1;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INSPECTOR COLUMN — Glass with obsidian raise
+   ═══════════════════════════════════════════════════════════ */
+.inspector-column {
+  background: var(--surface-glass);
+  border-color: var(--border-subtle);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-glass);
+}
+
+:root.dark .inspector-column {
+  background: rgba(14, 26, 46, 0.72);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: var(--shadow-glass);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REDUCED MOTION & FORCED COLORS — Accessibility Shield
+   ═══════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .workspace-header,
+  .command-palette,
+  .floating-suggestions-popover {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .ghosting-panel {
+    transition-duration: 0ms;
+  }
+
+  .workspace-stage,
+  .main-column,
+  .mode-switch-pill {
+    transform: none !important;
+  }
+
+  .writing-lane.ai-streaming::after {
+    animation: none;
+    opacity: 1;
+  }
+
+  .editor-panel.is-streaming::before,
+  .cm-entity-pill.is-neural-glow {
+    animation: none !important;
+  }
+
+  .floating-suggestions-popover,
+  .workspace-header-shell,
+  .editor-topbar-shell,
+  .editor-meta-shell,
+  .editor-side-shell,
+  .command-palette {
+    animation: none !important;
+    transition-duration: 0ms !important;
+  }
+
+  .theme-switcher-pill:hover {
+    transform: none;
+  }
+
+  .theme-switcher-pill:hover .theme-switcher-icon {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .workspace-header,
+  .command-palette,
+  .suggestions-popover,
+  .inspector-column,
+  .global-drop-overlay {
+    background: Canvas !important;
+    color: CanvasText !important;
+    border-color: ButtonText !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  button,
+  input,
+  select,
+  textarea,
+  .suggestion-item {
+    forced-color-adjust: auto;
+    border-color: ButtonText !important;
+    background: Canvas !important;
+    color: ButtonText !important;
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role='option']:focus-visible {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px;
+    box-shadow: none !important;
   }
 }

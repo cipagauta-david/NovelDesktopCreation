@@ -116,6 +116,27 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
           setDraggingNodeId(null)
         }}
       >
+        {/* SVG Defs: glow filters for stellar map effect */}
+        <defs>
+          <filter id="glow-active" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="glow-related" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <radialGradient id="halo-gradient" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="var(--color-primary-glow)" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="var(--color-primary-glow)" stopOpacity="0" />
+          </radialGradient>
+        </defs>
         {graphModel.edges.map((edge) => {
           const source = nodeById.get(edge.source)
           const target = nodeById.get(edge.target)
@@ -143,6 +164,7 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
                 key={node.id}
                 className={isActive ? 'graph-node active' : isConnected ? 'graph-node related' : 'graph-node'}
                 opacity={isActive || isConnected ? 1 : activeEntityId ? 0.22 : 1}
+                filter={isActive ? 'url(#glow-active)' : isConnected ? 'url(#glow-related)' : undefined}
                 onClick={() => onSelectEntity(node.id, node.tabId)}
                 onPointerDown={() => setDraggingNodeId(node.id)}
               >

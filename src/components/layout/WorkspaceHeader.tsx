@@ -1,4 +1,5 @@
 import type { Project, WorkspaceView } from '../../types/workspace'
+import { useTheme } from '../../hooks/useTheme'
 
 type WorkspaceHeaderProps = {
   project: Project | undefined
@@ -29,6 +30,12 @@ export function WorkspaceHeader({
   onToggleLeftPanel,
   onToggleInspector,
 }: WorkspaceHeaderProps) {
+  const { resolvedTheme, setTheme } = useTheme()
+
+  const handleToggleTheme = () => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
+  }
+
   return (
     <header className="workspace-header">
       <div className="workspace-header-title">
@@ -81,6 +88,18 @@ export function WorkspaceHeader({
             aria-pressed={godMode}
           >
             {godMode ? 'Salir God Mode' : 'God Mode'}
+          </button>
+
+          <button
+            type="button"
+            className="theme-switcher-pill"
+            onClick={handleToggleTheme}
+            aria-label={resolvedTheme === 'dark' ? 'Cambiar a modo día' : 'Cambiar a modo noche'}
+            title={resolvedTheme === 'dark' ? 'Modo Parchment (Día)' : 'Modo Obsidian Ink (Noche)'}
+          >
+            <span className="theme-switcher-icon" aria-hidden="true">
+              {resolvedTheme === 'dark' ? '☀' : '☽'}
+            </span>
           </button>
 
           <button
