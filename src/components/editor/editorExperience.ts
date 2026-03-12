@@ -219,11 +219,23 @@ function getEntityPillFromTarget(target: EventTarget | null): HTMLElement | null
 }
 
 export function createLiveEditorExtensions(interactions: LiveEditorInteractions = {}): Extension[] {
-  const { onEntityHover, onEntityHoverEnd } = interactions
+  const { onEntityInteract, onEntityHover, onEntityHoverEnd } = interactions
 
   return [
     createDynamicPlugin(buildLiveDecorations),
     EditorView.domEventHandlers({
+      mousedown(event) {
+        if (event.button !== 0 || (!event.ctrlKey && !event.metaKey)) {
+          return false
+        }
+        const pill = getEntityPillFromTarget(event.target)
+        if (pill?.dataset.entityId) {
+          event.preventDefault()
+          onEntityInteract?.(pill.dataset.entityId)
+          return true
+        }
+        return false
+      },
       click(event) {
         if (event.button !== 0 || (!event.ctrlKey && !event.metaKey)) {
           return false
@@ -232,7 +244,7 @@ export function createLiveEditorExtensions(interactions: LiveEditorInteractions 
         const pill = getEntityPillFromTarget(event.target)
         if (pill && pill.dataset.entityId) {
           event.preventDefault()
-          interactions.onEntityInteract?.(pill.dataset.entityId)
+          onEntityInteract?.(pill.dataset.entityId)
           return true
         }
         return false

@@ -15,6 +15,7 @@ export type AppSettings = {
   provider: Provider
   model: string
   apiKeyHint: string
+  apiKey?: string
 }
 
 export type OnboardingPayload = {

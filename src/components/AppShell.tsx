@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type DragEvent } from 'react'
 import { EditorPanel } from './EditorPanel'
 import { EntityList } from './EntityList'
 import { GraphPanel } from './GraphPanel'
@@ -17,6 +17,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   const workspace = useWorkspace(initialData, worker)
   const [zenMode, setZenMode] = useState(false)
   const [searchPaletteOpen, setSearchPaletteOpen] = useState(false)
+  const [globalDragging, setGlobalDragging] = useState(false)
   const hasLeftPanel = !zenMode && (workspace.panels.sidebar || workspace.panels.entities)
   const hasInspectorPanel = !zenMode && workspace.panels.inspector
 
@@ -44,9 +45,36 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   }
 
   const handleSelectResult = (entityId: string, tabId: string) => { workspace.selectEntity(entityId, tabId); setSearchPaletteOpen(false) }
+  const handleGlobalDrop = (event: DragEvent<HTMLElement>) => {
+    event.preventDefault()
+    setGlobalDragging(false)
+    const files = event.dataTransfer.files
+    if (!files || files.length === 0) {
+      return
+    }
+    void workspace.attachImages(files)
+  }
 
   return (
-    <main className="app-shell">
+    <main
+      className={globalDragging ? 'app-shell global-dragging' : 'app-shell'}
+      onDragOver={(event) => {
+        if (!Array.from(event.dataTransfer.items).some((item) => item.kind === 'file')) {
+          return
+        }
+        event.preventDefault()
+        if (!globalDragging) {
+          setGlobalDragging(true)
+        }
+      }}
+      onDragLeave={(event) => {
+        if (event.currentTarget.contains(event.relatedTarget as Node)) {
+          return
+        }
+        setGlobalDragging(false)
+      }}
+      onDrop={handleGlobalDrop}
+    >
       <div className={zenMode ? 'workspace-header-shell is-hidden' : 'workspace-header-shell'}>
         <WorkspaceHeader project={workspace.activeProject} searchResultsCount={workspace.searchResults.length} workspaceView={workspace.workspaceView} leftPanelOpen={hasLeftPanel} inspectorOpen={hasInspectorPanel} hasActiveSearch={workspace.searchQuery.trim().length > 0} onOpenSearch={() => setSearchPaletteOpen(true)} onViewChange={workspace.setWorkspaceView} onToggleLeftPanel={handleToggleNav} onToggleInspector={() => workspace.togglePanel('inspector')} />
       </div>
@@ -82,6 +110,12 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
 
       {searchPaletteOpen && <CommandPalette searchQuery={workspace.searchQuery} searchResults={workspace.searchResults} onSearchChange={workspace.setSearchQuery} onSelectResult={handleSelectResult} onClose={() => setSearchPaletteOpen(false)} />}
       {workspace.toast && <div className="toast">{workspace.toast}</div>}
+      {globalDragging && (
+        <div className="global-drop-overlay" aria-live="polite">
+          <strong>Suelta imágenes para anexarlas a la entidad activa</strong>
+          <span>Funciona en cualquier vista del workspace.</span>
+        </div>
+      )}
     </main>
   )
 }

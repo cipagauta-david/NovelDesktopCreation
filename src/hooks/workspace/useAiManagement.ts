@@ -4,30 +4,37 @@ import type {
   Project,
   CollectionTab,
   EntityRecord,
-  AiProposal
+  AiProposal,
+  AppSettings,
 } from '../../types/workspace'
 import { buildStructuredReference } from '../../utils/references'
 import { createHistoryEvent, isoNow, uid } from '../../utils/workspace'
+import { requestLlmProposal } from '../../services/llm'
 
 export function useAiManagement(
   activeProject: Project | undefined,
   activeTab: CollectionTab | null,
   activeEntity: EntityRecord | null,
+  settings: AppSettings | null,
   withProjectUpdate: (projectId: string, updater: (project: Project) => Project) => void,
   setToast: (msg: string) => void
 ) {
   const [pendingProposal, setPendingProposal] = useState<AiProposal | null>(null)
+  const [isGeneratingProposal, setIsGeneratingProposal] = useState(false)
 
-  function generateAiProposal() {
-    if (!activeEntity || !activeTab) return
+  function buildFallbackProposal() {
+    if (!activeEntity || !activeTab) {
+      return null
+    }
     const missingField = activeEntity.fields.some((field) => field.key === 'Pregunta dramática')
       ? null
       : { id: uid('field'), key: 'Pregunta dramática', value: '¿Qué verdad teme descubrir?' }
-    setPendingProposal({
+
+    return {
       id: uid('proposal'),
       title: `Propuesta contextual para ${activeEntity.title}`,
       summary:
-        'La IA sugiere reforzar claridad dramática, continuity y una nota derivada preparada para confirmación humana.',
+        'Sugerencia local de fallback: refuerza claridad dramática, continuidad y una nota derivada para confirmación humana.',
       entityId: activeEntity.id,
       contentAppend:
         `\n\n## Sugerencia IA\n- Aumenta la fricción en el siguiente beat.\n- Conecta el conflicto con el prompt de la tab: "${activeTab.prompt}".\n- Refuerza una referencia cruzada que haga visible el costo narrativo.`,
@@ -38,7 +45,48 @@ export function useAiManagement(
           activeEntity.title,
         )}.\n\n- Riesgo narrativo inmediato\n- Pregunta pendiente\n- Próxima escena candidata`,
       fieldToAdd: missingField,
-    })
+    } satisfies AiProposal
+  }
+
+  async function generateAiProposal() {
+    if (!activeEntity || !activeTab) return
+    if (isGeneratingProposal) return
+    setIsGeneratingProposal(true)
+    const fallback = buildFallbackProposal()
+    try {
+      const llmText =
+        settings == null
+          ? ''
+          : await requestLlmProposal({
+              provider: settings.provider,
+              model: settings.model,
+              apiKey: settings.apiKey,
+              tabPrompt: activeTab.prompt,
+              entityTitle: activeEntity.title,
+              entityContent: activeEntity.content,
+            })
+
+      if (!llmText.trim() || !fallback) {
+        setPendingProposal(fallback)
+        setToast('Sin respuesta remota, se cargó propuesta local.')
+        return
+      }
+
+      setPendingProposal({
+        ...fallback,
+        summary: `Propuesta generada con ${settings?.provider ?? 'motor local'}. Revisa antes de aplicar.`,
+        contentAppend: `\n\n## Sugerencia IA\n${llmText.trim()}`,
+      })
+      setToast('Propuesta IA generada. Revisa y confirma antes de aplicar.')
+    } catch (error) {
+      console.error('[AI] Error generando propuesta remota, usando fallback local', error)
+      if (fallback) {
+        setPendingProposal(fallback)
+      }
+      setToast('No se pudo conectar al proveedor IA. Se mantiene propuesta local.')
+    } finally {
+      setIsGeneratingProposal(false)
+    }
   }
 
   function confirmAiProposal() {
@@ -101,6 +149,7 @@ export function useAiManagement(
 
   return {
     pendingProposal,
+    isGeneratingProposal,
     setPendingProposal,
     generateAiProposal,
     confirmAiProposal,

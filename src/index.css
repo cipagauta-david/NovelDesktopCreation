@@ -1543,6 +1543,18 @@ label {
 
 .graph-node {
   cursor: pointer;
+  transition: opacity 140ms ease;
+}
+
+.graph-node circle {
+  transition:
+    cx 90ms linear,
+    cy 90ms linear,
+    r 120ms ease;
+}
+
+.graph-node:active {
+  cursor: grabbing;
 }
 
 .graph-node text {
@@ -1588,6 +1600,25 @@ svg {
   right: 1rem;
   bottom: 1rem;
   padding: 0.9rem 1.1rem;
+}
+
+.global-drop-overlay {
+  position: fixed;
+  inset: 1.2rem;
+  z-index: 60;
+  pointer-events: none;
+  border-radius: 20px;
+  border: 2px dashed var(--border-focus);
+  background: rgba(15, 23, 42, 0.76);
+  display: grid;
+  place-content: center;
+  gap: 0.4rem;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.app-shell.global-dragging .workspace-stage {
+  filter: saturate(0.78);
 }
 
 .main-column.focus-mode {

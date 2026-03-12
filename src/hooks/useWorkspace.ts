@@ -50,7 +50,14 @@ export function useWorkspace(
   const { searchQuery, setSearchQuery, searchResults } = useSearchManagement(activeProject, worker)
 
   const entityManagement = useEntityManagement(setData, activeProject, activeTab, activeEntity, activeDraft, tabEntities, setDraft, referenceSuggestion, setReferenceSuggestion, setWorkspaceView, projectManagement.withProjectUpdate, setToast)
-  const aiManagement = useAiManagement(activeProject, activeTab, activeEntity, projectManagement.withProjectUpdate, setToast)
+  const aiManagement = useAiManagement(
+    activeProject,
+    activeTab,
+    activeEntity,
+    data.settings,
+    projectManagement.withProjectUpdate,
+    setToast,
+  )
 
   // Motor de persistencia optimista con el worker
   usePersistenceManagement(activeProject, activeEntity, draft, setData, setSaveStatus, saveStatus, worker)
@@ -80,7 +87,13 @@ export function useWorkspace(
   }, [toast, setToast])
 
   const completeOnboarding = useCallback((payload: OnboardingPayload) => {
-    const settings: AppSettings = { authorName: payload.authorName || 'Autor(a)', provider: payload.provider, model: payload.model, apiKeyHint: payload.apiKey ? `••••${payload.apiKey.slice(-4)}` : 'Modo local' }
+    const settings: AppSettings = {
+      authorName: payload.authorName || 'Autor(a)',
+      provider: payload.provider,
+      model: payload.model,
+      apiKeyHint: payload.apiKey ? `••••${payload.apiKey.slice(-4)}` : 'Modo local',
+      apiKey: payload.apiKey || undefined,
+    }
     setData((c) => ({ ...c, settings }))
     setToast('Workspace configurado. Todo listo para escribir.')
   }, [setData, setToast])
