@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import type { PersistedState, Project } from '../../types/workspace'
 import { createHistoryEvent, isoNow, uid } from '../../utils/workspace'
 import { getDefaultPersistedState } from '../../data/seed'
@@ -13,12 +13,15 @@ export function useProjectManagement(
   const [newProjectName, setNewProjectName] = useState('')
   const [newProjectDescription, setNewProjectDescription] = useState('')
 
-  function withProjectUpdate(projectId: string, updater: (project: Project) => Project) {
-    setData((current) => ({
-      ...current,
-      projects: current.projects.map((project) => (project.id === projectId ? updater(project) : project)),
-    }))
-  }
+  const withProjectUpdate = useCallback(
+    (projectId: string, updater: (project: Project) => Project) => {
+      setData((current) => ({
+        ...current,
+        projects: current.projects.map((project) => (project.id === projectId ? updater(project) : project)),
+      }))
+    },
+    [setData],
+  )
 
   function selectProject(projectId: string) {
     const project = data.projects.find((entry) => entry.id === projectId)

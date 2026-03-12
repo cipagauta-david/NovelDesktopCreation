@@ -203,13 +203,13 @@ export function useEntityManagement(
     const assets = await Promise.all(
       imageFiles.map(
         (file) =>
-          new Promise<FieldValue | never>((resolve, reject) => {
+          new Promise<FieldValue>((resolve, reject) => {
             const reader = new FileReader()
             reader.onload = () =>
               resolve({
                 id: uid('asset'),
                 key: file.name,
-                value: String(reader.result),
+                value: reader.result as string,
               })
             reader.onerror = () => reject(reader.error)
             reader.readAsDataURL(file)

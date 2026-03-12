@@ -41,7 +41,7 @@ export function GraphPanel({ graphModel, activeEntityId, onSelectEntity }: Graph
               y1={source.y}
               x2={target.x}
               y2={target.y}
-              stroke={isRelated ? 'rgba(125, 211, 252, 0.55)' : 'rgba(148, 163, 184, 0.16)'}
+              stroke={isRelated ? 'var(--border-focus)' : 'var(--border-subtle)'}
               strokeWidth={isRelated ? '2.4' : '1.2'}
             />
           )
@@ -61,11 +61,11 @@ export function GraphPanel({ graphModel, activeEntityId, onSelectEntity }: Graph
                 cx={node.x}
                 cy={node.y}
                 r={isActive ? 16 : 10}
-                fill={isActive ? '#7c3aed' : '#1e293b'}
-                stroke={isActive ? '#c4b5fd' : '#7dd3fc'}
+                fill={isActive ? 'var(--brand-accent)' : 'var(--surface-base)'}
+                stroke={isActive ? 'var(--brand-accent-hover)' : 'var(--border-focus)'}
                 strokeWidth={isActive ? '2.4' : '1.4'}
               />
-              <text x={node.x} y={node.y + 24} textAnchor="middle">
+              <text x={node.x} y={node.y + 24} textAnchor="middle" fill="var(--text-primary)">
                 {node.title.length > 18 ? `${node.title.slice(0, 18)}…` : node.title}
               </text>
             </g>
