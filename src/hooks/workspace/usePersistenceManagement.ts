@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
 import { draftPayload, draftFromEntity, createHistoryEvent, isoNow } from '../../utils/workspace'
-import type { DraftState, EntityRecord, PersistedState } from '../../types/workspace'
+import type { DraftState, PersistedState } from '../../types/workspace'
 import type { AppWorker } from '../../data/worker'
 import * as Comlink from 'comlink'
+import { create } from 'mutative'
 
 export function usePersistenceManagement(
   activeProject: any,
@@ -28,49 +29,43 @@ export function usePersistenceManagement(
     const frameId = window.requestAnimationFrame(() => setSaveStatus('saving'))
 
     const timeoutId = window.setTimeout(async () => {
-      // Optimistic update of state locally
+      // Optimistic update of state locally using Mutative for hyper-fast deep cloning
+      let nextState: PersistedState | null = null
+
       setData((current) => {
-        const nextState = {
-          ...current,
-          projects: current.projects.map((project) => {
-            if (project.id !== activeProject.id) return project
-            const entities = project.entities.map((entity) => {
-              if (entity.id !== activeEntity.id) return entity
-              const updatedEntity: EntityRecord = {
-                ...entity,
-                title: draft.title || entity.title,
-                content: draft.content,
-                templateId: draft.templateId,
-                tags: draft.tagsText.split(',').map(s => s.trim()).filter(Boolean),
-                aliases: draft.aliasesText.split(',').map(s => s.trim()).filter(Boolean),
-                fields: draft.fields,
-                revision: entity.revision + 1,
-                updatedAt: isoNow(),
-              }
-              return {
-                ...updatedEntity,
-                history: [
-                  createHistoryEvent('Edición rápida', `Revisión ${updatedEntity.revision} guardada.`),
-                  ...entity.history,
-                ].slice(0, 20),
-              }
-            })
-            return {
-              ...project,
-              updatedAt: isoNow(),
-              entities,
-              history: [
-                createHistoryEvent('Autosave', `Guardado automático.`),
-                ...project.history,
-              ].slice(0, 40),
-            }
-          }),
+        nextState = create(current, (draftState) => {
+          const project = draftState.projects.find((p) => p.id === activeProject.id)
+          if (!project) return
+
+          const entity = project.entities.find((e) => e.id === activeEntity.id)
+          if (!entity) return
+
+          // Patch entity directly
+          entity.title = draft.title || entity.title
+          entity.content = draft.content
+          entity.templateId = draft.templateId
+          entity.tags = draft.tagsText.split(',').map(s => s.trim()).filter(Boolean)
+          entity.aliases = draft.aliasesText.split(',').map(s => s.trim()).filter(Boolean)
+          entity.fields = draft.fields
+          entity.revision += 1
+          entity.updatedAt = isoNow()
+
+          // Prepend entity history
+          entity.history.unshift(createHistoryEvent('Edición rápida', `Revisión ${entity.revision} guardada.`))
+          if (entity.history.length > 20) entity.history.length = 20
+
+          // Update project meta
+          project.updatedAt = isoNow()
+          project.history.unshift(createHistoryEvent('Autosave', `Guardado automático.`))
+          if (project.history.length > 40) project.history.length = 40
+        })
+
+        if (nextState) {
+          // Fire & Forget to worker (Off-main-thread write)
+          worker.persistState(nextState).catch(console.error)
         }
-
-        // Fire & Forget to worker (Off-main-thread write)
-        worker.persistState(nextState).catch(console.error)
-
-        return nextState
+        
+        return nextState || current
       })
       
       setSaveStatus('saved')

@@ -7,7 +7,6 @@ import { OnboardingScreen } from './OnboardingScreen'
 import { Sidebar } from './Sidebar'
 import { TabBar } from './TabBar'
 import { WorkspaceHeader } from './WorkspaceHeader'
-import { CommandPalette } from './CommandPalette'
 import { useWorkspace } from '../hooks/useWorkspace'
 import type { PersistedState } from '../types/workspace'
 import * as Comlink from 'comlink'
@@ -48,7 +47,21 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   return (
     <main className="app-shell">
       <div className={zenMode ? 'workspace-header-shell is-hidden' : 'workspace-header-shell'}>
-        <WorkspaceHeader project={workspace.activeProject} searchResultsCount={workspace.searchResults.length} workspaceView={workspace.workspaceView} leftPanelOpen={hasLeftPanel} inspectorOpen={hasInspectorPanel} hasActiveSearch={workspace.searchQuery.trim().length > 0} onOpenSearch={() => setSearchPaletteOpen(true)} onViewChange={workspace.setWorkspaceView} onToggleLeftPanel={handleToggleNav} onToggleInspector={() => workspace.togglePanel('inspector')} />
+        <WorkspaceHeader 
+          project={workspace.activeProject} 
+          workspaceView={workspace.workspaceView} 
+          leftPanelOpen={hasLeftPanel} 
+          inspectorOpen={hasInspectorPanel} 
+          searchQuery={workspace.searchQuery}
+          searchResults={workspace.searchResults}
+          searchOpen={searchPaletteOpen}
+          onSearchChange={workspace.setSearchQuery}
+          onSearchOpenChange={setSearchPaletteOpen}
+          onSelectSearchResult={handleSelectResult}
+          onViewChange={workspace.setWorkspaceView} 
+          onToggleLeftPanel={handleToggleNav} 
+          onToggleInspector={() => workspace.togglePanel('inspector')} 
+        />
       </div>
 
       <section className={zenMode ? 'workspace-stage focus-mode' : 'workspace-stage'}>
@@ -80,7 +93,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
         </section>
       </section>
 
-      {searchPaletteOpen && <CommandPalette searchQuery={workspace.searchQuery} searchResults={workspace.searchResults} onSearchChange={workspace.setSearchQuery} onSelectResult={handleSelectResult} onClose={() => setSearchPaletteOpen(false)} />}
+
       {workspace.toast && <div className="toast">{workspace.toast}</div>}
     </main>
   )
