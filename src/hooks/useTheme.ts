@@ -1,11 +1,28 @@
-import { useEffect, useMemo, useState } from 'react'
+import {
+  createContext,
+  createElement,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type PropsWithChildren,
+} from 'react'
 
 const THEME_STORAGE_KEY = 'ndc-theme'
-type ThemePreference = 'light' | 'dark' | 'system'
+export type ThemePreference = 'light' | 'dark' | 'system'
+type ResolvedTheme = 'light' | 'dark'
 
-function getSystemTheme(): 'light' | 'dark' {
+type ThemeContextValue = {
+  theme: ThemePreference
+  resolvedTheme: ResolvedTheme
+  setTheme: (theme: ThemePreference) => void
+}
+
+const ThemeContext = createContext<ThemeContextValue | null>(null)
+
+function getSystemTheme(): ResolvedTheme {
   if (typeof window === 'undefined' || !window.matchMedia) {
-    return 'dark'
+    return 'light'
   }
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
@@ -16,17 +33,24 @@ function readStoredTheme(): ThemePreference {
   return value === 'light' || value === 'dark' || value === 'system' ? value : 'system'
 }
 
-export function useTheme() {
+function applyThemeToDocument(resolvedTheme: ResolvedTheme) {
+  if (typeof document === 'undefined') return
+  const root = document.documentElement
+  root.classList.toggle('dark', resolvedTheme === 'dark')
+  root.setAttribute('data-theme', resolvedTheme)
+}
+
+export function ThemeProvider({ children }: PropsWithChildren) {
   const [theme, setTheme] = useState<ThemePreference>(() => readStoredTheme())
-  const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(() => getSystemTheme())
+  const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(() => getSystemTheme())
+
   const resolvedTheme = useMemo(
     () => (theme === 'system' ? systemTheme : theme),
     [theme, systemTheme],
   )
 
   useEffect(() => {
-    if (typeof document === 'undefined') return
-    document.documentElement.classList.toggle('dark', resolvedTheme === 'dark')
+    applyThemeToDocument(resolvedTheme)
   }, [resolvedTheme])
 
   useEffect(() => {
@@ -42,5 +66,19 @@ export function useTheme() {
     return () => media.removeEventListener('change', handleChange)
   }, [theme])
 
-  return { theme, resolvedTheme, setTheme }
+  const value = useMemo<ThemeContextValue>(() => ({
+    theme,
+    resolvedTheme,
+    setTheme,
+  }), [theme, resolvedTheme])
+
+  return createElement(ThemeContext.Provider, { value }, children)
+}
+
+export function useTheme() {
+  const context = useContext(ThemeContext)
+  if (!context) {
+    throw new Error('useTheme debe usarse dentro de ThemeProvider')
+  }
+  return context
 }

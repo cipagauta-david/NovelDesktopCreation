@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react'
 import { AppShell } from './components/layout/AppShell'
 import { useAppWorker } from './hooks/useAppWorker'
-import { useTheme } from './hooks/useTheme'
+import { ThemeProvider, useTheme } from './hooks/useTheme'
 import { getDefaultPersistedState } from './data/seed/project'
 import type { PersistedState } from './types/workspace'
 
 function App() {
-  useTheme()
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  )
+}
+
+function AppContent() {
+  const { resolvedTheme } = useTheme()
   const { worker, isReady } = useAppWorker()
   const [initialData, setInitialData] = useState<PersistedState | null>(null)
 
@@ -34,14 +42,18 @@ function App() {
 
   if (!worker || !initialData) {
     return (
-      <div className="surface-panel empty-state" style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <div data-resolved-theme={resolvedTheme} className="surface-panel empty-state" style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <h3>Iniciando Motor Off-Thread...</h3>
         <p>Cargando índices FTS5 y base de datos local</p>
       </div>
     )
   }
 
-  return <AppShell initialData={initialData} worker={worker} />
+  return (
+    <div data-resolved-theme={resolvedTheme}>
+      <AppShell initialData={initialData} worker={worker} />
+    </div>
+  )
 }
 
 export default App
