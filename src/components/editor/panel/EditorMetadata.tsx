@@ -10,7 +10,7 @@ type EditorMetadataProps = {
 
 export function EditorMetadata({ draft, templates, zenMode, onDraftChange }: EditorMetadataProps) {
   return (
-    <div className={zenMode ? 'editor-meta-shell is-hidden' : 'editor-meta-shell'}>
+    <div className={zenMode ? 'editor-meta-shell is-hidden' : 'editor-meta-shell'} style={{ fontFamily: 'var(--font-sans)' }}>
       <PanelSection title="Metadatos" meta="Plantilla, etiquetas y claves de contexto" defaultOpen={false}>
         <div className="form-grid compact-metadata-grid">
           <label>

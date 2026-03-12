@@ -15,8 +15,8 @@ export function EditorSuggestions({ active, options, style, onInsertReference }:
   }
 
   return (
-    <div className="suggestions-popover floating-suggestions-popover" style={style} role="listbox" aria-label="Sugerencias de referencias">
-      <div className="suggestions-popover-title">Suggestions</div>
+    <div className="suggestions-popover floating-suggestions-popover surface-glass shadow-glow" style={style} role="listbox" aria-label="Sugerencias de referencias">
+      <div className="suggestions-popover-title" style={{ fontFamily: 'var(--font-sans)', color: 'var(--text-ghost)', fontSize: '0.85em', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid var(--border-divider)' }}>Variables Neurales / Sugerencias</div>
       {options.map((option, index) => (
         <button
           key={option.id}

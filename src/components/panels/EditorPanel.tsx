@@ -440,7 +440,7 @@ export function EditorPanel({
   )
 
   return (
-    <section className={zenMode ? 'editor-panel editor-panel-zen' : 'editor-panel'} aria-label="Editor principal">
+    <section className={`editor-panel ${zenMode ? 'editor-panel-zen' : ''} ${isAiStreaming ? 'is-streaming' : ''}`} aria-label="Editor principal">
       {zenMode && (
         <button
           type="button"
