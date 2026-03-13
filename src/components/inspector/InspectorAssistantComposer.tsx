@@ -11,35 +11,39 @@ type InspectorAssistantComposerProps = {
 
 export function InspectorAssistantComposer({ value, streamStatus, onChange, onSubmit, onStopGeneration }: InspectorAssistantComposerProps) {
   const isStreaming = streamStatus === 'streaming'
+  const canSubmit = value.trim().length > 0 && !isStreaming
 
   return (
     <form className="assistant-composer" onSubmit={onSubmit}>
-      <label className="assistant-composer-label">
-        <span>Habla con la IA</span>
+      <div className="assistant-composer-input-shell">
         <textarea
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          placeholder="Pide una escena alternativa, continuidad, tono o conflicto."
-          rows={3}
+          placeholder="Pide una escena alternativa, continuidad, tono o conflicto…"
+          rows={4}
         />
-      </label>
+        <button
+          type="submit"
+          className="assistant-send-button"
+          disabled={!canSubmit}
+          aria-label="Enviar a la IA"
+          title="Enviar"
+        >
+          ↗
+        </button>
+      </div>
 
-      <div className="assistant-composer-actions">
+      <div className="assistant-composer-actions assistant-composer-footer">
         <small>Se integra en las instrucciones activas de esta colección.</small>
-        <div className="assistant-composer-buttons">
-          {isStreaming && (
-            <button
-              type="button"
-              className="ghost-button destructive-text assistant-stop-button"
-              onClick={onStopGeneration}
-            >
-              ■ Detener IA
-            </button>
-          )}
-          <button type="submit" className="primary-button" disabled={!value.trim() || isStreaming}>
-            Enviar
+        {isStreaming && (
+          <button
+            type="button"
+            className="ghost-button destructive-text assistant-stop-button"
+            onClick={onStopGeneration}
+          >
+            ■ Detener IA
           </button>
-        </div>
+        )}
       </div>
     </form>
   )

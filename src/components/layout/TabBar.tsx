@@ -56,13 +56,13 @@ export const TabBar = memo(function TabBar({
               type="button"
               className={tab.id === activeTab?.id ? 'tab-tree-item active' : 'tab-tree-item'}
               onClick={() => onSelectTab(tab.id)}
+              title={tab.prompt}
               role="treeitem"
               aria-selected={tab.id === activeTab?.id}
             >
               <span className="tab-tree-icon">{tab.icon}</span>
               <span className="tab-tree-copy">
                 <strong>{tab.name}</strong>
-                <small>{tab.prompt}</small>
               </span>
             </button>
           ))}

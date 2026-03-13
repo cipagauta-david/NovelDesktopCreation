@@ -59,6 +59,10 @@ export const editorTheme = EditorView.theme(
       backgroundColor: 'var(--accent-primary)',
       color: 'var(--bg-surface)',
     },
+    '.cm-source-heading-1, .cm-source-heading-2, .cm-source-heading-3, .cm-live-heading-1, .cm-live-heading-2, .cm-live-heading-3': {
+      color: 'var(--text-primary)',
+      fontWeight: '700',
+    },
   },
   { dark: true },
 )

@@ -24,7 +24,7 @@ import {
   createNarrativeGhostTextProvider,
   createSourceEditorExtensions,
 } from '../editor/editorExperience'
-import { baseEditorTheme, editorBasicSetup, editorModes } from '../editor/editorThemes'
+import { baseEditorTheme, editorBasicSetup } from '../editor/editorThemes'
 import { renderDocument } from '../editor/renderDocument'
 import { EditorAssets } from '../editor/panel/EditorAssets'
 import { EditorHeader } from '../editor/panel/EditorHeader'
@@ -394,22 +394,6 @@ export function EditorPanel({
     <PanelSection
       title="Documento"
       meta="Usa {{}} para enlazar entidades relacionadas"
-      actions={
-        <div className="editor-mode-switch segmented-control" role="tablist" aria-label="Modo del editor">
-          {editorModes.map((mode) => (
-            <button
-              key={mode.id}
-              type="button"
-              className={editorMode === mode.id ? 'active' : ''}
-              title={mode.description}
-              aria-pressed={editorMode === mode.id}
-              onClick={() => setEditorMode(mode.id)}
-            >
-              {mode.label}
-            </button>
-          ))}
-        </div>
-      }
     >
       <div
         ref={writingLaneRef}
@@ -492,9 +476,11 @@ export function EditorPanel({
       <EditorHeader
         draft={draft}
         entity={entity}
+        editorMode={editorMode}
         saveStatus={saveStatus}
         zenMode={zenMode}
         onDraftChange={onDraftChange}
+        onEditorModeChange={setEditorMode}
         onApplyTemplate={onApplyTemplate}
         onDuplicate={onDuplicate}
         onArchive={onArchive}
