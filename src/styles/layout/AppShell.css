@@ -470,3 +470,33 @@
   border-left: 1px solid var(--app-shell-separator);
   box-shadow: -1px 0 0 color-mix(in srgb, var(--app-shell-separator) 70%, transparent);
 }
+
+/* Surface framing reset */
+.app-shell {
+  background: var(--surface-base);
+}
+
+.workspace-header-shell {
+  border-bottom: 0;
+}
+
+.left-workspace-panel,
+.inspector-panel-shell {
+  background: var(--surface-panel);
+  border: 1px solid var(--surface-panel-border, var(--border-subtle));
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
+  border-radius: 12px;
+}
+
+.main-column {
+  background: var(--surface-canvas, var(--surface-base));
+  border: 1px solid var(--surface-panel-border, var(--border-subtle));
+  border-radius: 12px;
+  margin: 0;
+  padding: 1rem;
+}
+
+.left-workspace-panel.open,
+.inspector-panel-shell.open {
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
+}

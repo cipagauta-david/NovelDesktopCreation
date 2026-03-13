@@ -156,16 +156,39 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
       context.arc(node.x, node.y, isActive ? 16 : 10, 0, Math.PI * 2)
       context.fill()
       context.stroke()
+
+      if (isActive) {
+        context.strokeStyle = 'rgba(0, 212, 238, 0.95)'
+        context.lineWidth = 2
+        context.beginPath()
+        context.arc(node.x, node.y, 20, 0, Math.PI * 2)
+        context.stroke()
+      }
       context.restore()
 
       context.save()
       context.globalAlpha = alpha
+      const label = node.title.length > 18 ? `${node.title.slice(0, 18)}…` : node.title
+      context.font = '12px Inter, sans-serif'
+      const textWidth = context.measureText(label).width
+      const labelWidth = textWidth + 16
+      const labelHeight = 20
+      const labelX = node.x - labelWidth / 2
+      const labelY = node.y + 18
+
+      context.fillStyle = isDarkTheme ? 'rgba(8, 17, 31, 0.78)' : 'rgba(255, 255, 255, 0.9)'
+      context.strokeStyle = isDarkTheme ? 'rgba(148, 163, 184, 0.22)' : 'rgba(15, 23, 42, 0.1)'
+      context.lineWidth = 1
+      context.beginPath()
+      context.roundRect(labelX, labelY, labelWidth, labelHeight, 8)
+      context.fill()
+      context.stroke()
+
       context.fillStyle = isDarkTheme ? 'rgba(226, 232, 255, 0.95)' : 'rgba(15, 23, 42, 0.92)'
       context.font = '12px Inter, sans-serif'
       context.textAlign = 'center'
       context.textBaseline = 'top'
-      const label = node.title.length > 18 ? `${node.title.slice(0, 18)}…` : node.title
-      context.fillText(label, node.x, node.y + 24)
+      context.fillText(label, node.x, node.y + 22)
       context.restore()
     }
   }, [activeEntityId, connectedNodeIds, graphModel.edges, nodeById, nodesWithPosition, useCanvasRenderer])
@@ -177,21 +200,9 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
           <h3>Mapa narrativo</h3>
           <p>Explora conexiones y arrastra nodos para reorganizar el mapa en tiempo real.</p>
         </div>
-        <div className="toolbar-group">
-          <small>{graphModel.nodes.length} nodos</small>
-          <button
-            type="button"
-            className={relationSourceId ? 'ghost-button compact-button active' : 'ghost-button compact-button'}
-            onClick={() => setRelationSourceId((current) => current ? null : activeEntityId ?? null)}
-          >
-            {relationSourceId ? 'Cancelar enlace' : 'Crear enlace'}
-          </button>
-          <button type="button" className="ghost-button compact-button" onClick={resetLayout}>
-            Restablecer layout
-          </button>
-        </div>
       </div>
 
+      <div className="graph-canvas-shell">
       {useCanvasRenderer ? (
         <canvas
           ref={canvasRef}
@@ -365,14 +376,49 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
                 stroke={isActive ? 'var(--brand-accent-hover)' : 'var(--border-focus)'}
                 strokeWidth={isActive ? '2.4' : '1.4'}
               />
-              <text className="graph-node-text" x={node.x} y={node.y + 24} textAnchor="middle">
-                {node.title.length > 18 ? `${node.title.slice(0, 18)}…` : node.title}
-              </text>
+              {isActive && (
+                <circle
+                  cx={node.x}
+                  cy={node.y}
+                  r={20}
+                  fill="none"
+                  stroke="var(--brand-accent)"
+                  strokeWidth="2"
+                  className="graph-node-ring"
+                />
+              )}
+              {(() => {
+                const label = node.title.length > 18 ? `${node.title.slice(0, 18)}…` : node.title
+                const labelWidth = Math.max(70, label.length * 6.8 + 16)
+                return (
+                  <g className="graph-node-label">
+                    <rect x={node.x - labelWidth / 2} y={node.y + 14} width={labelWidth} height={20} rx={8} />
+                    <text className="graph-node-text" x={node.x} y={node.y + 28} textAnchor="middle">
+                      {label}
+                    </text>
+                  </g>
+                )
+              })()}
             </g>
           )
         })}
       </svg>
       )}
+
+      <div className="graph-floating-toolbar" role="toolbar" aria-label="Acciones del mapa narrativo">
+        <small>{graphModel.nodes.length} nodos</small>
+        <button
+          type="button"
+          className={relationSourceId ? 'ghost-button compact-button active' : 'ghost-button compact-button'}
+          onClick={() => setRelationSourceId((current) => current ? null : activeEntityId ?? null)}
+        >
+          {relationSourceId ? '✕ Cancelar enlace' : '+ Crear enlace'}
+        </button>
+        <button type="button" className="ghost-button compact-button" onClick={resetLayout}>
+          ↺ Restablecer layout
+        </button>
+      </div>
+      </div>
     </section>
   )
 })

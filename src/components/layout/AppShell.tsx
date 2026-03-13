@@ -39,6 +39,16 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   const godMode = workspace.workspaceView === 'graph'
   const hasLeftPanel = !zenMode && (workspace.panels.sidebar || workspace.panels.entities)
   const hasInspectorPanel = !zenMode && workspace.panels.inspector
+  const activeNodeLabel = workspace.activeEntity?.title ?? workspace.activeTab?.name ?? 'Sin nodo activo'
+  const activeNodeMeta = workspace.workspaceView === 'graph'
+    ? 'Vista mapa narrativa'
+    : workspace.activeProject?.name ?? 'Proyecto narrativo'
+  const providerModel = workspace.data.settings?.model ?? 'IA sin configurar'
+  const aiModelLabel = providerModel
+    .split('/')
+    .pop()
+    ?.replace(/-/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase()) ?? providerModel
 
   // Destructure stable callbacks to avoid re-running effect on every render
   const { togglePanel, panels, selectEntity, setWorkspaceView } = workspace
@@ -126,7 +136,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
       className={['app-shell', godMode ? 'god-mode' : '', spectralMode ? 'is-spectral' : ''].filter(Boolean).join(' ')}
     >
     <div className={[zenMode ? 'workspace-header-shell is-hidden' : 'workspace-header-shell', spectralMode ? 'is-spectral' : ''].filter(Boolean).join(' ')}>
-        <WorkspaceHeader project={workspace.activeProject} searchResultsCount={workspace.searchResults.length} workspaceView={workspace.workspaceView} leftPanelOpen={hasLeftPanel} inspectorOpen={hasInspectorPanel} hasActiveSearch={workspace.searchQuery.trim().length > 0} onOpenSearch={() => setSearchPaletteOpen(true)} onViewChange={workspace.setWorkspaceView} onToggleLeftPanel={handleToggleNav} onToggleInspector={() => workspace.togglePanel('inspector')} />
+        <WorkspaceHeader project={workspace.activeProject} activeNodeLabel={activeNodeLabel} activeNodeMeta={activeNodeMeta} aiModelLabel={aiModelLabel} searchResultsCount={workspace.searchResults.length} workspaceView={workspace.workspaceView} leftPanelOpen={hasLeftPanel} inspectorOpen={hasInspectorPanel} hasActiveSearch={workspace.searchQuery.trim().length > 0} onOpenSearch={() => setSearchPaletteOpen(true)} onViewChange={workspace.setWorkspaceView} onToggleLeftPanel={handleToggleNav} onToggleInspector={() => workspace.togglePanel('inspector')} />
       </div>
 
       <section className={[zenMode ? 'workspace-stage focus-mode' : 'workspace-stage', godMode ? 'god-mode' : ''].filter(Boolean).join(' ')}>

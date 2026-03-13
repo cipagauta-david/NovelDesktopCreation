@@ -3,7 +3,7 @@
   flex-shrink: 0;
   display: grid;
   gap: 0.55rem;
-  padding: 0.15rem 0 0;
+  padding: 0.25rem 0 0;
   background: transparent;
   border: 0;
 }
@@ -17,8 +17,8 @@
   padding-right: 3.1rem;
   resize: none;
   border-radius: 14px;
-  border: 1px solid var(--border-subtle);
-  background: color-mix(in srgb, var(--bg-editor) 82%, transparent);
+  border: 1px solid var(--surface-panel-border, var(--border-subtle));
+  background: color-mix(in srgb, var(--surface-panel) 94%, transparent);
 }
 
 .assistant-composer-actions {
@@ -40,9 +40,9 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--text-muted) 22%, transparent);
-  background: color-mix(in srgb, var(--text-muted) 15%, transparent);
-  color: var(--text-muted);
+  border: 1px solid #0f172a;
+  background: #0f172a;
+  color: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -55,16 +55,16 @@
 
 .assistant-send-button:hover:not(:disabled) {
   transform: none;
-  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 24%, transparent);
-  color: var(--text-primary);
+  border-color: #020617;
+  background: #020617;
+  color: #ffffff;
 }
 
 .assistant-send-button:disabled {
-  opacity: 1;
-  color: var(--text-muted);
-  border-color: color-mix(in srgb, var(--text-muted) 16%, transparent);
-  background: color-mix(in srgb, var(--text-muted) 10%, transparent);
+  opacity: 0.45;
+  color: #ffffff;
+  border-color: #0f172a;
+  background: #0f172a;
 }
 
 /* AI stop button: red translucent shadow */

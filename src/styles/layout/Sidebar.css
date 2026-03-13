@@ -18,21 +18,34 @@
   font-size: 0.78rem;
 }
 
-.sidebar-ai-status {
-  display: inline-flex;
+.project-switcher-inline {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.4rem;
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  font-weight: 500;
+  padding: 0.42rem 0.55rem;
+  border: 1px solid var(--surface-panel-border, var(--border-subtle));
+  border-radius: 10px;
+  background: var(--surface-base);
 }
 
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #22c55e;
-  box-shadow: 0 0 0 3px color-mix(in srgb, #22c55e 22%, transparent);
+.project-switcher-trigger {
+  min-width: 0;
+  color: var(--text-heading);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.project-switcher-inline .action-menu .icon-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+
+.project-switcher-inline .action-menu .icon-button:hover {
+  border-color: var(--surface-panel-border, var(--border-subtle));
+  background: var(--surface-panel);
 }
 
 .project-switcher-stack {

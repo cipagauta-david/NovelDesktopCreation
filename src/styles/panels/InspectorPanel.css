@@ -67,12 +67,45 @@
 
 .reference-card-mini {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.35rem;
+  border: 1px solid var(--surface-panel-border, var(--border-subtle));
+  background: var(--surface-panel);
+  transition:
+    transform var(--motion-fast),
+    box-shadow var(--motion-fast),
+    border-color var(--motion-fast);
+}
+
+.reference-card-mini:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  border-color: color-mix(in srgb, var(--brand-accent) 24%, var(--surface-panel-border));
 }
 
 .reference-card-mini p {
   margin: 0;
-  color: #9fb0c9;
+  color: var(--text-primary);
+}
+
+.reference-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+}
+
+.reference-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--surface-panel-border, var(--border-subtle));
+  background: var(--surface-base);
+  color: var(--text-secondary);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-weight: 700;
 }
 
 .meta-summary-item {
@@ -145,6 +178,18 @@
   display: grid;
   gap: 1rem;
   padding-right: 0.15rem;
+}
+
+.inspector-composer-dock {
+  position: sticky;
+  bottom: 0;
+  z-index: 8;
+  margin-top: auto;
+  padding-top: 0.45rem;
+  background: color-mix(in srgb, var(--surface-panel) 72%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid color-mix(in srgb, var(--surface-panel-border, var(--border-subtle)) 76%, transparent);
 }
 
 /* ── Streaming / AI indicator ──────────────────────────── */

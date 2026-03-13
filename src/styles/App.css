@@ -1,13 +1,13 @@
 :root,
 :root[data-theme="light"] {
-  --bg-surface-primary: #ffffff;
-  --bg-surface-secondary: #f8fafc;
+  --bg-surface-primary: var(--surface-panel, #ffffff);
+  --bg-surface-secondary: var(--surface-base, #f9f9fb);
 
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
+  --text-primary: #1c1c1e;
+  --text-secondary: #6c6c70;
   --text-accent: #0284c7;
 
-  --border-subtle: #e2e8f0;
+  --border-subtle: var(--surface-panel-border, #e2e2e8);
 }
 
 :root.dark,

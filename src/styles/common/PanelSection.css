@@ -14,6 +14,25 @@
   flex-wrap: wrap;
 }
 
+.section-card-header h3 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.section-meta {
+  margin-top: 0.16rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.section-card-body {
+  color: var(--text-primary);
+}
+
 .section-toggle {
   width: 32px;
   height: 32px;

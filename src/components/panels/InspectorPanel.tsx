@@ -223,7 +223,12 @@ export const InspectorPanel = memo(function InspectorPanel({
                     <article key={entity.id} className="reference-card-mini">
                       <strong>{entity.title}</strong>
                       <p>{buildSnippet(entity, entity.title)}</p>
-                      <small>{entity.fields.map((field) => field.key).slice(0, 3).join(' · ') || 'Sin propiedades'}</small>
+                      <div className="reference-badges" aria-label="Metadatos de referencia">
+                        {entity.fields.slice(0, 3).map((field) => (
+                          <span key={field.id} className="reference-badge">{field.key}</span>
+                        ))}
+                        {entity.fields.length === 0 && <span className="reference-badge">Sin propiedades</span>}
+                      </div>
                     </article>
                   ))}
                 </div>
@@ -390,13 +395,15 @@ export const InspectorPanel = memo(function InspectorPanel({
       </div>
 
       {activePanelTab === 'context' && (
-        <InspectorAssistantComposer
-          value={assistantDraft}
-          streamStatus={streamStatus}
-          onChange={setAssistantDraft}
-          onSubmit={handleAssistantSubmit}
-          onStopGeneration={onStopGeneration}
-        />
+        <div className="inspector-composer-dock">
+          <InspectorAssistantComposer
+            value={assistantDraft}
+            streamStatus={streamStatus}
+            onChange={setAssistantDraft}
+            onSubmit={handleAssistantSubmit}
+            onStopGeneration={onStopGeneration}
+          />
+        </div>
       )}
     </aside>
   )

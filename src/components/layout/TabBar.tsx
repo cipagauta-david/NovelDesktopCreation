@@ -18,6 +18,42 @@ type TabBarProps = {
   onDeleteTab: () => void
 }
 
+function renderCollectionIcon(name: string) {
+  const normalized = name.toLowerCase()
+
+  if (normalized.includes('capítulo') || normalized.includes('escena') || normalized.includes('escrit')) {
+    return (
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M5 4.5a1.5 1.5 0 0 1 1.5-1.5H15v13H6.5A1.5 1.5 0 0 0 5 17.5V4.5Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        <path d="M5 5h9" stroke="currentColor" strokeWidth="1.6" />
+      </svg>
+    )
+  }
+
+  if (normalized.includes('person') || normalized.includes('personaje')) {
+    return (
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="10" cy="7" r="3" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        <path d="M4 16c.8-2.2 2.8-3.4 6-3.4s5.2 1.2 6 3.4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    )
+  }
+
+  if (normalized.includes('mapa') || normalized.includes('mundo') || normalized.includes('lugar')) {
+    return (
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M3.5 5.5 8 3l4 2.5L16.5 3v11.5L12 17l-4-2.5L3.5 17V5.5Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <rect x="4" y="4" width="12" height="12" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  )
+}
+
 export const TabBar = memo(function TabBar({
   tabs,
   activeTab,
@@ -63,7 +99,7 @@ export const TabBar = memo(function TabBar({
               role="treeitem"
               aria-selected={tab.id === activeTab?.id}
             >
-              <span className="tab-tree-icon">{tab.icon}</span>
+              <span className="tab-tree-icon">{renderCollectionIcon(tab.name)}</span>
               <span className="tab-tree-copy">
                 <strong>{tab.name}</strong>
               </span>

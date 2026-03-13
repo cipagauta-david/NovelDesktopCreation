@@ -6,6 +6,9 @@ import '../../styles/layout/WorkspaceHeader.css';
 
 type WorkspaceHeaderProps = {
   project: Project | undefined
+  activeNodeLabel: string
+  activeNodeMeta: string
+  aiModelLabel: string
   searchResultsCount: number
   workspaceView: WorkspaceView
   leftPanelOpen: boolean
@@ -19,6 +22,9 @@ type WorkspaceHeaderProps = {
 
 export function WorkspaceHeader({
   project,
+  activeNodeLabel,
+  activeNodeMeta,
+  aiModelLabel,
   searchResultsCount,
   workspaceView,
   leftPanelOpen,
@@ -43,13 +49,13 @@ export function WorkspaceHeader({
   }> = [
     {
       key: 'navigation',
-      label: 'Navegación',
+      label: 'Paneles',
       active: leftPanelOpen,
       onClick: onToggleLeftPanel,
     },
     {
       key: 'context',
-      label: 'Contexto',
+      label: 'Inspector',
       active: inspectorOpen,
       onClick: onToggleInspector,
     },
@@ -57,48 +63,56 @@ export function WorkspaceHeader({
 
   return (
     <header className="workspace-header">
-      <div className="workspace-header-title">
+      <div className="workspace-header-context">
         <div className="workspace-project-meta">
-          <span className="eyebrow">Proyecto</span>
-          <strong>{project?.name ?? 'Proyecto narrativo'}</strong>
-          <small>{project?.description ?? 'Escribe y conecta escenas, personajes y lugares.'}</small>
+          <span className="eyebrow">Nodo activo</span>
+          <strong title={activeNodeLabel}>{activeNodeLabel}</strong>
+          <small title={activeNodeMeta}>{activeNodeMeta}</small>
+        </div>
+      </div>
+
+      <div className="workspace-header-command-center">
+        <button
+          type="button"
+          className={hasActiveSearch ? 'header-search-trigger command-search active' : 'header-search-trigger command-search'}
+          onClick={onOpenSearch}
+        >
+          <span>Buscar escena, entidad o comando…</span>
+          <small>Ctrl+K</small>
+        </button>
+
+        <div className="view-mode-toggle command-segmented" role="tablist" aria-label="Modo de vista">
+          <button
+            type="button"
+            className={workspaceView === 'editor' ? 'view-mode-button active' : 'view-mode-button'}
+            aria-selected={workspaceView === 'editor'}
+            onClick={() => onViewChange('editor')}
+          >
+            Escritura
+          </button>
+          <button
+            type="button"
+            className={workspaceView === 'graph' ? 'view-mode-button active' : 'view-mode-button'}
+            aria-selected={workspaceView === 'graph'}
+            onClick={() => onViewChange('graph')}
+          >
+            Mapa
+          </button>
+          {utilityItems.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={item.active ? 'workspace-nav-item active' : 'workspace-nav-item'}
+              onClick={item.onClick}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
       </div>
 
       <div className="workspace-header-actions">
         <div className="workspace-header-primary-actions minimal-header-actions">
-          <div className="view-mode-toggle" role="tablist" aria-label="Modo de vista">
-            <button
-              type="button"
-              className={workspaceView === 'editor' ? 'view-mode-button active' : 'view-mode-button'}
-              aria-selected={workspaceView === 'editor'}
-              onClick={() => onViewChange('editor')}
-            >
-              Escritura
-            </button>
-            <button
-              type="button"
-              className={workspaceView === 'graph' ? 'view-mode-button active' : 'view-mode-button'}
-              aria-selected={workspaceView === 'graph'}
-              onClick={() => onViewChange('graph')}
-            >
-              Mapa
-            </button>
-          </div>
-
-          <nav className="workspace-header-nav" aria-label="Paneles">
-            {utilityItems.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                className={item.active ? 'workspace-nav-item active' : 'workspace-nav-item'}
-                onClick={item.onClick}
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
-
           <button
             type="button"
             className="header-utility-button"
@@ -111,14 +125,10 @@ export function WorkspaceHeader({
             </span>
           </button>
 
-          <button
-            type="button"
-            className={hasActiveSearch ? 'header-search-trigger active' : 'header-search-trigger'}
-            onClick={onOpenSearch}
-          >
-            <span>Buscar…</span>
-            <small>Ctrl+K</small>
-          </button>
+          <div className="ai-status-pill" title={`${project?.name ?? 'Proyecto'} · ${aiModelLabel}`}>
+            <span className="status-dot" aria-hidden="true" />
+            <span>{aiModelLabel}</span>
+          </div>
         </div>
 
         <div className="workspace-status">

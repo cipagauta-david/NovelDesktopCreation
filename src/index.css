@@ -84,9 +84,13 @@
   --color-border: #e2e8f0;
   
   /* BACKWARD-COMPAT ALIASES */
-  --surface-base: var(--color-parchment);
+  --surface-base: #f9f9fb;
+  --surface-panel: #ffffff;
+  --surface-canvas: #f4f4f8;
+  --surface-panel-border: #e2e2e8;
   --text-primary: var(--text-body);
-  --text-secondary: #475569;
+  --text-secondary: #6c6c70;
+  --text-heading: #1c1c1e;
   --brand-accent: var(--color-primary);
   --brand-accent-hover: var(--color-primary-hover);
   --brand-gradient: linear-gradient(135deg, var(--color-primary), #38bdf8);
@@ -167,7 +171,10 @@
   --color-info: #60a5fa;
 
   /* BACKWARD-COMPAT ALIASES */
-  --surface-base: var(--color-obsidian);
+  --surface-base: #0b1020;
+  --surface-panel: #111827;
+  --surface-canvas: #0f172a;
+  --surface-panel-border: rgba(148, 163, 184, 0.22);
   --text-primary: var(--text-body);
   --text-secondary: #93a4bc;
   --brand-accent: var(--color-primary);
@@ -379,9 +386,10 @@ label {
 .eyebrow {
   display: inline-block;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   font-size: 0.76rem;
-  color: #7dd3fc;
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .hero-panel,

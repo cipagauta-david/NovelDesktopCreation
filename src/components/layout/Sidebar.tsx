@@ -45,22 +45,14 @@ export const Sidebar = memo(function Sidebar({
   onImportProject,
 }: SidebarProps) {
   const [showProjectForm, setShowProjectForm] = useState(false)
-  const compactModel = settings.model
-    .split('/')
-    .pop()
-    ?.replace(/-/g, ' ')
-    .replace(/\b\w/g, (letter) => letter.toUpperCase()) ?? settings.model
-  const aiStatusTitle = `IA activa · ${settings.provider} · ${settings.model}`
+  const activeProject = projects.find((project) => project.id === activeProjectId)
 
   return (
     <aside className="sidebar sidebar-compact">
       <div className="sidebar-identity">
         <span className="eyebrow">Espacio narrativo</span>
         <strong>{settings.authorName}</strong>
-        <small className="sidebar-ai-status" title={aiStatusTitle}>
-          <span className="status-dot" aria-hidden="true" />
-          IA conectada ({compactModel})
-        </small>
+        <small>Explora y orquesta tu universo narrativo.</small>
       </div>
 
       <PanelSection
@@ -94,26 +86,27 @@ export const Sidebar = memo(function Sidebar({
         }
       >
         <div className="project-switcher-stack">
-          <label className="compact-label">
-            Selector de proyecto
-            <select value={activeProjectId} onChange={(event) => onSelectProject(event.target.value)}>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="project-switcher-inline" aria-label="Selector de proyecto">
+            <div className="project-switcher-trigger" role="status" aria-live="polite">
+              <span>{activeProject?.name ?? 'Proyecto narrativo'}</span>
+            </div>
+            <ActionMenu
+              label="Seleccionar proyecto"
+              icon="⌄"
+              items={projects.map((project) => ({
+                label: project.id === activeProjectId ? `✓ ${project.name}` : project.name,
+                onSelect: () => onSelectProject(project.id),
+              }))}
+            />
+          </div>
 
           <div className="project-switcher-summary">
-            {projects
-              .filter((project) => project.id === activeProjectId)
-              .map((project) => (
-                <div key={project.id}>
-                  <strong>{project.name}</strong>
-                  <span>{project.description}</span>
-                </div>
-              ))}
+            {activeProject && (
+              <div key={activeProject.id}>
+                <strong>{activeProject.name}</strong>
+                <span>{activeProject.description}</span>
+              </div>
+            )}
           </div>
         </div>
 
