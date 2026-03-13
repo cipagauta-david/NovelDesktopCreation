@@ -1,11 +1,20 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 
-import { ENABLE_INCREMENTAL_GRAPH_HUD } from '../../data/constants'
+import { ENABLE_INCREMENTAL_GRAPH_HUD, GRAPH_RENDERER_KIND } from '../../data/constants'
 import type { GraphModel, GraphNode } from '../../types/workspace'
+import { resolveGraphRendererAdapter } from './graph/adapters'
+import { CosmographRenderer } from './graph/adapters/CosmographRenderer'
+import { getNodeCategory } from './graph/category'
+import type { GraphCategory, GraphViewSettings } from './graph/contracts'
+import { GraphHud } from './graph/GraphHud'
+import { radialRepulsionLayoutEngine } from './graph/layoutEngine'
+import { getCategoryPalette } from './graph/palette'
+import { useGraphViewModel } from './graph/viewModel'
 import '../../styles/panels/GraphPanel.css';
 
 const VIEW_WIDTH = 520
 const VIEW_HEIGHT = 440
+const VIEW_PADDING = 20
 const CANVAS_NODE_THRESHOLD = 140
 
 type GraphPanelProps = {
@@ -17,89 +26,8 @@ type GraphPanelProps = {
   onCreateRelation?: (sourceEntityId: string, targetEntityId: string) => void
 }
 
-type GraphCategory = 'chapters' | 'characters' | 'world' | 'other'
-
-type Palette = {
-  fill: string
-  stroke: string
-  halo: string
-}
-
-const GRAPH_CATEGORY_LABEL: Record<GraphCategory, string> = {
-  chapters: 'Capítulos',
-  characters: 'Personajes',
-  world: 'Mundo',
-  other: 'Otros',
-}
-
-function getNodeCategory(tabName: string): GraphCategory {
-  const normalized = tabName.toLowerCase()
-  if (normalized.includes('cap') || normalized.includes('escena') || normalized.includes('historia')) {
-    return 'chapters'
-  }
-  if (normalized.includes('person')) {
-    return 'characters'
-  }
-  if (normalized.includes('mundo') || normalized.includes('lógica') || normalized.includes('escenario') || normalized.includes('lugar')) {
-    return 'world'
-  }
-  return 'other'
-}
-
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
-}
-
-function applyRepulsion(nodes: GraphNode[], repulsionStrength: number): GraphNode[] {
-  if (repulsionStrength === 50 || nodes.length === 0) {
-    return nodes
-  }
-
-  const centerX = VIEW_WIDTH / 2
-  const centerY = VIEW_HEIGHT / 2
-  const factor = 0.72 + (repulsionStrength / 100) * 1.05
-
-  return nodes.map((node) => {
-    const dx = node.x - centerX
-    const dy = node.y - centerY
-    return {
-      ...node,
-      x: clamp(centerX + dx * factor, 20, VIEW_WIDTH - 20),
-      y: clamp(centerY + dy * factor, 20, VIEW_HEIGHT - 20),
-    }
-  })
-}
-
-function getCategoryPalette(category: GraphCategory, isDarkTheme: boolean): Palette {
-  if (category === 'chapters') {
-    return {
-      fill: isDarkTheme ? 'rgba(59, 130, 246, 0.82)' : 'rgba(37, 99, 235, 0.92)',
-      stroke: isDarkTheme ? 'rgba(147, 197, 253, 0.96)' : 'rgba(30, 64, 175, 0.96)',
-      halo: isDarkTheme ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.28)',
-    }
-  }
-
-  if (category === 'characters') {
-    return {
-      fill: isDarkTheme ? 'rgba(249, 115, 22, 0.82)' : 'rgba(234, 88, 12, 0.9)',
-      stroke: isDarkTheme ? 'rgba(253, 186, 116, 0.96)' : 'rgba(194, 65, 12, 0.96)',
-      halo: isDarkTheme ? 'rgba(249, 115, 22, 0.34)' : 'rgba(249, 115, 22, 0.25)',
-    }
-  }
-
-  if (category === 'world') {
-    return {
-      fill: isDarkTheme ? 'rgba(20, 184, 166, 0.8)' : 'rgba(13, 148, 136, 0.9)',
-      stroke: isDarkTheme ? 'rgba(94, 234, 212, 0.92)' : 'rgba(15, 118, 110, 0.96)',
-      halo: isDarkTheme ? 'rgba(20, 184, 166, 0.3)' : 'rgba(20, 184, 166, 0.22)',
-    }
-  }
-
-  return {
-    fill: isDarkTheme ? 'rgba(148, 163, 184, 0.74)' : 'rgba(100, 116, 139, 0.84)',
-    stroke: isDarkTheme ? 'rgba(226, 232, 240, 0.88)' : 'rgba(51, 65, 85, 0.9)',
-    halo: isDarkTheme ? 'rgba(148, 163, 184, 0.25)' : 'rgba(148, 163, 184, 0.18)',
-  }
 }
 
 export const GraphPanel = memo(function GraphPanel({
@@ -116,16 +44,25 @@ export const GraphPanel = memo(function GraphPanel({
   const [nodeOverrides, setNodeOverrides] = useState<Record<string, { x: number; y: number }>>({})
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null)
   const [relationSourceId, setRelationSourceId] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [repulsionStrength, setRepulsionStrength] = useState(50)
-  const [categoryVisibility, setCategoryVisibility] = useState<Record<GraphCategory, boolean>>({
-    chapters: true,
-    characters: true,
-    world: true,
-    other: true,
+  const [simulationPaused, setSimulationPaused] = useState(false)
+  const [centerViewRequestId, setCenterViewRequestId] = useState(0)
+  const [viewSettings, setViewSettings] = useState<GraphViewSettings>({
+    repulsionStrength: 26,
+    gravityStrength: 38,
+    linkWeightStrength: 34,
+    searchTerm: '',
+    categoryVisibility: {
+      chapters: true,
+      characters: true,
+      world: true,
+      other: true,
+    },
   })
+  const rendererAdapter = resolveGraphRendererAdapter(GRAPH_RENDERER_KIND)
+  const rendererStatus = rendererAdapter.getStatus()
+  const useCosmographRenderer = rendererAdapter.kind === 'cosmograph' && rendererStatus.ready
 
-  const nodesWithPosition = useMemo(
+  const positionedNodes = useMemo(
     () =>
       graphModel.nodes.map((node) => ({
         ...node,
@@ -135,100 +72,47 @@ export const GraphPanel = memo(function GraphPanel({
     [graphModel.nodes, nodeOverrides],
   )
 
-  const degreeByNodeId = useMemo(() => {
-    const degrees = new Map<string, number>()
-    for (const node of graphModel.nodes) {
-      degrees.set(node.id, 0)
-    }
-    for (const edge of graphModel.edges) {
-      degrees.set(edge.source, (degrees.get(edge.source) ?? 0) + 1)
-      degrees.set(edge.target, (degrees.get(edge.target) ?? 0) + 1)
-    }
-    return degrees
-  }, [graphModel.edges, graphModel.nodes])
-
-  const availableCategories = useMemo(() => {
-    const entries = new Set<GraphCategory>()
-    for (const node of nodesWithPosition) {
-      entries.add(getNodeCategory(node.tabName))
-    }
-    return Array.from(entries)
-  }, [nodesWithPosition])
-
-  const filteredNodes = useMemo(
-    () =>
-      nodesWithPosition.filter((node) => {
-        const category = getNodeCategory(node.tabName)
-        return categoryVisibility[category]
-      }),
-    [categoryVisibility, nodesWithPosition],
-  )
-
-  const renderedNodes = useMemo(
-    () => applyRepulsion(filteredNodes, repulsionStrength),
-    [filteredNodes, repulsionStrength],
-  )
-
-  const visibleNodeIds = useMemo(
-    () => new Set(renderedNodes.map((node) => node.id)),
-    [renderedNodes],
-  )
-
-  const filteredEdges = useMemo(
-    () => graphModel.edges.filter((edge) => visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target)),
-    [graphModel.edges, visibleNodeIds],
-  )
-
-  const nodeById = useMemo(
-    () => new Map(renderedNodes.map((node) => [node.id, node])),
-    [renderedNodes],
-  )
-
-  const normalizedSearch = searchTerm.trim().toLowerCase()
-  const highlightedNodeId = useMemo(() => {
-    if (!normalizedSearch) {
-      return null
-    }
-
-    return (
-      renderedNodes.find((node) => {
-        const titleMatch = node.title.toLowerCase().includes(normalizedSearch)
-        const categoryMatch = GRAPH_CATEGORY_LABEL[getNodeCategory(node.tabName)].toLowerCase().includes(normalizedSearch)
-        return titleMatch || categoryMatch
-      })?.id ?? null
-    )
-  }, [normalizedSearch, renderedNodes])
+  const graphViewModel = useGraphViewModel({
+    graphModel,
+    positionedNodes,
+    settings: viewSettings,
+    layoutEngine: radialRepulsionLayoutEngine,
+    viewport: {
+      width: VIEW_WIDTH,
+      height: VIEW_HEIGHT,
+      padding: VIEW_PADDING,
+    },
+  })
 
   const connectedNodeIds = useMemo(
     () =>
       activeEntityId
         ? new Set(
-            filteredEdges.flatMap((edge) =>
-              edge.source === activeEntityId || edge.target === activeEntityId
-                ? [edge.source, edge.target]
-                : [],
+            graphViewModel.filteredEdges.flatMap((edge) =>
+              edge.source === activeEntityId || edge.target === activeEntityId ? [edge.source, edge.target] : [],
             ),
           )
         : null,
-    [activeEntityId, filteredEdges],
+    [activeEntityId, graphViewModel.filteredEdges],
   )
 
-  const useCanvasRenderer = renderedNodes.length >= CANVAS_NODE_THRESHOLD
+  const useCanvasRenderer = !useCosmographRenderer && graphViewModel.renderedNodes.length >= CANVAS_NODE_THRESHOLD
 
   const getNodeRadius = useCallback(
     (nodeId: string, isActive: boolean) => {
-      const degree = degreeByNodeId.get(nodeId) ?? 0
+      const degree = graphViewModel.degreeByNodeId.get(nodeId) ?? 0
       const baseRadius = 7 + Math.min(9, Math.sqrt(degree) * 1.75)
       return isActive ? baseRadius + 4 : baseRadius
     },
-    [degreeByNodeId],
+    [graphViewModel.degreeByNodeId],
   )
 
-  function getSvgCoordinates(event: PointerEvent<SVGSVGElement>) {
+  const getSvgCoordinates = useCallback((event: PointerEvent<SVGSVGElement>) => {
     const svg = svgRef.current
     if (!svg) {
       return null
     }
+
     const point = svg.createSVGPoint()
     point.x = event.clientX
     point.y = event.clientY
@@ -236,11 +120,12 @@ export const GraphPanel = memo(function GraphPanel({
     if (!matrix) {
       return null
     }
+
     const transformed = point.matrixTransform(matrix.inverse())
     return { x: transformed.x, y: transformed.y }
-  }
+  }, [])
 
-  function getCanvasCoordinates(event: PointerEvent<HTMLCanvasElement> | MouseEvent<HTMLCanvasElement>) {
+  const getCanvasCoordinates = useCallback((event: PointerEvent<HTMLCanvasElement> | MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current
     if (!canvas) {
       return null
@@ -253,13 +138,13 @@ export const GraphPanel = memo(function GraphPanel({
       x: ((event.clientX - rect.left) / rect.width) * VIEW_WIDTH,
       y: ((event.clientY - rect.top) / rect.height) * VIEW_HEIGHT,
     }
-  }
+  }, [])
 
-  function getClosestNodeId(position: { x: number; y: number }): string | null {
+  const getClosestNodeId = useCallback((position: { x: number; y: number }) => {
     let bestId: string | null = null
     let bestDistance = Number.POSITIVE_INFINITY
 
-    for (const node of renderedNodes) {
+    for (const node of graphViewModel.renderedNodes) {
       const radius = getNodeRadius(node.id, node.id === activeEntityId)
       const dx = node.x - position.x
       const dy = node.y - position.y
@@ -271,7 +156,7 @@ export const GraphPanel = memo(function GraphPanel({
     }
 
     return bestId
-  }
+  }, [activeEntityId, getNodeRadius, graphViewModel.renderedNodes])
 
   const commitNodePosition = useCallback(
     (nodeId: string) => {
@@ -301,6 +186,24 @@ export const GraphPanel = memo(function GraphPanel({
     onResetLayout?.()
   }, [onResetLayout])
 
+  const centerGraphView = useCallback(() => {
+    if (useCosmographRenderer) {
+      setCenterViewRequestId((current) => current + 1)
+      return
+    }
+    resetLayout()
+  }, [resetLayout, useCosmographRenderer])
+
+  const submitSearchSelection = useCallback(() => {
+    if (!graphViewModel.highlightedNodeId) {
+      return
+    }
+    const node = graphViewModel.nodeById.get(graphViewModel.highlightedNodeId)
+    if (node) {
+      handleNodeSelection(node)
+    }
+  }, [graphViewModel.highlightedNodeId, graphViewModel.nodeById, handleNodeSelection])
+
   useEffect(() => {
     if (!useCanvasRenderer) {
       return
@@ -323,9 +226,9 @@ export const GraphPanel = memo(function GraphPanel({
     context.lineCap = 'round'
     context.lineJoin = 'round'
 
-    for (const edge of filteredEdges) {
-      const source = nodeById.get(edge.source)
-      const target = nodeById.get(edge.target)
+    for (const edge of graphViewModel.filteredEdges) {
+      const source = graphViewModel.nodeById.get(edge.source)
+      const target = graphViewModel.nodeById.get(edge.target)
       if (!source || !target) {
         continue
       }
@@ -339,10 +242,10 @@ export const GraphPanel = memo(function GraphPanel({
       context.stroke()
     }
 
-    for (const node of renderedNodes) {
+    for (const node of graphViewModel.renderedNodes) {
       const isActive = node.id === activeEntityId
       const isConnected = connectedNodeIds?.has(node.id) ?? true
-      const isHighlighted = highlightedNodeId === node.id
+      const isHighlighted = graphViewModel.highlightedNodeId === node.id
       const dimmed = !isActive && !isConnected && Boolean(activeEntityId)
       const alpha = dimmed ? 0.22 : 1
       const category = getNodeCategory(node.tabName)
@@ -405,11 +308,11 @@ export const GraphPanel = memo(function GraphPanel({
   }, [
     activeEntityId,
     connectedNodeIds,
-    filteredEdges,
     getNodeRadius,
-    highlightedNodeId,
-    nodeById,
-    renderedNodes,
+    graphViewModel.filteredEdges,
+    graphViewModel.highlightedNodeId,
+    graphViewModel.nodeById,
+    graphViewModel.renderedNodes,
     useCanvasRenderer,
   ])
 
@@ -419,70 +322,75 @@ export const GraphPanel = memo(function GraphPanel({
         <div>
           <h3>Mapa narrativo</h3>
           <p>Explora conexiones y arrastra nodos para reorganizar el mapa en tiempo real.</p>
+          {!rendererStatus.ready && (
+            <small className="graph-renderer-status">{rendererStatus.reason}</small>
+          )}
         </div>
       </div>
 
       <div className="graph-canvas-shell">
         {ENABLE_INCREMENTAL_GRAPH_HUD && (
-          <div className="graph-hud" aria-label="Controles del grafo">
-            <div className="graph-hud-row graph-hud-filters">
-              {availableCategories.map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  className={categoryVisibility[category] ? 'graph-hud-toggle active' : 'graph-hud-toggle'}
-                  onClick={() => {
-                    setCategoryVisibility((current) => ({
-                      ...current,
-                      [category]: !current[category],
-                    }))
-                  }}
-                >
-                  {GRAPH_CATEGORY_LABEL[category]}
-                </button>
-              ))}
-            </div>
-
-            <div className="graph-hud-row graph-hud-search-row">
-              <input
-                type="search"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Buscar nodo..."
-                aria-label="Buscar nodo"
-                onKeyDown={(event) => {
-                  if (event.key !== 'Enter' || !highlightedNodeId) {
-                    return
-                  }
-                  const node = nodeById.get(highlightedNodeId)
-                  if (node) {
-                    handleNodeSelection(node)
-                  }
-                }}
-              />
-              {searchTerm && (
-                <button type="button" className="graph-hud-clear" onClick={() => setSearchTerm('')}>
-                  Limpiar
-                </button>
-              )}
-            </div>
-
-            <label className="graph-hud-slider">
-              <span>Repulsión</span>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={repulsionStrength}
-                onChange={(event) => setRepulsionStrength(Number(event.target.value))}
-                aria-label="Repulsión de nodos"
-              />
-              <small>{repulsionStrength}%</small>
-            </label>
-          </div>
+          <GraphHud
+            availableCategories={graphViewModel.availableCategories}
+            categoryVisibility={viewSettings.categoryVisibility}
+            searchTerm={viewSettings.searchTerm}
+            repulsionStrength={viewSettings.repulsionStrength}
+            gravityStrength={viewSettings.gravityStrength}
+            linkWeightStrength={viewSettings.linkWeightStrength}
+            simulationPaused={simulationPaused}
+            disableSimulationToggle={!useCosmographRenderer}
+            onToggleCategory={(category: GraphCategory) => {
+              setViewSettings((current) => ({
+                ...current,
+                categoryVisibility: {
+                  ...current.categoryVisibility,
+                  [category]: !current.categoryVisibility[category],
+                },
+              }))
+            }}
+            onSearchTermChange={(value) => setViewSettings((current) => ({ ...current, searchTerm: value }))}
+            onClearSearch={() => setViewSettings((current) => ({ ...current, searchTerm: '' }))}
+            onSubmitSearch={submitSearchSelection}
+            onRepulsionStrengthChange={(value) =>
+              setViewSettings((current) => ({
+                ...current,
+                repulsionStrength: value,
+              }))
+            }
+            onGravityStrengthChange={(value) =>
+              setViewSettings((current) => ({
+                ...current,
+                gravityStrength: value,
+              }))
+            }
+            onLinkWeightStrengthChange={(value) =>
+              setViewSettings((current) => ({
+                ...current,
+                linkWeightStrength: value,
+              }))
+            }
+            onCenterView={centerGraphView}
+            onToggleSimulation={() => setSimulationPaused((current) => !current)}
+          />
         )}
 
-        {useCanvasRenderer ? (
+        {useCosmographRenderer ? (
+          <CosmographRenderer
+            nodes={graphViewModel.renderedNodes}
+            edges={graphViewModel.filteredEdges}
+            activeEntityId={activeEntityId}
+            highlightedNodeId={graphViewModel.highlightedNodeId}
+            repulsionStrength={viewSettings.repulsionStrength}
+            gravityStrength={viewSettings.gravityStrength}
+            linkWeightStrength={viewSettings.linkWeightStrength}
+            simulationPaused={simulationPaused}
+            centerViewRequestId={centerViewRequestId}
+            degreeByNodeId={graphViewModel.degreeByNodeId}
+            onNodeSelect={handleNodeSelection}
+            onNodePositionChange={onNodePositionChange}
+            onAutoPauseAfterCenter={() => setSimulationPaused(true)}
+          />
+        ) : useCanvasRenderer ? (
           <canvas
             ref={canvasRef}
             className="graph-canvas"
@@ -512,8 +420,8 @@ export const GraphPanel = memo(function GraphPanel({
               setNodeOverrides((current) => ({
                 ...current,
                 [draggingNodeId]: {
-                  x: clamp(position.x, 20, VIEW_WIDTH - 20),
-                  y: clamp(position.y, 20, VIEW_HEIGHT - 20),
+                  x: clamp(position.x, VIEW_PADDING, VIEW_WIDTH - VIEW_PADDING),
+                  y: clamp(position.y, VIEW_PADDING, VIEW_HEIGHT - VIEW_PADDING),
                 },
               }))
             }}
@@ -526,11 +434,12 @@ export const GraphPanel = memo(function GraphPanel({
               }
 
               if (selectedNodeId) {
-                const selected = nodeById.get(selectedNodeId)
+                const selected = graphViewModel.nodeById.get(selectedNodeId)
                 if (selected) {
                   handleNodeSelection(selected)
                 }
               }
+
               setDraggingNodeId(null)
             }}
             onPointerLeave={() => {
@@ -558,8 +467,8 @@ export const GraphPanel = memo(function GraphPanel({
               setNodeOverrides((current) => ({
                 ...current,
                 [draggingNodeId]: {
-                  x: clamp(position.x, 20, VIEW_WIDTH - 20),
-                  y: clamp(position.y, 20, VIEW_HEIGHT - 20),
+                  x: clamp(position.x, VIEW_PADDING, VIEW_WIDTH - VIEW_PADDING),
+                  y: clamp(position.y, VIEW_PADDING, VIEW_HEIGHT - VIEW_PADDING),
                 },
               }))
             }}
@@ -576,9 +485,9 @@ export const GraphPanel = memo(function GraphPanel({
               setDraggingNodeId(null)
             }}
           >
-            {filteredEdges.map((edge) => {
-              const source = nodeById.get(edge.source)
-              const target = nodeById.get(edge.target)
+            {graphViewModel.filteredEdges.map((edge) => {
+              const source = graphViewModel.nodeById.get(edge.source)
+              const target = graphViewModel.nodeById.get(edge.target)
               if (!source || !target) {
                 return null
               }
@@ -596,10 +505,10 @@ export const GraphPanel = memo(function GraphPanel({
               )
             })}
 
-            {renderedNodes.map((node) => {
+            {graphViewModel.renderedNodes.map((node) => {
               const isActive = node.id === activeEntityId
               const isConnected = connectedNodeIds?.has(node.id) ?? true
-              const isHighlighted = highlightedNodeId === node.id
+              const isHighlighted = graphViewModel.highlightedNodeId === node.id
               const category = getNodeCategory(node.tabName)
               const palette = getCategoryPalette(category, true)
               const radius = getNodeRadius(node.id, isActive)
@@ -662,7 +571,7 @@ export const GraphPanel = memo(function GraphPanel({
         )}
 
         <div className="graph-floating-toolbar" role="toolbar" aria-label="Acciones del mapa narrativo">
-          <small>{renderedNodes.length} nodos</small>
+          <small>{graphViewModel.renderedNodes.length} nodos</small>
           <button
             type="button"
             className={relationSourceId ? 'ghost-button compact-button active' : 'ghost-button compact-button'}
