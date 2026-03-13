@@ -240,6 +240,7 @@ export type GraphNode = {
   x: number
   y: number
   tabId: string
+  tabName: string
 }
 
 export type GraphEdge = {

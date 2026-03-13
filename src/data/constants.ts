@@ -2,6 +2,9 @@ import type { CollectionTab, Provider } from '../types/workspace'
 
 export const STORAGE_KEY = 'ndc-mvp-state-v2'
 
+export const ENABLE_INCREMENTAL_GRAPH_HUD =
+  (import.meta.env.VITE_ENABLE_INCREMENTAL_GRAPH_HUD ?? '1') !== '0'
+
 export const providerModels: Record<Provider, string[]> = {
   OpenAI: ['gpt-4.1', 'gpt-4o-mini'],
   Anthropic: ['claude-3-7-sonnet', 'claude-3-5-haiku'],

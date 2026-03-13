@@ -921,16 +921,6 @@ label {
   gap: 0.2rem;
 }
 
-.graph-canvas-shell > svg.graph-canvas {
-  width: 100%;
-  min-height: 540px;
-  border-radius: 20px;
-  background:
-    radial-gradient(circle at center, rgba(37, 99, 235, 0.08), transparent 56%),
-    var(--surface-base);
-  border: 1px solid var(--border-subtle);
-}
-
 .empty-state {
   display: grid;
   place-items: center;
@@ -1139,98 +1129,8 @@ body {
   font-family: var(--font-ui);
 }
 
-.workspace-header,
-.tab-bar,
-.search-results-bar,
-.left-workspace-panel,
-.main-column,
-.editor-code-mirror .cm-editor,
-.editor-source-editor,
-.editor-pane,
-.editor-live-editor .cm-editor,
-.rendered-document {
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-.theme-switcher-pill,
-.mode-switch-pill,
-.toggle-chip,
-.search-trigger {
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
 .editor-panel {
   gap: 1.2rem;
-}
-
-.editor-preview-pane,
-.doc-paragraph,
-.doc-list-item {
-  color: var(--text-primary);
-  font-family: var(--font-editor);
-  line-height: 1.72;
-}
-
-.doc-heading-1::after,
-.cm-source-heading-1::after,
-.cm-live-heading-1::after {
-  background: color-mix(
-    in srgb,
-    var(--text-primary) 25%,
-    transparent
-  ) !important;
-  box-shadow: none !important;
-}
-
-.editor-inline-pill,
-.entity-reference,
-.cm-entity-pill {
-  background: var(--entity-bg) !important;
-  color: var(--entity-text) !important;
-  border-radius: 4px !important;
-  box-shadow: none !important;
-}
-
-.editor-inline-pill-icon,
-.cm-entity-pill-icon {
-  color: var(--entity-text) !important;
-}
-
-.list-card,
-.template-card {
-  background: transparent !important;
-  border: 0 !important;
-  border-radius: 10px;
-  box-shadow: none !important;
-}
-
-.list-card:hover,
-.list-card.active,
-.template-card:hover {
-  background: var(--accent-surface) !important;
-}
-
-.tab-tree-copy strong,
-.list-card-content strong,
-.template-card strong {
-  color: var(--text-primary) !important;
-}
-
-.tab-tree-copy small,
-.list-card span,
-.list-card small,
-.template-card span,
-.template-card small,
-.sidebar-identity small,
-.section-meta {
-  color: var(--text-secondary) !important;
-}
-
-.dropzone,
-.global-drop-overlay {
-  display: none !important;
 }
 
 * {
