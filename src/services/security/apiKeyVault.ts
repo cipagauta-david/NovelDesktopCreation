@@ -10,6 +10,12 @@ type ProviderVaultMetadata = {
   rotatedAt: string
 }
 
+type WorkspaceTokenMetadata = {
+  workspaceId: string
+  rotatedAt: string
+  expiresAt: string
+}
+
 const VAULT_DB = 'novel-desktop-vault-db'
 const VAULT_VERSION = 1
 const VAULT_STORE = 'api-key-vault'
@@ -81,6 +87,10 @@ function providerMetadataRecordId(provider: Provider): string {
 
 function workspaceSyncTokenRecordId(workspaceId: string): string {
   return `sync-token:${workspaceId}`
+}
+
+function workspaceSyncTokenMetadataRecordId(workspaceId: string): string {
+  return `sync-token-meta:${workspaceId}`
 }
 
 async function getOrCreateDeviceKey(): Promise<CryptoKey> {
@@ -163,9 +173,10 @@ export async function readProviderVaultMetadata(provider: Provider): Promise<Pro
   return dbGet<ProviderVaultMetadata>(providerMetadataRecordId(provider))
 }
 
-export async function saveWorkspaceSyncToken(workspaceId: string, token: string): Promise<void> {
+export async function saveWorkspaceSyncToken(workspaceId: string, token: string, options?: { expiresInDays?: number }): Promise<void> {
   if (!token.trim()) {
     await dbDelete(workspaceSyncTokenRecordId(workspaceId))
+    await dbDelete(workspaceSyncTokenMetadataRecordId(workspaceId))
     return
   }
 
@@ -177,9 +188,23 @@ export async function saveWorkspaceSyncToken(workspaceId: string, token: string)
     iv: Array.from(iv),
     cipherText: Array.from(new Uint8Array(cipher)),
   } satisfies VaultEnvelope)
+  const expiresInDays = Math.max(1, Math.min(options?.expiresInDays ?? 30, 180))
+  const now = new Date()
+  const expiresAt = new Date(now.getTime() + expiresInDays * 24 * 60 * 60 * 1000)
+  await dbPut(workspaceSyncTokenMetadataRecordId(workspaceId), {
+    workspaceId,
+    rotatedAt: now.toISOString(),
+    expiresAt: expiresAt.toISOString(),
+  } satisfies WorkspaceTokenMetadata)
 }
 
 export async function readWorkspaceSyncToken(workspaceId: string): Promise<string | undefined> {
+  const metadata = await dbGet<WorkspaceTokenMetadata>(workspaceSyncTokenMetadataRecordId(workspaceId))
+  if (metadata && new Date(metadata.expiresAt).getTime() <= Date.now()) {
+    await deleteWorkspaceSyncToken(workspaceId)
+    return undefined
+  }
+
   const envelope = await dbGet<VaultEnvelope>(workspaceSyncTokenRecordId(workspaceId))
   if (!envelope) {
     return undefined
@@ -197,4 +222,13 @@ export async function readWorkspaceSyncToken(workspaceId: string): Promise<strin
 
 export async function deleteWorkspaceSyncToken(workspaceId: string): Promise<void> {
   await dbDelete(workspaceSyncTokenRecordId(workspaceId))
+  await dbDelete(workspaceSyncTokenMetadataRecordId(workspaceId))
+}
+
+export async function rotateWorkspaceSyncToken(workspaceId: string, token: string, options?: { expiresInDays?: number }): Promise<void> {
+  await saveWorkspaceSyncToken(workspaceId, token, options)
+}
+
+export async function readWorkspaceSyncTokenMetadata(workspaceId: string): Promise<WorkspaceTokenMetadata | null> {
+  return dbGet<WorkspaceTokenMetadata>(workspaceSyncTokenMetadataRecordId(workspaceId))
 }

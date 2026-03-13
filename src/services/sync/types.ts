@@ -1,13 +1,15 @@
-import type { ChangeEvent, PersistedState } from '../../types/workspace'
+import type { ChangeEvent, PersistedState, SyncContractVersion, SyncOperation } from '../../types/workspace'
 
 export type SyncQueueItem = {
   id: string
   enqueuedAt: string
   retries: number
+  nextAttemptAt: string
+  poisonedAt?: string
   lastError?: string
   changeEventId: string
   projectId?: string
-  state: PersistedState
+  operation: SyncOperation
 }
 
 export type SyncMergeResult = {
@@ -25,6 +27,8 @@ export type SyncEngine = {
     endpoint: string
     workspaceId: string
     authToken?: string
-  }) => Promise<{ pushed: number; conflictsResolved: number; retries: number; lastError?: string }>
+    contractVersion?: SyncContractVersion
+    maxRetries?: number
+  }) => Promise<{ pushed: number; conflictsResolved: number; retries: number; poisoned: number; lastError?: string }>
   mergeRemoteState: (localState: PersistedState, remoteState: PersistedState) => SyncMergeResult
 }

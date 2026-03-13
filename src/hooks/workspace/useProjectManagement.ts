@@ -90,9 +90,9 @@ export function useProjectManagement(
     setSearchQuery('')
   }
 
-  function renameActiveProject() {
+  function renameActiveProject(nextNameInput: string) {
     if (!activeProject) return
-    const nextName = window.prompt('Renombra el proyecto activo', activeProject.name)
+    const nextName = nextNameInput
     if (!nextName?.trim()) return
     withProjectUpdate(activeProject.id, (project) => ({
       ...project,

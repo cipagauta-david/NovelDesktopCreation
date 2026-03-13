@@ -6,6 +6,7 @@ type DesktopWorkerBridge = {
     init?: () => Promise<void>
     saveState?: (state: PersistedState) => Promise<void>
     loadState?: () => Promise<PersistedState | null>
+    clearState?: () => Promise<void>
   }
 }
 
@@ -19,6 +20,7 @@ export type StateStorageAdapter = {
   init: () => Promise<void>
   saveState: (state: PersistedState) => Promise<void>
   loadState: () => Promise<PersistedState | null>
+  clearState: () => Promise<void>
 }
 
 const DB_NAME = 'novel-desktop-worker-db'
@@ -86,6 +88,20 @@ function createWebIndexedDbAdapter(): StateStorageAdapter {
       db.close()
       return state
     },
+    async clearState() {
+      if (typeof indexedDB === 'undefined') {
+        return
+      }
+      const db = await openDatabase()
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction(STATE_STORE, 'readwrite')
+        tx.objectStore(STATE_STORE).delete(STATE_ID)
+        tx.oncomplete = () => resolve()
+        tx.onerror = () => reject(tx.error)
+        tx.onabort = () => reject(tx.error)
+      })
+      db.close()
+    },
   }
 }
 
@@ -109,6 +125,13 @@ function createDesktopAdapter(bridge: DesktopWorkerBridge): StateStorageAdapter 
         return bridge.stateStorage.loadState()
       }
       return createWebIndexedDbAdapter().loadState()
+    },
+    async clearState() {
+      if (bridge.stateStorage?.clearState) {
+        await bridge.stateStorage.clearState()
+        return
+      }
+      await createWebIndexedDbAdapter().clearState()
     },
   }
 }

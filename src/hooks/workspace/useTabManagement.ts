@@ -83,9 +83,9 @@ export function useTabManagement(
     })
   }
 
-  function renameActiveTab() {
+  function renameActiveTab(nextNameInput: string) {
     if (!activeProject || !activeTab) return
-    const nextName = window.prompt('Renombra la tab activa', activeTab.name)
+    const nextName = nextNameInput
     if (!nextName?.trim()) return
     withProjectUpdate(activeProject.id, (project) => ({
       ...project,

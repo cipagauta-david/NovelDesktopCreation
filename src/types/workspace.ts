@@ -89,6 +89,7 @@ export type EntityRecord = {
   tabId: string
   title: string
   content: string
+  textCrdtState?: string
   templateId: string
   tags: string[]
   aliases: string[]
@@ -125,14 +126,40 @@ export type SyncRemoteConfig = {
   endpoint: string
   workspaceId: string
   authTokenHint: string
+  contractVersion?: SyncContractVersion
+  authMode?: 'bearer'
 }
 
 export type SyncQueueStats = {
   pending: number
   retries: number
+  poisoned: number
   conflictsResolved: number
   lastError?: string
   lastSyncedAt?: string
+}
+
+export type SyncContractVersion = '2026-03-sync-v2'
+
+export type SyncOperationType =
+  | 'workspace.settings'
+  | 'workspace.pointer'
+  | 'project.upsert'
+  | 'project.delete'
+  | 'entity.upsert'
+  | 'entity.delete'
+  | 'relation.upsert'
+  | 'relation.delete'
+
+export type SyncOperation = {
+  id: string
+  correlationId?: string
+  changeEventId: string
+  timestamp: string
+  type: SyncOperationType
+  projectId?: string
+  entityId?: string
+  payload: unknown
 }
 
 export type CorrelationReport = {

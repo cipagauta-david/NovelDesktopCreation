@@ -21,6 +21,7 @@ export interface AppWorker {
   init(): Promise<void>
   persistState(state: PersistedState, meta?: WorkerRequestMeta): Promise<void>
   loadState(): Promise<PersistedState | null>
+  resetWorkspace(): Promise<void>
   searchEntities(query: string, entities: EntityRecord[], meta?: WorkerRequestMeta): Promise<EntityRecord[]>
   // ── FTS5 index API ──────────────────────────────────
   ftsIndex(entities: EntityRecord[], meta?: WorkerRequestMeta): Promise<number>
@@ -112,6 +113,16 @@ const workerObj: AppWorker = {
     }
   },
 
+  async resetWorkspace(): Promise<void> {
+    try {
+      await stateStorage.clearState()
+    } catch (error) {
+      console.warn('[Worker] Fallo limpiando adapter de estado', error)
+    }
+    fallbackState = null
+    searchIndex.buildFromEntities([])
+  },
+
   // Mantener compatibilidad con el API original (filtro lineal)
   async searchEntities(query: string, entities: EntityRecord[], meta?: WorkerRequestMeta): Promise<EntityRecord[]> {
     return withSpan('worker.search_entities', {
@@ -169,7 +180,7 @@ const workerObj: AppWorker = {
     })
   },
 
-  async ftsUpsert(entity: EntityRecord, _meta?: WorkerRequestMeta): Promise<void> {
+  async ftsUpsert(entity: EntityRecord): Promise<void> {
     const validatedEntity = parseWithContract(EntityRecordSchema, entity, {
       provider: 'Local/Ollama',
       contract: 'ipc-worker-fts-upsert',
@@ -178,7 +189,7 @@ const workerObj: AppWorker = {
     searchIndex.upsertEntity(validatedEntity)
   },
 
-  async ftsRemove(entityId: string, _meta?: WorkerRequestMeta): Promise<void> {
+  async ftsRemove(entityId: string): Promise<void> {
     searchIndex.removeEntity(entityId)
   },
 }

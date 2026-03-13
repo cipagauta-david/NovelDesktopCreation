@@ -11,13 +11,15 @@ type GraphPanelProps = {
   onSelectEntity: (entityId: string, tabId: string) => void
   onNodePositionChange?: (entityId: string, x: number, y: number) => void
   onResetLayout?: () => void
+  onCreateRelation?: (sourceEntityId: string, targetEntityId: string) => void
 }
 
-export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId, onSelectEntity, onNodePositionChange, onResetLayout }: GraphPanelProps) {
+export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId, onSelectEntity, onNodePositionChange, onResetLayout, onCreateRelation }: GraphPanelProps) {
   const svgRef = useRef<SVGSVGElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [nodeOverrides, setNodeOverrides] = useState<Record<string, { x: number; y: number }>>({})
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null)
+  const [relationSourceId, setRelationSourceId] = useState<string | null>(null)
 
   const nodesWithPosition = useMemo(
     () =>
@@ -52,6 +54,7 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
 
   const resetLayout = useCallback(() => {
     setNodeOverrides({})
+    setRelationSourceId(null)
     onResetLayout?.()
   }, [onResetLayout])
 
@@ -169,6 +172,13 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
         </div>
         <div className="toolbar-group">
           <small>{graphModel.nodes.length} nodos</small>
+          <button
+            type="button"
+            className={relationSourceId ? 'ghost-button compact-button active' : 'ghost-button compact-button'}
+            onClick={() => setRelationSourceId((current) => current ? null : activeEntityId ?? null)}
+          >
+            {relationSourceId ? 'Cancelar enlace' : 'Crear enlace'}
+          </button>
           <button type="button" className="ghost-button compact-button" onClick={resetLayout}>
             Restablecer layout
           </button>
@@ -216,6 +226,11 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
             if (!draggingNodeId && selectedNodeId) {
               const selected = nodeById.get(selectedNodeId)
               if (selected) {
+                if (relationSourceId && relationSourceId !== selected.id && onCreateRelation) {
+                  onCreateRelation(relationSourceId, selected.id)
+                  setRelationSourceId(null)
+                  return
+                }
                 onSelectEntity(selected.id, selected.tabId)
               }
             }
@@ -331,7 +346,18 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
                 className={isActive ? 'graph-node active' : isConnected ? 'graph-node related' : 'graph-node'}
                 opacity={isActive || isConnected ? 1 : activeEntityId ? 0.22 : 1}
                 filter={isActive ? 'url(#glow-active)' : isConnected ? 'url(#glow-related)' : undefined}
-                onClick={() => onSelectEntity(node.id, node.tabId)}
+                onClick={() => {
+                  if (relationSourceId && relationSourceId !== node.id && onCreateRelation) {
+                    onCreateRelation(relationSourceId, node.id)
+                    setRelationSourceId(null)
+                    return
+                  }
+                  if (!relationSourceId) {
+                    onSelectEntity(node.id, node.tabId)
+                    return
+                  }
+                  setRelationSourceId(node.id)
+                }}
                 onPointerDown={() => setDraggingNodeId(node.id)}
               >
               {(isActive || isConnected) && (

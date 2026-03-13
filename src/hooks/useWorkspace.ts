@@ -25,6 +25,7 @@ import {
 } from '../services/security/apiKeyVault'
 import { useSyncManagement } from './workspace/useSyncManagement'
 import { createPluginManager } from '../services/plugins/manager'
+import { getDefaultPersistedState } from '../data/seed/project'
 
 const defaultPanels: PanelVisibility = { sidebar: true, entities: true, inspector: false }
 
@@ -127,13 +128,18 @@ export function useWorkspace(
     setToast('Workspace configurado. Todo listo para escribir.')
   }, [setData, setToast])
 
-  const clearWorkspace = useCallback(() => {
-    // TODO: delegate to worker reset
+  const clearWorkspace = useCallback(async () => {
+    await worker.resetWorkspace()
+    localStorage.removeItem('novel.sync.queue.v2')
+    localStorage.removeItem('novel.sync.last-state.v2')
+    setData(getDefaultPersistedState())
+    setDraft(null)
     setSearchQuery('')
     setPendingProposal(null)
     setPanels(defaultPanels)
-    setToast('Workspace reiniciado.')
-  }, [setSearchQuery, setPendingProposal, setToast])
+    setWorkspaceView('editor')
+    setToast('Workspace reiniciado desde almacenamiento persistente.')
+  }, [setData, setDraft, setSearchQuery, setPendingProposal, setToast, setWorkspaceView, worker])
 
   const togglePanel = useCallback((panel: PanelKey) => setPanels((c) => ({ ...c, [panel]: !c[panel] })), [])
 
@@ -157,18 +163,17 @@ export function useWorkspace(
     setToast('Checkpoint restaurado.')
   }, [setData, setToast])
 
-  const rotateProviderCredential = useCallback(async () => {
+  const rotateProviderCredential = useCallback(async (nextApiKey: string) => {
     const provider = data.settings?.provider
     if (!provider) return
-    const next = window.prompt(`Nueva API key para ${provider}`) ?? ''
-    if (!next.trim()) return
-    await rotateProviderApiKey(provider, next)
+    if (!nextApiKey.trim()) return
+    await rotateProviderApiKey(provider, nextApiKey)
     setData((current) => ({
       ...current,
       settings: current.settings
         ? {
             ...current.settings,
-            apiKeyHint: `••••${next.trim().slice(-4)}`,
+            apiKeyHint: `••••${nextApiKey.trim().slice(-4)}`,
           }
         : current.settings,
     }))
@@ -178,8 +183,6 @@ export function useWorkspace(
   const invalidateProviderCredential = useCallback(async () => {
     const provider = data.settings?.provider
     if (!provider) return
-    const ok = window.confirm(`¿Invalidar y borrar la API key de ${provider}?`)
-    if (!ok) return
     await deleteProviderApiKey(provider)
     setData((current) => ({
       ...current,
@@ -193,12 +196,12 @@ export function useWorkspace(
     setToast(`Key de ${provider} invalidada.`)
   }, [data.settings?.provider, setData, setToast])
 
-  const configureRemoteSync = useCallback(async () => {
+  const configureRemoteSync = useCallback(async (input: { endpoint: string; workspaceId: string; token?: string }) => {
     if (!activeProject) return
-    const endpoint = window.prompt('Endpoint remoto de sync', data.syncRemoteConfig?.endpoint ?? '') ?? ''
+    const endpoint = input.endpoint
     if (!endpoint.trim()) return
-    const workspaceId = window.prompt('Workspace ID remoto', data.syncRemoteConfig?.workspaceId ?? activeProject.id) ?? activeProject.id
-    const token = window.prompt('Token Bearer de sync remoto (se guarda en vault)') ?? ''
+    const workspaceId = input.workspaceId || activeProject.id
+    const token = input.token ?? ''
 
     if (token.trim()) {
       await saveWorkspaceSyncToken(workspaceId, token)
@@ -210,6 +213,8 @@ export function useWorkspace(
         endpoint: endpoint.trim(),
         workspaceId: workspaceId.trim() || activeProject.id,
         authTokenHint: token.trim() ? `••••${token.trim().slice(-4)}` : (current.syncRemoteConfig?.authTokenHint ?? 'sin token'),
+        contractVersion: '2026-03-sync-v2',
+        authMode: 'bearer',
       },
     }))
     setToast('Sync remoto configurado.')

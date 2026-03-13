@@ -22,7 +22,7 @@ export function useSyncManagement(
 
     const latestChange = data.changeLog[data.changeLog.length - 1]
     previousChangeCountRef.current = data.changeLog.length
-    setSyncStatus('queued')
+    queueMicrotask(() => setSyncStatus('queued'))
 
     syncEngine
       .enqueueStateFromChange(data, latestChange)
@@ -32,6 +32,7 @@ export function useSyncManagement(
           syncStats: {
             pending: (current.syncStats?.pending ?? 0) + 1,
             retries: current.syncStats?.retries ?? 0,
+            poisoned: current.syncStats?.poisoned ?? 0,
             conflictsResolved: current.syncStats?.conflictsResolved ?? 0,
             lastError: current.syncStats?.lastError,
             lastSyncedAt: current.syncStats?.lastSyncedAt,
@@ -63,6 +64,7 @@ export function useSyncManagement(
       endpoint: config.endpoint,
       workspaceId: config.workspaceId,
       authToken,
+      contractVersion: config.contractVersion,
     })
 
     setData((current) => {
@@ -71,6 +73,7 @@ export function useSyncManagement(
         syncStats: {
           pending: Math.max(0, (current.syncStats?.pending ?? 0) - result.pushed + result.retries),
           retries: (current.syncStats?.retries ?? 0) + result.retries,
+          poisoned: (current.syncStats?.poisoned ?? 0) + result.poisoned,
           conflictsResolved: (current.syncStats?.conflictsResolved ?? 0) + result.conflictsResolved,
           lastError: result.lastError,
           lastSyncedAt: new Date().toISOString(),

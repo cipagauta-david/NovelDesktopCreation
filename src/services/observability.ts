@@ -59,3 +59,14 @@ export function captureException(error: unknown, context?: Record<string, unknow
     extra: context,
   })
 }
+
+export function sanitizeTraceForExport<T extends Record<string, unknown>>(entry: T): T {
+  const redacted = { ...entry }
+  const sensitiveKeys = ['authorization', 'apiKey', 'token', 'promptSnippet']
+  for (const key of Object.keys(redacted)) {
+    if (sensitiveKeys.some((pattern) => key.toLowerCase().includes(pattern.toLowerCase()))) {
+      redacted[key as keyof T] = '[REDACTED]' as T[keyof T]
+    }
+  }
+  return redacted
+}

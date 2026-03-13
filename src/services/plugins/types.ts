@@ -1,6 +1,7 @@
 import type { PersistedState } from '../../types/workspace'
 
 export type PluginCapability = 'workspace:read' | 'workspace:write'
+export type PluginCommandPermission = 'command:read' | 'command:write' | 'command:dangerous'
 
 export type PluginCommand = {
   name: string
@@ -22,7 +23,17 @@ export type PluginDefinition = {
   name: string
   version: string
   capabilities: PluginCapability[]
+  commandPermissions?: Record<string, PluginCommandPermission[]>
   executionBudgetMs?: number
   maxCommandsPerMinute?: number
   onCommand: (command: PluginCommand, context: PluginContext) => Promise<void> | void
+}
+
+export type PluginAuditEvent = {
+  id: string
+  pluginId: string
+  commandName: string
+  status: 'allowed' | 'rejected' | 'failed' | 'ok'
+  detail: string
+  timestamp: string
 }

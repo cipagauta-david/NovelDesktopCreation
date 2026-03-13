@@ -1,8 +1,31 @@
-import type { ChangeEvent, EntityRecord, PersistedState, Project } from '../../types/workspace'
+import type {
+  ChangeEvent,
+  EntityRecord,
+  PersistedState,
+  Project,
+  SyncContractVersion,
+  SyncOperation,
+} from '../../types/workspace'
 import type { SyncEngine, SyncMergeResult, SyncQueueItem } from './types'
 import { uid } from '../../utils/workspace'
+import { mergeTextFromCrdt } from './crdtText'
 
-const SYNC_QUEUE_KEY = 'novel.sync.queue.v1'
+const SYNC_QUEUE_KEY = 'novel.sync.queue.v2'
+const SYNC_LAST_STATE_KEY = 'novel.sync.last-state.v2'
+const DEFAULT_CONTRACT_VERSION: SyncContractVersion = '2026-03-sync-v2'
+const DEFAULT_MAX_RETRIES = 5
+const BASE_BACKOFF_MS = 1_250
+
+type RemoteSyncPayload = {
+  contractVersion: SyncContractVersion
+  workspaceId: string
+  operations: SyncOperation[]
+}
+
+type RemoteSyncResponse = {
+  state?: PersistedState
+  acceptedOperationIds?: string[]
+}
 
 function readQueue(): SyncQueueItem[] {
   try {
@@ -19,29 +42,48 @@ function writeQueue(queue: SyncQueueItem[]): void {
   localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue))
 }
 
-type RemoteSyncPayload = {
-  workspaceId: string
-  correlationId?: string
-  state: PersistedState
+function readLastState(): PersistedState | null {
+  try {
+    const raw = localStorage.getItem(SYNC_LAST_STATE_KEY)
+    if (!raw) return null
+    return JSON.parse(raw) as PersistedState
+  } catch {
+    return null
+  }
 }
 
-async function pushRemoteState(params: {
+function writeLastState(state: PersistedState): void {
+  localStorage.setItem(SYNC_LAST_STATE_KEY, JSON.stringify(state))
+}
+
+function shouldAttempt(item: SyncQueueItem): boolean {
+  return new Date(item.nextAttemptAt).getTime() <= Date.now() && !item.poisonedAt
+}
+
+function nextBackoffDelayMs(retries: number): number {
+  const jitter = 0.75 + Math.random() * 0.5
+  return Math.round(BASE_BACKOFF_MS * Math.pow(2, Math.max(0, retries - 1)) * jitter)
+}
+
+async function pushRemoteOperations(params: {
   endpoint: string
   workspaceId: string
   authToken?: string
-  state: PersistedState
-  correlationId?: string
-}): Promise<PersistedState | null> {
-  const response = await fetch(`${params.endpoint.replace(/\/$/, '')}/sync`, {
+  contractVersion: SyncContractVersion
+  operations: SyncOperation[]
+}): Promise<RemoteSyncResponse> {
+  const base = params.endpoint.replace(/\/$/, '')
+  const response = await fetch(`${base}/api/v2/sync/events`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'X-Sync-Contract-Version': params.contractVersion,
       ...(params.authToken ? { Authorization: `Bearer ${params.authToken}` } : {}),
     },
     body: JSON.stringify({
+      contractVersion: params.contractVersion,
       workspaceId: params.workspaceId,
-      correlationId: params.correlationId,
-      state: params.state,
+      operations: params.operations,
     } satisfies RemoteSyncPayload),
   })
 
@@ -49,8 +91,7 @@ async function pushRemoteState(params: {
     throw new Error(`Sync remoto falló (${response.status})`)
   }
 
-  const payload = await response.json().catch(() => null) as { state?: PersistedState } | null
-  return payload?.state ?? null
+  return (await response.json().catch(() => ({}))) as RemoteSyncResponse
 }
 
 function mergeById<T extends { id: string }>(first: T[], second: T[], resolver: (a: T, b: T) => T): T[] {
@@ -67,9 +108,30 @@ function isRemoteNewer(localTimestamp: string, remoteTimestamp: string): boolean
 }
 
 function mergeEntity(localEntity: EntityRecord, remoteEntity: EntityRecord): { entity: EntityRecord; conflict: boolean } {
+  if (localEntity.content !== remoteEntity.content) {
+    const mergedText = mergeTextFromCrdt({
+      actorId: localEntity.id,
+      localText: localEntity.content,
+      remoteText: remoteEntity.content,
+      localState: localEntity.textCrdtState,
+      remoteState: remoteEntity.textCrdtState,
+    })
+
+    const remoteWins = isRemoteNewer(localEntity.updatedAt, remoteEntity.updatedAt)
+    return {
+      entity: {
+        ...(remoteWins ? remoteEntity : localEntity),
+        content: mergedText.text,
+        textCrdtState: mergedText.state,
+      },
+      conflict: true,
+    }
+  }
+
   if (isRemoteNewer(localEntity.updatedAt, remoteEntity.updatedAt)) {
     return { entity: remoteEntity, conflict: true }
   }
+
   return { entity: localEntity, conflict: false }
 }
 
@@ -112,6 +174,185 @@ function mergeProject(localProject: Project, remoteProject: Project): { project:
   }
 }
 
+function deriveSyncOperations(previous: PersistedState | null, current: PersistedState, change: ChangeEvent): SyncOperation[] {
+  const operations: SyncOperation[] = []
+
+  if (!previous) {
+    operations.push({
+      id: uid('sync-op'),
+      changeEventId: change.id,
+      correlationId: change.correlationId,
+      timestamp: change.timestamp,
+      type: 'workspace.settings',
+      payload: {
+        settings: current.settings,
+        syncRemoteConfig: current.syncRemoteConfig,
+      },
+    })
+    for (const project of current.projects) {
+      operations.push({
+        id: uid('sync-op'),
+        changeEventId: change.id,
+        correlationId: change.correlationId,
+        timestamp: change.timestamp,
+        type: 'project.upsert',
+        projectId: project.id,
+        payload: project,
+      })
+    }
+    return operations
+  }
+
+  if (JSON.stringify(previous.settings) !== JSON.stringify(current.settings) || JSON.stringify(previous.syncRemoteConfig) !== JSON.stringify(current.syncRemoteConfig)) {
+    operations.push({
+      id: uid('sync-op'),
+      changeEventId: change.id,
+      correlationId: change.correlationId,
+      timestamp: change.timestamp,
+      type: 'workspace.settings',
+      payload: {
+        settings: current.settings,
+        syncRemoteConfig: current.syncRemoteConfig,
+      },
+    })
+  }
+
+  if (previous.activeProjectId !== current.activeProjectId || previous.activeTabId !== current.activeTabId || previous.activeEntityId !== current.activeEntityId) {
+    operations.push({
+      id: uid('sync-op'),
+      changeEventId: change.id,
+      correlationId: change.correlationId,
+      timestamp: change.timestamp,
+      type: 'workspace.pointer',
+      payload: {
+        activeProjectId: current.activeProjectId,
+        activeTabId: current.activeTabId,
+        activeEntityId: current.activeEntityId,
+      },
+    })
+  }
+
+  const prevProjects = new Map(previous.projects.map((project) => [project.id, project]))
+  const currProjects = new Map(current.projects.map((project) => [project.id, project]))
+
+  for (const [projectId, project] of currProjects) {
+    const prevProject = prevProjects.get(projectId)
+    if (!prevProject) {
+      operations.push({
+        id: uid('sync-op'),
+        changeEventId: change.id,
+        correlationId: change.correlationId,
+        timestamp: change.timestamp,
+        type: 'project.upsert',
+        projectId,
+        payload: project,
+      })
+      continue
+    }
+
+    if (project.updatedAt !== prevProject.updatedAt || project.name !== prevProject.name || project.description !== prevProject.description) {
+      operations.push({
+        id: uid('sync-op'),
+        changeEventId: change.id,
+        correlationId: change.correlationId,
+        timestamp: change.timestamp,
+        type: 'project.upsert',
+        projectId,
+        payload: {
+          id: project.id,
+          name: project.name,
+          description: project.description,
+          updatedAt: project.updatedAt,
+          tabs: project.tabs,
+          templates: project.templates,
+        },
+      })
+    }
+
+    const prevEntities = new Map(prevProject.entities.map((entity) => [entity.id, entity]))
+    const currEntities = new Map(project.entities.map((entity) => [entity.id, entity]))
+
+    for (const [entityId, entity] of currEntities) {
+      const prevEntity = prevEntities.get(entityId)
+      if (!prevEntity || prevEntity.revision !== entity.revision || prevEntity.updatedAt !== entity.updatedAt || prevEntity.content !== entity.content) {
+        operations.push({
+          id: uid('sync-op'),
+          changeEventId: change.id,
+          correlationId: change.correlationId,
+          timestamp: change.timestamp,
+          type: 'entity.upsert',
+          projectId,
+          entityId,
+          payload: entity,
+        })
+      }
+    }
+
+    for (const entityId of prevEntities.keys()) {
+      if (!currEntities.has(entityId)) {
+        operations.push({
+          id: uid('sync-op'),
+          changeEventId: change.id,
+          correlationId: change.correlationId,
+          timestamp: change.timestamp,
+          type: 'entity.delete',
+          projectId,
+          entityId,
+          payload: { id: entityId },
+        })
+      }
+    }
+
+    const prevRelations = new Map((prevProject.relations ?? []).map((relation) => [relation.id, relation]))
+    const currRelations = new Map((project.relations ?? []).map((relation) => [relation.id, relation]))
+
+    for (const [relationId, relation] of currRelations) {
+      const prevRelation = prevRelations.get(relationId)
+      if (!prevRelation || prevRelation.updatedAt !== relation.updatedAt) {
+        operations.push({
+          id: uid('sync-op'),
+          changeEventId: change.id,
+          correlationId: change.correlationId,
+          timestamp: change.timestamp,
+          type: 'relation.upsert',
+          projectId,
+          payload: relation,
+        })
+      }
+    }
+
+    for (const relationId of prevRelations.keys()) {
+      if (!currRelations.has(relationId)) {
+        operations.push({
+          id: uid('sync-op'),
+          changeEventId: change.id,
+          correlationId: change.correlationId,
+          timestamp: change.timestamp,
+          type: 'relation.delete',
+          projectId,
+          payload: { id: relationId },
+        })
+      }
+    }
+  }
+
+  for (const projectId of prevProjects.keys()) {
+    if (!currProjects.has(projectId)) {
+      operations.push({
+        id: uid('sync-op'),
+        changeEventId: change.id,
+        correlationId: change.correlationId,
+        timestamp: change.timestamp,
+        type: 'project.delete',
+        projectId,
+        payload: { id: projectId },
+      })
+    }
+  }
+
+  return operations
+}
+
 export function mergePersistedStates(localState: PersistedState, remoteState: PersistedState): SyncMergeResult {
   let conflictsResolved = 0
 
@@ -145,8 +386,6 @@ export function mergePersistedStates(localState: PersistedState, remoteState: Pe
     const remoteTs = report.finishedAt ?? report.startedAt
     correlationMap.set(report.correlationId, isRemoteNewer(localTs, remoteTs) ? report : current)
   }
-  const mergedCorrelationReports = Array.from(correlationMap.values())
-    .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
 
   return {
     merged: {
@@ -162,7 +401,8 @@ export function mergePersistedStates(localState: PersistedState, remoteState: Pe
       checkpoints: localState.checkpoints,
       syncRemoteConfig: remoteState.syncRemoteConfig ?? localState.syncRemoteConfig,
       syncStats: remoteState.syncStats ?? localState.syncStats,
-      correlationReports: mergedCorrelationReports,
+      correlationReports: Array.from(correlationMap.values())
+        .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()),
     },
     conflictsResolved,
   }
@@ -172,15 +412,24 @@ export function createSyncEngine(): SyncEngine {
   return {
     async enqueueStateFromChange(state: PersistedState, change: ChangeEvent) {
       const queue = readQueue()
-      queue.push({
-        id: uid('sync-op'),
-        enqueuedAt: new Date().toISOString(),
-        retries: 0,
-        changeEventId: change.id,
-        projectId: change.projectId,
-        state,
-      })
+      const previous = readLastState()
+      const operations = deriveSyncOperations(previous, state, change)
+      const nowIso = new Date().toISOString()
+
+      for (const operation of operations) {
+        queue.push({
+          id: uid('sync-queue'),
+          enqueuedAt: nowIso,
+          retries: 0,
+          nextAttemptAt: nowIso,
+          changeEventId: change.id,
+          projectId: operation.projectId,
+          operation,
+        })
+      }
+
       writeQueue(queue)
+      writeLastState(state)
     },
 
     async peekQueue() {
@@ -194,27 +443,37 @@ export function createSyncEngine(): SyncEngine {
     async flushRemoteQueue(params) {
       const queue = readQueue()
       if (queue.length === 0) {
-        return { pushed: 0, conflictsResolved: 0, retries: 0 }
+        return { pushed: 0, conflictsResolved: 0, retries: 0, poisoned: 0 }
       }
+
+      const maxRetries = params.maxRetries ?? DEFAULT_MAX_RETRIES
+      const contractVersion = params.contractVersion ?? DEFAULT_CONTRACT_VERSION
 
       let pushed = 0
       let conflictsResolved = 0
       let retries = 0
+      let poisoned = 0
       let lastError: string | undefined
       const nextQueue: SyncQueueItem[] = []
 
       for (const item of queue) {
+        if (!shouldAttempt(item)) {
+          nextQueue.push(item)
+          continue
+        }
+
         try {
-          const remote = await pushRemoteState({
+          const remote = await pushRemoteOperations({
             endpoint: params.endpoint,
             workspaceId: params.workspaceId,
             authToken: params.authToken,
-            state: item.state,
-            correlationId: item.changeEventId,
+            contractVersion,
+            operations: [item.operation],
           })
 
-          if (remote) {
-            const merged = mergePersistedStates(item.state, remote)
+          if (remote.state) {
+            const localSnapshot = readLastState() ?? remote.state
+            const merged = mergePersistedStates(localSnapshot, remote.state)
             conflictsResolved += merged.conflictsResolved
           }
           pushed += 1
@@ -223,16 +482,29 @@ export function createSyncEngine(): SyncEngine {
           const retryCount = item.retries + 1
           retries += 1
           lastError = message
+
+          if (retryCount >= maxRetries) {
+            poisoned += 1
+            nextQueue.push({
+              ...item,
+              retries: retryCount,
+              lastError: message,
+              poisonedAt: new Date().toISOString(),
+            })
+            continue
+          }
+
           nextQueue.push({
             ...item,
             retries: retryCount,
             lastError: message,
+            nextAttemptAt: new Date(Date.now() + nextBackoffDelayMs(retryCount)).toISOString(),
           })
         }
       }
 
       writeQueue(nextQueue)
-      return { pushed, conflictsResolved, retries, lastError }
+      return { pushed, conflictsResolved, retries, poisoned, lastError }
     },
 
     mergeRemoteState(localState: PersistedState, remoteState: PersistedState) {

@@ -16,6 +16,7 @@ import { addBreadcrumb } from '../../services/observability'
 import { withSpan } from '../../services/tracing'
 import * as Comlink from 'comlink'
 import { finalizeCorrelationIntent, startCorrelationIntent } from '../../services/correlation'
+import { buildNextTextCrdtState } from '../../services/sync/crdtText'
 
 export function usePersistenceManagement(
   activeProject: Project | undefined,
@@ -54,6 +55,13 @@ export function usePersistenceManagement(
                 ...entity,
                 title: draft.title || entity.title,
                 content: draft.content,
+                textCrdtState: buildNextTextCrdtState({
+                  actorId: entity.id,
+                  previousText: entity.content,
+                  nextText: draft.content,
+                  previousState: entity.textCrdtState,
+                  timestamp: isoNow(),
+                }),
                 templateId: draft.templateId,
                 tags: draft.tagsText.split(',').map(s => s.trim()).filter(Boolean),
                 aliases: draft.aliasesText.split(',').map(s => s.trim()).filter(Boolean),

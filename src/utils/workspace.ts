@@ -121,6 +121,9 @@ function historyEventToChangeEvent(params: {
 }
 
 export function migratePersistedState(state: PersistedState): PersistedState {
+  const safeProjects = Array.isArray(state.projects) ? state.projects : []
+  const safeChangeLog = Array.isArray(state.changeLog) ? state.changeLog : []
+
   const sanitizedSettings = state.settings
     ? {
         authorName: state.settings.authorName,
@@ -130,14 +133,19 @@ export function migratePersistedState(state: PersistedState): PersistedState {
       }
     : null
 
-  if (state.changeLog.length > 0) {
+  if (safeChangeLog.length > 0) {
     return {
       ...state,
+      projects: safeProjects,
+      activeProjectId: typeof state.activeProjectId === 'string' ? state.activeProjectId : '',
+      activeTabId: typeof state.activeTabId === 'string' ? state.activeTabId : '',
+      activeEntityId: typeof state.activeEntityId === 'string' ? state.activeEntityId : '',
+      changeLog: safeChangeLog,
       settings: sanitizedSettings,
     }
   }
 
-  const migrated = state.projects.flatMap((project) => {
+  const migrated = safeProjects.flatMap((project) => {
     const projectEvents = project.history.map((event) =>
       historyEventToChangeEvent({
         event,
@@ -165,6 +173,10 @@ export function migratePersistedState(state: PersistedState): PersistedState {
 
   return {
     ...state,
+    projects: safeProjects,
+    activeProjectId: typeof state.activeProjectId === 'string' ? state.activeProjectId : '',
+    activeTabId: typeof state.activeTabId === 'string' ? state.activeTabId : '',
+    activeEntityId: typeof state.activeEntityId === 'string' ? state.activeEntityId : '',
     settings: sanitizedSettings,
     changeLog: migrated,
   }

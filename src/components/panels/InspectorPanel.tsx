@@ -349,6 +349,7 @@ export const InspectorPanel = memo(function InspectorPanel({
                 <div className="meta-summary-item"><span>Token</span><strong>{syncRemoteConfig?.authTokenHint ?? '-'}</strong></div>
                 <div className="meta-summary-item"><span>Pendientes</span><strong>{syncStats?.pending ?? 0}</strong></div>
                 <div className="meta-summary-item"><span>Retries</span><strong>{syncStats?.retries ?? 0}</strong></div>
+                <div className="meta-summary-item"><span>Poison</span><strong>{syncStats?.poisoned ?? 0}</strong></div>
                 <div className="meta-summary-item"><span>Conflictos</span><strong>{syncStats?.conflictsResolved ?? 0}</strong></div>
               </div>
             </PanelSection>
