@@ -419,6 +419,36 @@
     transform var(--motion-fast);
 }
 
+/* ARIS Layout normalization */
+.app-shell {
+  background: var(--surface-base);
+}
+
+.workspace-header-shell {
+  border-bottom: 1px solid color-mix(in srgb, var(--surface-panel-border, var(--border-subtle)) 92%, transparent);
+}
+
+.workspace-grid {
+  gap: 0;
+}
+
+.left-workspace-panel,
+.inspector-panel-shell {
+  background: var(--surface-panel);
+  border-radius: 0;
+  border-right: 1px solid color-mix(in srgb, var(--surface-panel-border, var(--border-subtle)) 92%, transparent);
+}
+
+.inspector-panel-shell {
+  border-right: 0;
+  border-left: 1px solid color-mix(in srgb, var(--surface-panel-border, var(--border-subtle)) 92%, transparent);
+}
+
+.main-column {
+  background: var(--surface-base);
+  border-radius: 0;
+}
+
 :root:not(.dark) .app-shell.is-spectral .workspace-header-shell,
 :root:not(.dark) .app-shell.is-spectral .ghosting-panel,
 :root:not(.dark) .main-column.is-spectral {

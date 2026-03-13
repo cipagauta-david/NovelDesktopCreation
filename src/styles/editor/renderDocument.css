@@ -3,14 +3,12 @@
 }
 
 .editor-inline-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.36rem;
+  display: inline-block;
   margin: 0 0.08rem;
   padding: 0.16rem 0.56rem;
-  border-radius: 999px;
-  line-height: 1;
-  vertical-align: baseline;
+  border-radius: var(--radius-sm);
+  line-height: 1.2;
+  vertical-align: middle;
   background: color-mix(in srgb, var(--text-accent, #0284c7) 14%, var(--bg-surface-primary, #ffffff));
   color: var(--text-primary);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-accent, #0284c7) 18%, var(--border-subtle));
@@ -82,7 +80,8 @@
 
 .doc-paragraph {
   color: var(--text-primary);
-  line-height: 1.7;
+  line-height: 1.8;
+  margin: 0 0 1.2em;
 }
 
 .doc-list-item {

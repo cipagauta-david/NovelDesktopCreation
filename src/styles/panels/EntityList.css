@@ -31,6 +31,10 @@
   flex-direction: row;
   align-items: flex-start;
   gap: 0.5rem;
+  width: 100%;
+  border-radius: 0;
+  border-left: 2px solid transparent;
+  background: transparent;
 }
 
 .entity-list .list-card .drag-handle {
@@ -66,4 +70,17 @@
 
 .entity-list .list-card.drop-target {
   border-top: 2px solid var(--brand-accent);
+}
+
+.entity-list .list-card:hover {
+  background: color-mix(in srgb, var(--surface-panel) 76%, transparent);
+}
+
+.entity-list .list-card.active {
+  background: color-mix(in srgb, var(--surface-panel) 92%, transparent);
+  border-left-color: var(--brand-accent);
+}
+
+.entity-list .list-card-content {
+  padding-left: 0.25rem;
 }

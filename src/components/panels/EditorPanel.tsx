@@ -7,14 +7,12 @@ import {
   useState,
   type CSSProperties,
   type DragEvent,
-  type ReactNode,
   type RefObject,
 } from 'react'
 import { markdown } from '@codemirror/lang-markdown'
 import { EditorView, type ViewUpdate } from '@codemirror/view'
 import CodeMirror from '@uiw/react-codemirror'
 
-import type { EditorMode } from '../../types/editor'
 import type { DraftState, EntityRecord, EntityTemplate, FieldValue, LlmStreamStatus } from '../../types/workspace'
 import { PanelSection } from '../common/PanelSection'
 import {
@@ -22,10 +20,8 @@ import {
   createGhostTextExtensions,
   createLiveEditorExtensions,
   createNarrativeGhostTextProvider,
-  createSourceEditorExtensions,
 } from '../editor/editorExperience'
 import { baseEditorTheme, editorBasicSetup } from '../editor/editorThemes'
-import { renderDocument } from '../editor/renderDocument'
 import { EditorAssets } from '../editor/panel/EditorAssets'
 import { EditorHeader } from '../editor/panel/EditorHeader'
 import { EditorMetadata } from '../editor/panel/EditorMetadata'
@@ -89,9 +85,7 @@ export function EditorPanel({
   onGenerateAiProposal,
   onToggleZenMode,
 }: EditorPanelProps) {
-  const [editorMode, setEditorMode] = useState<EditorMode>('live')
   const [cursorPosition, setCursorPosition] = useState(0)
-  const [previewContent, setPreviewContent] = useState(draft.content)
   const [suggestionsStyle, setSuggestionsStyle] = useState<CSSProperties>()
   const [hoveredReference, setHoveredReference] = useState<{
     entityId: string
@@ -100,7 +94,6 @@ export function EditorPanel({
   } | null>(null)
   const [hoverPayload, setHoverPayload] = useState<EntityHoverPayload | null>(null)
   const [assetDragActive, setAssetDragActive] = useState(false)
-  const previewPaneRef = useRef<HTMLDivElement | null>(null)
   const writingLaneRef = useRef<HTMLDivElement | null>(null)
   const entityById = useMemo(() => new Map(allEntities.map((entry) => [entry.id, entry])), [allEntities])
 
@@ -118,10 +111,6 @@ export function EditorPanel({
       onOpenEntity(entityId, targetEntity?.tabId)
     },
     [entityById, onOpenEntity],
-  )
-  const sourceEditorExtensions = useMemo(
-    () => [markdown(), EditorView.lineWrapping, baseEditorTheme, ...createSourceEditorExtensions(), ...createGhostTextExtensions(ghostTextProvider)],
-    [ghostTextProvider],
   )
   const liveEditorExtensions = useMemo(
     () => [
@@ -167,17 +156,12 @@ export function EditorPanel({
   }
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => setPreviewContent(draft.content), 32)
-    return () => window.clearTimeout(timeoutId)
-  }, [draft.content])
-
-  useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
       setHoveredReference(null)
       setHoverPayload(null)
     })
     return () => window.cancelAnimationFrame(frameId)
-  }, [draft.entityId, editorMode])
+  }, [draft.entityId])
 
   useLayoutEffect(() => {
     if (!hoverPayload) {
@@ -282,57 +266,7 @@ export function EditorPanel({
       window.visualViewport?.removeEventListener('resize', requestPositionUpdate)
       window.visualViewport?.removeEventListener('scroll', requestPositionUpdate)
     }
-  }, [cursorPosition, editorMode, editorViewRef, referenceSuggestionActive, suggestionOptions.length])
-
-  useEffect(() => {
-    if (editorMode !== 'split') {
-      return
-    }
-
-    let cleanup: (() => void) | undefined
-    const frameId = window.requestAnimationFrame(() => {
-      const sourceScroller = editorViewRef.current?.scrollDOM
-      const previewScroller = previewPaneRef.current
-      if (!sourceScroller || !previewScroller) {
-        return
-      }
-
-      let syncing: 'source' | 'preview' | null = null
-      const syncScroll = (origin: 'source' | 'preview') => {
-        if (syncing && syncing !== origin) {
-          return
-        }
-
-        syncing = origin
-        const from = origin === 'source' ? sourceScroller : previewScroller
-        const to = origin === 'source' ? previewScroller : sourceScroller
-        const maxFrom = from.scrollHeight - from.clientHeight
-        const maxTo = to.scrollHeight - to.clientHeight
-        const ratio = maxFrom <= 0 ? 0 : from.scrollTop / maxFrom
-
-        window.requestAnimationFrame(() => {
-          to.scrollTop = maxTo <= 0 ? 0 : ratio * maxTo
-          syncing = null
-        })
-      }
-
-      const handleSourceScroll = () => syncScroll('source')
-      const handlePreviewScroll = () => syncScroll('preview')
-
-      sourceScroller.addEventListener('scroll', handleSourceScroll, { passive: true })
-      previewScroller.addEventListener('scroll', handlePreviewScroll, { passive: true })
-
-      cleanup = () => {
-        sourceScroller.removeEventListener('scroll', handleSourceScroll)
-        previewScroller.removeEventListener('scroll', handlePreviewScroll)
-      }
-    })
-
-    return () => {
-      window.cancelAnimationFrame(frameId)
-      cleanup?.()
-    }
-  }, [draft.entityId, editorMode, editorViewRef, previewContent])
+  }, [cursorPosition, editorViewRef, referenceSuggestionActive, suggestionOptions.length])
 
   const commonEditorProps = {
     value: draft.content,
@@ -357,41 +291,14 @@ export function EditorPanel({
     },
   }
 
-  let editorSurface: ReactNode
-
-  if (editorMode === 'split') {
-    editorSurface = (
-      <div className="editor-split-layout">
-        <CodeMirror
-          {...commonEditorProps}
-          extensions={sourceEditorExtensions}
-          className="editor-code-mirror editor-source-editor"
-          aria-label="Editor markdown en vista dividida"
-        />
-        <div ref={previewPaneRef} className="editor-pane editor-preview-pane">
-          {renderDocument(previewContent)}
-        </div>
-      </div>
-    )
-  } else if (editorMode === 'source') {
-    editorSurface = (
-      <CodeMirror
-        {...commonEditorProps}
-        extensions={sourceEditorExtensions}
-        className="editor-code-mirror editor-source-editor"
-        aria-label="Editor markdown original"
-      />
-    )
-  } else {
-    editorSurface = (
-      <CodeMirror
-        {...commonEditorProps}
-        extensions={liveEditorExtensions}
-        className="editor-code-mirror editor-live-editor"
-        aria-label="Editor markdown live"
-      />
-    )
-  }
+  const editorSurface = (
+    <CodeMirror
+      {...commonEditorProps}
+      extensions={liveEditorExtensions}
+      className="editor-code-mirror editor-live-editor"
+      aria-label="Editor narrativo inmersivo"
+    />
+  )
 
   const documentEditor = (
     <PanelSection
@@ -479,11 +386,9 @@ export function EditorPanel({
       <EditorHeader
         draft={draft}
         entity={entity}
-        editorMode={editorMode}
         saveStatus={saveStatus}
         zenMode={zenMode}
         onDraftChange={onDraftChange}
-        onEditorModeChange={setEditorMode}
         onApplyTemplate={onApplyTemplate}
         onDuplicate={onDuplicate}
         onArchive={onArchive}

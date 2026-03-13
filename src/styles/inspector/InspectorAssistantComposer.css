@@ -1,9 +1,11 @@
 .assistant-composer {
+  position: sticky;
+  bottom: 0;
   margin-top: auto;
   flex-shrink: 0;
   display: grid;
   gap: 0.55rem;
-  padding: 0.25rem 0 0;
+  padding: 0.45rem 0 0.1rem;
   background: transparent;
   border: 0;
 }
@@ -13,12 +15,14 @@
 }
 
 .assistant-composer textarea {
-  min-height: 96px;
+  min-height: 120px;
+  max-height: 320px;
   padding-right: 3.1rem;
   resize: none;
-  border-radius: 14px;
+  overflow-y: auto;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--surface-panel-border, var(--border-subtle));
-  background: color-mix(in srgb, var(--surface-panel) 94%, transparent);
+  background: color-mix(in srgb, var(--surface-panel) 96%, transparent);
 }
 
 .assistant-composer-actions {
@@ -39,10 +43,10 @@
   bottom: 0.55rem;
   width: 34px;
   height: 34px;
-  border-radius: 10px;
-  border: 1px solid #0f172a;
-  background: #0f172a;
-  color: #ffffff;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--color-success) 55%, #0f172a);
+  background: color-mix(in srgb, var(--color-success) 72%, #0f172a);
+  color: #ecfdf5;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -55,16 +59,20 @@
 
 .assistant-send-button:hover:not(:disabled) {
   transform: none;
-  border-color: #020617;
-  background: #020617;
+  border-color: color-mix(in srgb, var(--color-success) 78%, #020617);
+  background: color-mix(in srgb, var(--color-success) 82%, #020617);
   color: #ffffff;
 }
 
 .assistant-send-button:disabled {
   opacity: 0.45;
-  color: #ffffff;
-  border-color: #0f172a;
-  background: #0f172a;
+  color: #d1fae5;
+  border-color: color-mix(in srgb, var(--color-success) 42%, #0f172a);
+  background: color-mix(in srgb, var(--color-success) 52%, #0f172a);
+}
+
+.assistant-composer-footer small::after {
+  content: ' · Enter para enviar';
 }
 
 /* AI stop button: red translucent shadow */

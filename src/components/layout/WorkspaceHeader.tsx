@@ -72,15 +72,6 @@ export function WorkspaceHeader({
       </div>
 
       <div className="workspace-header-command-center">
-        <button
-          type="button"
-          className={hasActiveSearch ? 'header-search-trigger command-search active' : 'header-search-trigger command-search'}
-          onClick={onOpenSearch}
-        >
-          <span>Buscar escena, entidad o comando…</span>
-          <small>Ctrl+K</small>
-        </button>
-
         <div className="view-mode-toggle command-segmented" role="tablist" aria-label="Modo de vista">
           <button
             type="button"
@@ -113,6 +104,16 @@ export function WorkspaceHeader({
 
       <div className="workspace-header-actions">
         <div className="workspace-header-primary-actions minimal-header-actions">
+          <button
+            type="button"
+            className={hasActiveSearch ? 'header-search-trigger active' : 'header-search-trigger'}
+            onClick={onOpenSearch}
+            aria-label="Abrir búsqueda global"
+          >
+            <span>Buscar…</span>
+            <small>Ctrl+K</small>
+          </button>
+
           <button
             type="button"
             className="header-utility-button"

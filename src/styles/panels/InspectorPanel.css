@@ -61,8 +61,9 @@
 .reference-card-mini,
 .meta-summary-item {
   padding: 0.85rem 0.95rem;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.035);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface-panel) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface-panel-border, var(--border-subtle)) 86%, transparent);
 }
 
 .reference-card-mini {
@@ -115,13 +116,13 @@
 
 .meta-summary-item span {
   font-size: 12px;
-  color: rgba(203, 213, 225, 0.52);
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .meta-summary-item strong {
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 700;
 }
 
@@ -222,7 +223,7 @@
   font-family: var(--font-serif);
   font-size: 0.8rem;
   line-height: 1.55;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   max-height: 200px;
   overflow-y: auto;
   white-space: pre-wrap;

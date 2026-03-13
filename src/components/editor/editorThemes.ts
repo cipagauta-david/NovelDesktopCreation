@@ -35,7 +35,7 @@ export const baseEditorTheme = EditorView.theme(
     '.cm-scroller': {
       overflow: 'auto',
       fontFamily: 'var(--font-editor)',
-      lineHeight: '1.72',
+      lineHeight: '1.8',
     },
     '.cm-content, .cm-gutter': {
       minHeight: '420px',
@@ -100,17 +100,16 @@ export const baseEditorTheme = EditorView.theme(
       paddingRight: '0.12rem',
     },
     '.cm-entity-pill': {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '0.38rem',
+      display: 'inline-block',
       margin: '0 0.06rem',
       padding: '0.16rem 0.58rem',
-      borderRadius: '4px',
+      borderRadius: 'var(--radius-sm)',
       background: 'var(--entity-bg)',
       boxShadow: 'none',
       color: 'var(--entity-text)',
-      lineHeight: '1.1',
-      verticalAlign: 'baseline',
+      lineHeight: '1.25',
+      whiteSpace: 'nowrap',
+      verticalAlign: 'middle',
       transition: 'box-shadow var(--motion-fast), background var(--motion-fast)',
     },
     '.cm-entity-pill.is-neural-glow': {
@@ -121,6 +120,7 @@ export const baseEditorTheme = EditorView.theme(
     '.cm-entity-pill-icon': {
       color: 'inherit',
       fontSize: '0.72rem',
+      marginRight: '0.38rem',
     },
     '.cm-ghost-text': {
       color: 'var(--text-ghost)',

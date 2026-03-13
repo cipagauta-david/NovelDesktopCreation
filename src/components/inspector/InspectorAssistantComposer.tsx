@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react'
+import { useLayoutEffect, useRef, type FormEvent } from 'react'
 import type { LlmStreamStatus } from '../../types/workspace'
 import '../../styles/inspector/InspectorAssistantComposer.css';
 
@@ -15,13 +15,31 @@ type InspectorAssistantComposerProps = {
 export function InspectorAssistantComposer({ value, streamStatus, onChange, onSubmit, onStopGeneration }: InspectorAssistantComposerProps) {
   const isStreaming = streamStatus === 'streaming'
   const canSubmit = value.trim().length > 0 && !isStreaming
+  const formRef = useRef<HTMLFormElement | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current
+    if (!textarea) {
+      return
+    }
+    textarea.style.height = '0px'
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 320)}px`
+  }, [value])
 
   return (
-    <form className="assistant-composer" onSubmit={onSubmit}>
+    <form ref={formRef} className="assistant-composer" onSubmit={onSubmit}>
       <div className="assistant-composer-input-shell">
         <textarea
+          ref={textareaRef}
           value={value}
           onChange={(event) => onChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey && canSubmit) {
+              event.preventDefault()
+              formRef.current?.requestSubmit()
+            }
+          }}
           placeholder="Pide una escena alternativa, continuidad, tono o conflicto…"
           rows={4}
         />

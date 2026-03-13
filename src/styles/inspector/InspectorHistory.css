@@ -17,3 +17,14 @@
 .history-actor-user .history-actor-icon {
   color: var(--text-muted);
 }
+
+.history-list .history-item {
+  background: color-mix(in srgb, var(--surface-panel) 94%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface-panel-border, var(--border-subtle)) 86%, transparent);
+  border-radius: var(--radius-lg);
+}
+
+.history-list .history-item p,
+.history-list .history-item small {
+  color: #cbd5e1;
+}

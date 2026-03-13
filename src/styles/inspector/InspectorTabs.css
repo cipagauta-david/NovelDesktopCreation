@@ -9,10 +9,10 @@
 
 :root.dark,
 :root[data-theme="dark"] {
-  --inspector-tabs-bg: color-mix(in srgb, var(--bg-surface-secondary, #17171c) 94%, transparent);
-  --inspector-tabs-border: rgba(148, 163, 184, 0.2);
-  --inspector-tab-hover-bg: color-mix(in srgb, var(--bg-surface-primary, #111114) 72%, var(--bg-surface-secondary, #17171c));
-  --inspector-tab-active-bg: color-mix(in srgb, var(--bg-surface-primary, #111114) 82%, transparent);
+  --inspector-tabs-bg: #1f2937;
+  --inspector-tabs-border: #334155;
+  --inspector-tab-hover-bg: #334155;
+  --inspector-tab-active-bg: #374151;
   --inspector-tab-active-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
 }
 
@@ -31,7 +31,7 @@
   padding: 0.45rem 0.75rem;
   border-radius: 6px;
   background: transparent;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #cbd5e1);
   font-size: 0.84rem;
   text-align: center;
   border: 1px solid transparent;
@@ -47,7 +47,7 @@
 
 .inspector-tab.active {
   background: var(--inspector-tab-active-bg);
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #e5e7eb);
   box-shadow: var(--inspector-tab-active-shadow);
   border: 1px solid var(--inspector-tabs-border);
 }

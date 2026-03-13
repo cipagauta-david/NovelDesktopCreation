@@ -24,6 +24,10 @@
    ═══════════════════════════════════════════════════════════ */
 :root,
 :root[data-theme="light"] {
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
   /* MASTER TYPOGRAPHY */
   --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, sans-serif;
   --font-serif: "Crimson Pro Variable", "Crimson Pro", Georgia, serif;
@@ -126,6 +130,10 @@
    ═══════════════════════════════════════════════════════════ */
 :root.dark,
 :root[data-theme="dark"] {
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
   /* SUPERFICIES INMERSIVAS — La Obsidiana */
   --color-parchment: #08111f;
   --color-background-light: #08111f;
@@ -171,9 +179,9 @@
   --color-info: #60a5fa;
 
   /* BACKWARD-COMPAT ALIASES */
-  --surface-base: #0b1020;
-  --surface-panel: #111827;
-  --surface-canvas: #0f172a;
+  --surface-base: #020617;
+  --surface-panel: #0f172a;
+  --surface-canvas: #1e293b;
   --surface-panel-border: rgba(148, 163, 184, 0.22);
   --text-primary: var(--text-body);
   --text-secondary: #93a4bc;
@@ -913,7 +921,7 @@ label {
   gap: 0.2rem;
 }
 
-svg {
+.graph-canvas-shell > svg.graph-canvas {
   width: 100%;
   min-height: 540px;
   border-radius: 20px;
@@ -1140,8 +1148,7 @@ body {
 .editor-source-editor,
 .editor-pane,
 .editor-live-editor .cm-editor,
-.rendered-document,
-svg {
+.rendered-document {
   border: 0 !important;
   box-shadow: none !important;
 }
@@ -1191,7 +1198,6 @@ svg {
   color: var(--entity-text) !important;
 }
 
-.tab-tree-item,
 .list-card,
 .template-card {
   background: transparent !important;
@@ -1200,8 +1206,6 @@ svg {
   box-shadow: none !important;
 }
 
-.tab-tree-item:hover,
-.tab-tree-item.active,
 .list-card:hover,
 .list-card.active,
 .template-card:hover {
@@ -1778,6 +1782,38 @@ label,
 :root[data-theme="light"] .history-item p,
 :root[data-theme="light"] .reference-card-mini p {
   color: #475569;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ARIS NORMALIZATION — Radios y superficies unificadas
+   ═══════════════════════════════════════════════════════════ */
+button,
+.primary-button,
+.ghost-button,
+.secondary-button,
+.header-utility-button,
+.header-search-trigger,
+.view-mode-button,
+.workspace-nav-item,
+.assistant-send-button {
+  border-radius: var(--radius-md);
+}
+
+input,
+textarea,
+select {
+  border-radius: var(--radius-sm);
+}
+
+.panel,
+.section-card,
+.left-workspace-panel,
+.inspector-column,
+.reference-card-mini,
+.meta-summary-item,
+.history-item,
+.template-card {
+  border-radius: var(--radius-lg);
 }
 
 /* ═══════════════════════════════════════════════════════════

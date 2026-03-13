@@ -1,5 +1,4 @@
 import type { DraftState, EntityRecord } from '../../../types/workspace'
-import type { EditorMode } from '../../../types/editor'
 import { formatTimestamp } from '../../../utils/workspace'
 import { ActionMenu } from '../../common/ActionMenu'
 import '../../../styles/editor/panel/EditorHeader.css';
@@ -9,11 +8,9 @@ import '../../../styles/editor/panel/EditorHeader.css';
 type EditorHeaderProps = {
   draft: DraftState
   entity: EntityRecord
-  editorMode: EditorMode
   saveStatus: 'idle' | 'saving' | 'saved'
   zenMode: boolean
   onDraftChange: (next: DraftState) => void
-  onEditorModeChange: (mode: EditorMode) => void
   onApplyTemplate: () => void
   onDuplicate: () => void
   onArchive: () => void
@@ -25,11 +22,9 @@ type EditorHeaderProps = {
 export function EditorHeader({
   draft,
   entity,
-  editorMode,
   saveStatus,
   zenMode,
   onDraftChange,
-  onEditorModeChange,
   onApplyTemplate,
   onDuplicate,
   onArchive,
@@ -37,12 +32,6 @@ export function EditorHeader({
   onGenerateAiProposal,
   onToggleZenMode,
 }: EditorHeaderProps) {
-  const editorModeButtons: Array<{ mode: EditorMode; icon: string; label: string }> = [
-    { mode: 'split', icon: '◫', label: 'Vista dividida' },
-    { mode: 'source', icon: '</>', label: 'Código fuente' },
-    { mode: 'live', icon: '◉', label: 'Vista previa en vivo' },
-  ]
-
   return (
     <div className={zenMode ? 'panel-header editor-topbar-shell is-hidden' : 'panel-header editor-topbar-shell'}>
       <div className="editor-heading">
@@ -55,21 +44,9 @@ export function EditorHeader({
             placeholder="Título de la entidad"
             aria-label="Título de la entidad"
           />
-          <div className="editor-mode-icon-toggle" role="tablist" aria-label="Modo del editor">
-            {editorModeButtons.map((button) => (
-              <button
-                key={button.mode}
-                type="button"
-                className={editorMode === button.mode ? 'active' : ''}
-                title={button.label}
-                aria-label={button.label}
-                aria-pressed={editorMode === button.mode}
-                onClick={() => onEditorModeChange(button.mode)}
-              >
-                {button.icon}
-              </button>
-            ))}
-          </div>
+          <span className="editor-mode-badge" aria-label="Editor en modo inmersivo">
+            ◉ Texto limpio
+          </span>
         </div>
         <div className="entity-meta-row editor-meta-inline">
           <span>
