@@ -66,29 +66,53 @@ async function run() {
     const ast = postcss.parse(originalCss);
 
     const nodesToRemove = [];
+    let pendingComments = [];
 
     // Iterar sólamente sobre los nodos raiz y preservar la estructura
     ast.nodes.forEach(node => {
+        if (node.type === 'comment') {
+            pendingComments.push(node);
+            return;
+        }
+
         if (node.type === 'rule') {
             const targetComp = getTargetComponent(node);
             if (targetComp) {
                 const compRoot = getOrCreateComponentRoot(targetComp);
+                pendingComments.forEach(c => {
+                    compRoot.append(c.clone());
+                    nodesToRemove.push(c);
+                });
                 compRoot.append(node.clone());
                 nodesToRemove.push(node);
             }
+            pendingComments = [];
         } else if (node.type === 'atrule' && (node.name === 'media' || node.name === 'supports' || node.name === 'layer')) {
             // Manejar media queries anidadas
-            if (!node.nodes) return;
+            if (!node.nodes) {
+                pendingComments = [];
+                return;
+            }
             
             const childMoves = new Map(); // ComponentPath -> Array de Reglas
             const childrenToRemove = [];
             let allChildrenMoved = true;
+            let childComments = [];
 
             node.nodes.forEach(child => {
+                if (child.type === 'comment') {
+                    childComments.push(child);
+                    return;
+                }
+
                 if (child.type === 'rule') {
                     const targetComp = getTargetComponent(child);
                     if (targetComp) {
                         if (!childMoves.has(targetComp)) childMoves.set(targetComp, []);
+                        childComments.forEach(c => {
+                            childMoves.get(targetComp).push(c.clone());
+                            childrenToRemove.push(c);
+                        });
                         childMoves.get(targetComp).push(child.clone());
                         childrenToRemove.push(child);
                     } else {
@@ -97,11 +121,21 @@ async function run() {
                 } else {
                     allChildrenMoved = false;
                 }
+                childComments = [];
             });
 
             // Reconstruir los Media Queries para cada componente
             for (const [comp, rules] of childMoves.entries()) {
                 const compRoot = getOrCreateComponentRoot(comp);
+                
+                // Mover también comentarios en crudo encima del arroba rule si aplica
+                pendingComments.forEach(c => {
+                    compRoot.append(c.clone());
+                    if (allChildrenMoved && !nodesToRemove.includes(c)) {
+                        nodesToRemove.push(c);
+                    }
+                });
+
                 const clonedAtRule = node.clone({ nodes: [] });
                 rules.forEach(r => clonedAtRule.append(r));
                 compRoot.append(clonedAtRule);
@@ -113,6 +147,9 @@ async function run() {
             if (allChildrenMoved && node.nodes.length === 0) {
                 nodesToRemove.push(node);
             }
+            pendingComments = [];
+        } else {
+            pendingComments = [];
         }
     });
 
