@@ -1,7 +1,7 @@
 import { STORAGE_KEY, defaultTabBlueprints } from '../constants'
 import type { CollectionTab, PersistedState, Project } from '../../types/workspace'
 import { buildStructuredReference } from '../../utils/references'
-import { createHistoryEvent, isoNow, uid } from '../../utils/workspace'
+import { createHistoryEvent, isoNow, migratePersistedState, uid } from '../../utils/workspace'
 import { getDefaultTemplates } from './templates'
 
 export function buildSeedProject(): Project {
@@ -167,13 +167,14 @@ export function getDefaultPersistedState(): PersistedState {
   const firstTabId = project.tabs[0]?.id ?? ''
   const firstEntityId =
     project.entities.find((entity) => entity.tabId === firstTabId)?.id ?? project.entities[0]?.id ?? ''
-  return {
+  return migratePersistedState({
     settings: null,
     projects: [project],
     activeProjectId: project.id,
     activeTabId: firstTabId,
     activeEntityId: firstEntityId,
-  }
+    changeLog: [],
+  })
 }
 
 export function loadPersistedState(): PersistedState {
@@ -189,7 +190,7 @@ export function loadPersistedState(): PersistedState {
       return empty
     }
 
-    return {
+    return migratePersistedState({
       settings: parsed.settings ?? null,
       projects: parsed.projects,
       activeProjectId: parsed.activeProjectId ?? parsed.projects[0].id,
@@ -199,7 +200,8 @@ export function loadPersistedState(): PersistedState {
         parsed.activeEntityId ??
         parsed.projects[0].entities[0]?.id ??
         getDefaultPersistedState().activeEntityId,
-    }
+      changeLog: parsed.changeLog ?? [],
+    })
   } catch {
     localStorage.removeItem(STORAGE_KEY)
     return empty

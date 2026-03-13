@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { draftPayload, draftFromEntity, createHistoryEvent, isoNow } from '../../utils/workspace'
+import { appendChangeEvent, createChangeEvent, draftPayload, draftFromEntity, createHistoryEvent, isoNow } from '../../utils/workspace'
 import type { DraftState, EntityRecord, PersistedState, Project } from '../../types/workspace'
 import type { AppWorker } from '../../data/worker'
 import { addBreadcrumb } from '../../services/observability'
@@ -69,6 +69,15 @@ export function usePersistenceManagement(
           }),
         }
 
+        const withChangeEvent = appendChangeEvent(nextState, createChangeEvent({
+          label: 'Autosave',
+          details: `Guardado automático de ${activeEntity.title}.`,
+          actorType: 'user',
+          projectId: activeProject.id,
+          tabId: activeEntity.tabId,
+          entityId: activeEntity.id,
+        }))
+
         // Fire & Forget to worker (Off-main-thread write)
         addBreadcrumb('Autosave persistido en worker', 'workspace.save', {
           projectId: activeProject.id,
@@ -78,10 +87,10 @@ export function usePersistenceManagement(
           projectId: activeProject.id,
           entityId: activeEntity.id,
         }, async () => {
-          await worker.persistState(nextState)
+          await worker.persistState(withChangeEvent)
         }).catch(console.error)
 
-        return nextState
+        return withChangeEvent
       })
       
       setSaveStatus('saved')

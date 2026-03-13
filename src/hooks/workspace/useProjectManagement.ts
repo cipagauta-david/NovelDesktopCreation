@@ -1,7 +1,15 @@
 import { useState, useCallback } from 'react'
 import type { PersistedState, Project } from '../../types/workspace'
-import { createHistoryEvent, isoNow, uid } from '../../utils/workspace'
+import { appendChangeEvent, createChangeEvent, createHistoryEvent, isoNow, uid } from '../../utils/workspace'
 import { getDefaultPersistedState } from '../../data/seed/project'
+
+type ChangeDescriptor = {
+  label: string
+  details: string
+  actorType?: 'user' | 'ai' | 'system'
+  tabId?: string
+  entityId?: string
+}
 
 export function useProjectManagement(
   data: PersistedState,
@@ -14,11 +22,26 @@ export function useProjectManagement(
   const [newProjectDescription, setNewProjectDescription] = useState('')
 
   const withProjectUpdate = useCallback(
-    (projectId: string, updater: (project: Project) => Project) => {
-      setData((current) => ({
+    (projectId: string, updater: (project: Project) => Project, change?: ChangeDescriptor) => {
+      setData((current) => {
+        const nextState = {
         ...current,
         projects: current.projects.map((project) => (project.id === projectId ? updater(project) : project)),
-      }))
+        }
+
+        if (!change) {
+          return nextState
+        }
+
+        return appendChangeEvent(nextState, createChangeEvent({
+          label: change.label,
+          details: change.details,
+          actorType: change.actorType,
+          projectId,
+          tabId: change.tabId,
+          entityId: change.entityId,
+        }))
+      })
     },
     [setData],
   )
@@ -50,7 +73,10 @@ export function useProjectManagement(
         createHistoryEvent('Proyecto renombrado', `Ahora se llama ${nextName.trim()}.`),
         ...project.history,
       ].slice(0, 40),
-    }))
+    }), {
+      label: 'Proyecto renombrado',
+      details: `Ahora se llama ${nextName.trim()}.`,
+    })
     setToast(`Proyecto renombrado a ${nextName.trim()}.`)
   }
 
@@ -64,6 +90,15 @@ export function useProjectManagement(
       activeProjectId: nextProject.id,
       activeTabId: nextProject.tabs[0]?.id ?? '',
       activeEntityId: nextProject.entities[0]?.id ?? '',
+      changeLog: [
+        ...current.changeLog,
+        createChangeEvent({
+          label: 'Proyecto eliminado',
+          details: `Se eliminó ${activeProject.name}.`,
+          actorType: 'user',
+          projectId: activeProject.id,
+        }),
+      ],
     }))
     setToast(`Proyecto ${activeProject.name} eliminado.`)
   }
@@ -85,6 +120,15 @@ export function useProjectManagement(
       activeProjectId: project.id,
       activeTabId: project.tabs[0]?.id ?? '',
       activeEntityId: project.entities[0]?.id ?? '',
+      changeLog: [
+        ...current.changeLog,
+        createChangeEvent({
+          label: 'Proyecto creado',
+          details: `Se creó ${projectName}.`,
+          actorType: 'user',
+          projectId: project.id,
+        }),
+      ],
     }))
     setNewProjectName('')
     setNewProjectDescription('')

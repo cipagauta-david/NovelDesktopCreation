@@ -2,11 +2,19 @@ import { useState } from 'react'
 import type { PersistedState, Project, CollectionTab } from '../../types/workspace'
 import { createHistoryEvent, isoNow, uid } from '../../utils/workspace'
 
+type ChangeDescriptor = {
+  label: string
+  details: string
+  actorType?: 'user' | 'ai' | 'system'
+  tabId?: string
+  entityId?: string
+}
+
 export function useTabManagement(
   setData: React.Dispatch<React.SetStateAction<PersistedState>>,
   activeProject: Project | undefined,
   activeTab: CollectionTab | null,
-  withProjectUpdate: (projectId: string, updater: (project: Project) => Project) => void,
+  withProjectUpdate: (projectId: string, updater: (project: Project) => Project, change?: ChangeDescriptor) => void,
   setToast: (msg: string) => void
 ) {
   const [newTabName, setNewTabName] = useState('')
@@ -41,7 +49,11 @@ export function useTabManagement(
         createHistoryEvent('Tab creada', `${newTab.name} ya forma parte del proyecto.`),
         ...project.history,
       ].slice(0, 40),
-    }))
+    }), {
+      label: 'Tab creada',
+      details: `${newTab.name} ya forma parte del proyecto.`,
+      tabId: newTab.id,
+    })
     setData((current) => ({ ...current, activeTabId: newTab.id, activeEntityId: '' }))
     setNewTabName('')
     setToast(`Tab ${newTab.name} creada.`)
@@ -64,7 +76,11 @@ export function useTabManagement(
         createHistoryEvent('Tabs reordenadas', `${activeTab.name} cambió de posición.`),
         ...project.history,
       ].slice(0, 40),
-    }))
+    }), {
+      label: 'Tabs reordenadas',
+      details: `${activeTab.name} cambió de posición.`,
+      tabId: activeTab.id,
+    })
   }
 
   function renameActiveTab() {
@@ -81,7 +97,11 @@ export function useTabManagement(
         createHistoryEvent('Tab renombrada', `${activeTab.name} ahora es ${nextName.trim()}.`),
         ...project.history,
       ].slice(0, 40),
-    }))
+    }), {
+      label: 'Tab renombrada',
+      details: `${activeTab.name} ahora es ${nextName.trim()}.`,
+      tabId: activeTab.id,
+    })
   }
 
   function deleteActiveTab() {
@@ -100,7 +120,11 @@ export function useTabManagement(
         createHistoryEvent('Tab eliminada', `${activeTab.name} y sus entidades fueron retiradas.`),
         ...project.history,
       ].slice(0, 40),
-    }))
+    }), {
+      label: 'Tab eliminada',
+      details: `${activeTab.name} y sus entidades fueron retiradas.`,
+      tabId: activeTab.id,
+    })
     setData((current) => ({
       ...current,
       activeTabId: nextTab.id,
@@ -113,7 +137,11 @@ export function useTabManagement(
     withProjectUpdate(activeProject.id, (project) => ({
       ...project,
       tabs: project.tabs.map((tab) => (tab.id === activeTab.id ? { ...tab, prompt } : tab)),
-    }))
+    }), {
+      label: 'Prompt de tab actualizado',
+      details: `Se actualizó el prompt de ${activeTab.name}.`,
+      tabId: activeTab.id,
+    })
   }
 
   return {

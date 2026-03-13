@@ -46,6 +46,18 @@ export type HistoryEvent = {
   actorType: ActorType
 }
 
+export type ChangeEvent = {
+  id: string
+  timestamp: string
+  actorType: ActorType
+  label: string
+  details: string
+  projectId?: string
+  tabId?: string
+  entityId?: string
+  source: 'legacy-history' | 'mutation'
+}
+
 export type EntityTemplate = {
   id: string
   name: string
@@ -95,6 +107,7 @@ export type PersistedState = {
   activeProjectId: string
   activeTabId: string
   activeEntityId: string
+  changeLog: ChangeEvent[]
   graphLayouts?: PersistedGraphLayouts
   llmTraces?: LlmTraceEntry[]
 }

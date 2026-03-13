@@ -17,7 +17,17 @@ export function useAiManagement(
   activeTab: CollectionTab | null,
   activeEntity: EntityRecord | null,
   settings: AppSettings | null,
-  withProjectUpdate: (projectId: string, updater: (project: Project) => Project) => void,
+  withProjectUpdate: (
+    projectId: string,
+    updater: (project: Project) => Project,
+    change?: {
+      label: string
+      details: string
+      actorType?: 'user' | 'ai' | 'system'
+      tabId?: string
+      entityId?: string
+    },
+  ) => void,
   setToast: (msg: string) => void
 ) {
   const [pendingProposal, setPendingProposal] = useState<AiProposal | null>(null)

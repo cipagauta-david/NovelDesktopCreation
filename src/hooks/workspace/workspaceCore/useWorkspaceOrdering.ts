@@ -6,7 +6,17 @@ import { createHistoryEvent, isoNow } from '../../../utils/workspace'
 type UseWorkspaceOrderingArgs = {
   activeProject: Project | undefined
   activeTab: CollectionTab | null
-  withProjectUpdate: (projectId: string, updater: (project: Project) => Project) => void
+  withProjectUpdate: (
+    projectId: string,
+    updater: (project: Project) => Project,
+    change?: {
+      label: string
+      details: string
+      actorType?: 'user' | 'ai' | 'system'
+      tabId?: string
+      entityId?: string
+    },
+  ) => void
 }
 
 export function useWorkspaceOrdering({
@@ -33,6 +43,10 @@ export function useWorkspaceOrdering({
           ...project.history,
         ].slice(0, 40),
       }
+    }, {
+      label: 'Entidades reordenadas',
+      details: `Reordenamiento en ${activeTab.name}.`,
+      tabId: activeTab.id,
     })
   }, [activeProject, activeTab, withProjectUpdate])
 
@@ -53,6 +67,9 @@ export function useWorkspaceOrdering({
           ...project.history,
         ].slice(0, 40),
       }
+    }, {
+      label: 'Tabs reordenadas',
+      details: 'Reordenamiento por drag & drop.',
     })
   }, [activeProject, withProjectUpdate])
 

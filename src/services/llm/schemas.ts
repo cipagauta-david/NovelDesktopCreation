@@ -65,6 +65,18 @@ export const HistoryEventSchema = z.object({
   actorType: z.enum(['user', 'ai', 'system']),
 })
 
+export const ChangeEventSchema = z.object({
+  id: z.string(),
+  timestamp: z.string(),
+  actorType: z.enum(['user', 'ai', 'system']),
+  label: z.string(),
+  details: z.string(),
+  projectId: z.string().optional(),
+  tabId: z.string().optional(),
+  entityId: z.string().optional(),
+  source: z.enum(['legacy-history', 'mutation']),
+})
+
 export const EntityRecordSchema = z.object({
   id: z.string(),
   tabId: z.string(),
@@ -122,6 +134,7 @@ export const PersistedStateSchema = z.object({
   activeProjectId: z.string(),
   activeTabId: z.string(),
   activeEntityId: z.string(),
+  changeLog: z.array(ChangeEventSchema).default([]),
   graphLayouts: z.record(z.string(), z.record(z.string(), z.object({ x: z.number(), y: z.number() }))).optional(),
   llmTraces: z.array(z.object({
     id: z.string(),

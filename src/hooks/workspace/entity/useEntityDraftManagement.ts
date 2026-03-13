@@ -8,7 +8,17 @@ type UseEntityDraftManagementArgs = {
   activeEntity: EntityRecord | null
   activeDraft: DraftState | null
   setDraft: Dispatch<SetStateAction<DraftState | null>>
-  withProjectUpdate: (projectId: string, updater: (project: Project) => Project) => void
+  withProjectUpdate: (
+    projectId: string,
+    updater: (project: Project) => Project,
+    change?: {
+      label: string
+      details: string
+      actorType?: 'user' | 'ai' | 'system'
+      tabId?: string
+      entityId?: string
+    },
+  ) => void
   setToast: (msg: string) => void
 }
 
@@ -100,7 +110,12 @@ export function useEntityDraftManagement({
               ].slice(0, 20),
             },
       ),
-    }))
+    }), {
+      label: 'Assets añadidos',
+      details: `${assets.length} imagen(es) anexadas.`,
+      entityId: activeEntity.id,
+      tabId: activeEntity.tabId,
+    })
     setToast(`${assets.length} imagen(es) añadidas al proyecto.`)
   }
 

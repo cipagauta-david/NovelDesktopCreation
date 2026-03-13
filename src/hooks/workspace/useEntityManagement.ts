@@ -23,7 +23,17 @@ export function useEntityManagement(
   referenceSuggestion: { start: number; end: number; query: string } | null,
   setReferenceSuggestion: Dispatch<SetStateAction<{ start: number; end: number; query: string } | null>>,
   setWorkspaceView: Dispatch<SetStateAction<WorkspaceView>>,
-  withProjectUpdate: (projectId: string, updater: (project: Project) => Project) => void,
+  withProjectUpdate: (
+    projectId: string,
+    updater: (project: Project) => Project,
+    change?: {
+      label: string
+      details: string
+      actorType?: 'user' | 'ai' | 'system'
+      tabId?: string
+      entityId?: string
+    },
+  ) => void,
   setToast: (msg: string) => void
 ) {
   const crud = useEntityCrudManagement({

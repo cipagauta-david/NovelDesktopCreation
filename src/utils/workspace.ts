@@ -1,9 +1,11 @@
 import type {
   ActorType,
+  ChangeEvent,
   DraftState,
   EntityDraft,
   EntityRecord,
   HistoryEvent,
+  PersistedState,
 } from '../types/workspace'
 
 export function uid(prefix: string): string {
@@ -25,6 +27,92 @@ export function createHistoryEvent(
     details,
     actorType,
     timestamp: isoNow(),
+  }
+}
+
+export function createChangeEvent(params: {
+  label: string
+  details: string
+  actorType?: ActorType
+  projectId?: string
+  tabId?: string
+  entityId?: string
+  source?: ChangeEvent['source']
+}): ChangeEvent {
+  return {
+    id: uid('change'),
+    timestamp: isoNow(),
+    actorType: params.actorType ?? 'user',
+    label: params.label,
+    details: params.details,
+    projectId: params.projectId,
+    tabId: params.tabId,
+    entityId: params.entityId,
+    source: params.source ?? 'mutation',
+  }
+}
+
+export function appendChangeEvent(state: PersistedState, event: ChangeEvent): PersistedState {
+  return {
+    ...state,
+    changeLog: [...state.changeLog, event],
+  }
+}
+
+function historyEventToChangeEvent(params: {
+  event: HistoryEvent
+  projectId: string
+  tabId?: string
+  entityId?: string
+}): ChangeEvent {
+  const { event, projectId, tabId, entityId } = params
+  return {
+    id: uid('change-legacy'),
+    timestamp: event.timestamp,
+    actorType: event.actorType,
+    label: event.label,
+    details: event.details,
+    projectId,
+    tabId,
+    entityId,
+    source: 'legacy-history',
+  }
+}
+
+export function migratePersistedState(state: PersistedState): PersistedState {
+  if (state.changeLog.length > 0) {
+    return state
+  }
+
+  const migrated = state.projects.flatMap((project) => {
+    const projectEvents = project.history.map((event) =>
+      historyEventToChangeEvent({
+        event,
+        projectId: project.id,
+      }),
+    )
+    const entityEvents = project.entities.flatMap((entity) =>
+      entity.history.map((event) =>
+        historyEventToChangeEvent({
+          event,
+          projectId: project.id,
+          tabId: entity.tabId,
+          entityId: entity.id,
+        }),
+      ),
+    )
+    return [...projectEvents, ...entityEvents]
+  })
+
+  migrated.sort((a, b) => {
+    const timestampDiff = new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    if (timestampDiff !== 0) return timestampDiff
+    return a.id.localeCompare(b.id)
+  })
+
+  return {
+    ...state,
+    changeLog: migrated,
   }
 }
 

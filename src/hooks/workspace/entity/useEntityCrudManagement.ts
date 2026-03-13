@@ -21,7 +21,17 @@ type UseEntityCrudManagementArgs = {
   activeTabEntities: EntityRecord[]
   setDraft: Dispatch<SetStateAction<DraftState | null>>
   setWorkspaceView: Dispatch<SetStateAction<WorkspaceView>>
-  withProjectUpdate: (projectId: string, updater: (project: Project) => Project) => void
+  withProjectUpdate: (
+    projectId: string,
+    updater: (project: Project) => Project,
+    change?: {
+      label: string
+      details: string
+      actorType?: 'user' | 'ai' | 'system'
+      tabId?: string
+      entityId?: string
+    },
+  ) => void
   setToast: (msg: string) => void
 }
 
@@ -87,7 +97,12 @@ export function useEntityCrudManagement({
         createHistoryEvent('Entidad creada', `${newEntity.title} lista para edición.`),
         ...project.history,
       ].slice(0, 40),
-    }))
+    }), {
+      label: 'Entidad creada',
+      details: `${newEntity.title} lista para edición.`,
+      tabId: activeTab.id,
+      entityId: newEntity.id,
+    })
     setData((current) => ({ ...current, activeEntityId: newEntity.id }))
     setToast('Entidad lista para editar.')
   }
@@ -113,7 +128,12 @@ export function useEntityCrudManagement({
         createHistoryEvent('Entidad duplicada', `${duplicated.title} creada desde un original.`),
         ...project.history,
       ].slice(0, 40),
-    }))
+    }), {
+      label: 'Entidad duplicada',
+      details: `${duplicated.title} creada desde un original.`,
+      tabId: duplicated.tabId,
+      entityId: duplicated.id,
+    })
     setData((current) => ({ ...current, activeEntityId: duplicated.id }))
   }
 
@@ -137,7 +157,12 @@ export function useEntityCrudManagement({
             },
       ),
       updatedAt: isoNow(),
-    }))
+    }), {
+      label: 'Entidad archivada',
+      details: `${activeEntity.title} pasó a estado archivado.`,
+      tabId: activeEntity.tabId,
+      entityId: activeEntity.id,
+    })
     setData((current) => ({ ...current, activeEntityId: nextEntity?.id ?? '' }))
   }
 
@@ -155,7 +180,12 @@ export function useEntityCrudManagement({
         createHistoryEvent('Entidad eliminada', `${activeEntity.title} fue eliminada.`),
         ...project.history,
       ].slice(0, 40),
-    }))
+    }), {
+      label: 'Entidad eliminada',
+      details: `${activeEntity.title} fue eliminada.`,
+      tabId: activeEntity.tabId,
+      entityId: activeEntity.id,
+    })
     setData((current) => ({ ...current, activeEntityId: nextEntity?.id ?? '' }))
   }
 
@@ -194,7 +224,12 @@ export function useEntityCrudManagement({
         createHistoryEvent('Template guardado', `${template.name} listo para reutilizar.`),
         ...project.history,
       ].slice(0, 40),
-    }))
+    }), {
+      label: 'Template guardado',
+      details: `${template.name} listo para reutilizar.`,
+      entityId: activeEntity.id,
+      tabId: activeEntity.tabId,
+    })
     setToast('Template guardado y listo para nuevas entidades.')
   }
 

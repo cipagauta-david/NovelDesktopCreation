@@ -5,6 +5,7 @@ import type { PersistedState, Project } from '../../../types/workspace'
 import { addBreadcrumb } from '../../../services/observability'
 import { downloadProjectAsJson } from '../../../utils/exportImport/exportProject'
 import { promptFileImport } from '../../../utils/exportImport/importProject'
+import { createChangeEvent } from '../../../utils/workspace'
 
 type UseWorkspaceTransferArgs = {
   activeProject: Project | undefined
@@ -34,6 +35,15 @@ export function useWorkspaceTransfer({ activeProject, setData, setToast }: UseWo
       activeProjectId: result.project.id,
       activeTabId: result.project.tabs[0]?.id ?? '',
       activeEntityId: result.project.entities[0]?.id ?? '',
+      changeLog: [
+        ...current.changeLog,
+        createChangeEvent({
+          label: 'Proyecto importado',
+          details: `Importado ${result.project.name}.`,
+          actorType: 'system',
+          projectId: result.project.id,
+        }),
+      ],
     }))
     addBreadcrumb('Import de proyecto', 'workspace.import', { projectId: result.project.id })
     setToast(`Proyecto "${result.project.name}" importado correctamente.`)

@@ -1,6 +1,7 @@
 import * as Comlink from 'comlink'
 import type { EntityRecord, PersistedState } from '../types/workspace'
 import { withSpan } from '../services/tracing'
+import { migratePersistedState } from '../utils/workspace'
 import {
   EntityRecordSchema,
   FtsSearchResultSchema,
@@ -61,7 +62,9 @@ function openDatabase(): Promise<IDBDatabase> {
 }
 
 async function saveStateToIndexedDb(state: PersistedState): Promise<void> {
-  parseWithContract(PersistedStateSchema, state, {
+  const normalizedState = migratePersistedState(state)
+
+  parseWithContract(PersistedStateSchema, normalizedState, {
     provider: 'Local/Ollama',
     contract: 'ipc-worker-persist-state',
     message: 'PersistedState inválido al persistir',
@@ -70,7 +73,7 @@ async function saveStateToIndexedDb(state: PersistedState): Promise<void> {
   const db = await openDatabase()
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STATE_STORE, 'readwrite')
-    tx.objectStore(STATE_STORE).put({ id: STATE_ID, value: state } satisfies PersistedStateRecord)
+    tx.objectStore(STATE_STORE).put({ id: STATE_ID, value: normalizedState } satisfies PersistedStateRecord)
     tx.oncomplete = () => resolve()
     tx.onerror = () => reject(new Error(`No se pudo guardar estado: ${formatErrorMessage(tx.error)}`))
     tx.onabort = () => {
@@ -104,7 +107,7 @@ async function loadStateFromIndexedDb(): Promise<PersistedState | null> {
     provider: 'Local/Ollama',
     contract: 'ipc-worker-load-state',
     message: 'PersistedState inválido al cargar',
-  })
+  }) as PersistedState
 }
 
 const workerObj: AppWorker = {
@@ -133,11 +136,11 @@ const workerObj: AppWorker = {
 
   async persistState(state: PersistedState): Promise<void> {
     await withSpan('worker.persist_state', { projects: state.projects.length }, async () => {
-      const validatedState = parseWithContract(PersistedStateSchema, state, {
+      const validatedState = migratePersistedState(parseWithContract(PersistedStateSchema, state, {
         provider: 'Local/Ollama',
         contract: 'ipc-worker-persist-state',
         message: 'PersistedState inválido recibido por worker',
-      })
+      }) as PersistedState)
 
       const allEntities = validatedState.projects.flatMap((p) => p.entities)
       searchIndex.buildFromEntities(allEntities)
@@ -163,7 +166,7 @@ const workerObj: AppWorker = {
 
     try {
       const saved = await loadStateFromIndexedDb()
-      return saved ?? fallbackState
+      return saved ? migratePersistedState(saved) : fallbackState
     } catch (error) {
       console.error('[Worker] Fallo leyendo IndexedDB, usando fallback en memoria', error)
       return fallbackState

@@ -5,7 +5,17 @@ type UseAiProposalLifecycleArgs = {
   pendingProposal: AiProposal | null
   activeProject: Project | undefined
   activeTab: CollectionTab | null
-  withProjectUpdate: (projectId: string, updater: (project: Project) => Project) => void
+  withProjectUpdate: (
+    projectId: string,
+    updater: (project: Project) => Project,
+    change?: {
+      label: string
+      details: string
+      actorType?: 'user' | 'ai' | 'system'
+      tabId?: string
+      entityId?: string
+    },
+  ) => void
   setPendingProposal: (proposal: AiProposal | null) => void
   setStreamingText: (value: string) => void
   setStreamStatusIdle: () => void
@@ -70,7 +80,13 @@ export function useAiProposalLifecycle({
         createHistoryEvent('IA confirmada', `Se aplicó una propuesta sobre ${followUpEntity.title}.`, 'ai'),
         ...project.history,
       ].slice(0, 40),
-    }))
+    }), {
+      label: 'IA confirmada',
+      details: `Se aplicó una propuesta sobre ${followUpEntity.title}.`,
+      actorType: 'ai',
+      tabId: activeTab.id,
+      entityId: pendingProposal.entityId,
+    })
 
     setPendingProposal(null)
     setStreamingText('')
