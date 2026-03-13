@@ -10,6 +10,18 @@
   --border-subtle: #e2e8f0;
 }
 
+:root.dark,
+:root[data-theme="dark"] {
+  --bg-surface-primary: #111114;
+  --bg-surface-secondary: #17171c;
+
+  --text-primary: #e2e2e8;
+  --text-secondary: #a3a3b5;
+  --text-accent: #67e8f9;
+
+  --border-subtle: rgba(148, 163, 184, 0.18);
+}
+
 /* ===== Semantic Token Binding (inherited from ARIS tokens) ===== */
 
 .app-loading-state {

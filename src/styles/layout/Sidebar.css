@@ -10,12 +10,29 @@
 
 .sidebar-identity strong {
   font-size: 0.96rem;
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .sidebar-identity small {
-  color: #8ea0b9;
+  color: var(--text-secondary);
   font-size: 0.78rem;
+}
+
+.sidebar-ai-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #22c55e 22%, transparent);
 }
 
 .project-switcher-stack {
@@ -34,12 +51,12 @@
 }
 
 .project-switcher-summary strong {
-  color: #f8fafc;
+  color: var(--text-primary);
   font-size: 0.92rem;
 }
 
 .project-switcher-summary span {
-  color: #8ea0b9;
+  color: var(--text-secondary);
   font-size: 0.82rem;
 }
 

@@ -45,14 +45,21 @@ export const Sidebar = memo(function Sidebar({
   onImportProject,
 }: SidebarProps) {
   const [showProjectForm, setShowProjectForm] = useState(false)
+  const compactModel = settings.model
+    .split('/')
+    .pop()
+    ?.replace(/-/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase()) ?? settings.model
+  const aiStatusTitle = `IA activa · ${settings.provider} · ${settings.model}`
 
   return (
     <aside className="sidebar sidebar-compact">
       <div className="sidebar-identity">
         <span className="eyebrow">Espacio narrativo</span>
         <strong>{settings.authorName}</strong>
-        <small>
-          IA activa · {settings.provider} · {settings.model}
+        <small className="sidebar-ai-status" title={aiStatusTitle}>
+          <span className="status-dot" aria-hidden="true" />
+          IA conectada ({compactModel})
         </small>
       </div>
 

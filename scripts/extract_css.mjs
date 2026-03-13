@@ -32,6 +32,29 @@ function getOrCreateComponentRoot(compPath) {
     return componentRoots.get(compPath);
 }
 
+function normalizeContent(content) {
+    return content.replace(/\r\n/g, '\n').trim();
+}
+
+function mergeCssContent(existingContent, incomingContent) {
+    const normalizedExisting = normalizeContent(existingContent);
+    const normalizedIncoming = normalizeContent(incomingContent);
+
+    if (!normalizedIncoming) {
+        return existingContent;
+    }
+
+    if (!normalizedExisting) {
+        return incomingContent;
+    }
+
+    if (normalizedExisting.includes(normalizedIncoming)) {
+        return existingContent;
+    }
+
+    return `${existingContent.trimEnd()}\n\n${incomingContent.trimStart()}`;
+}
+
 // Determina muy estrictamente si una regla CSS pertenece a un solo componente
 function getTargetComponent(rule) {
     let targetComp = null;
@@ -42,15 +65,23 @@ function getTargetComponent(rule) {
         if (matches.length === 0) return false; // Selector sin clases (ej: body o h1), PELIGRO. No extraer.
         
         let selectorTarget = null;
+        let hasUnknownClass = false;
         for (const match of matches) {
             const cls = match[1];
             if (classToComponent.has(cls)) {
-                selectorTarget = classToComponent.get(cls);
-                break; // Con una sola clase atada al componente es seguro encapsular este selector completo
+                const clsOwner = classToComponent.get(cls);
+                if (selectorTarget === null) {
+                    selectorTarget = clsOwner;
+                } else if (selectorTarget !== clsOwner) {
+                    return false; // Mezcla clases de componentes distintos en el mismo selector
+                }
+            } else {
+                hasUnknownClass = true;
             }
         }
         
         if (!selectorTarget) return false; // Un selector (separado por coma) no tiene dueño, PELIGRO.
+        if (hasUnknownClass) return false; // Selector mixto: parte del estilo queda global y parte no; mejor no mover.
         
         if (targetComp === null) {
             targetComp = selectorTarget;
@@ -166,11 +197,9 @@ async function run() {
         const cssFilename = `${parsedPath.name}.css`;
         const componentCssPath = path.join(parsedPath.dir, cssFilename);
 
-        let newCssContent = '';
-        if (fs.existsSync(componentCssPath)) {
-            newCssContent = fs.readFileSync(componentCssPath, 'utf8') + '\n\n';
-        }
-        newCssContent += compASTRoot.toString();
+        const incomingCssContent = compASTRoot.toString();
+        const existingCssContent = fs.existsSync(componentCssPath) ? fs.readFileSync(componentCssPath, 'utf8') : '';
+        const newCssContent = mergeCssContent(existingCssContent, incomingCssContent);
         fs.writeFileSync(componentCssPath, newCssContent, 'utf8');
 
         modifiedComponents++;

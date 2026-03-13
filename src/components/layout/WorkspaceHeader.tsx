@@ -8,13 +8,11 @@ type WorkspaceHeaderProps = {
   project: Project | undefined
   searchResultsCount: number
   workspaceView: WorkspaceView
-  godMode: boolean
   leftPanelOpen: boolean
   inspectorOpen: boolean
   hasActiveSearch: boolean
   onOpenSearch: () => void
   onViewChange: (view: WorkspaceView) => void
-  onToggleGodMode: () => void
   onToggleLeftPanel: () => void
   onToggleInspector: () => void
 }
@@ -23,13 +21,11 @@ export function WorkspaceHeader({
   project,
   searchResultsCount,
   workspaceView,
-  godMode,
   leftPanelOpen,
   inspectorOpen,
   hasActiveSearch,
   onOpenSearch,
   onViewChange,
-  onToggleGodMode,
   onToggleLeftPanel,
   onToggleInspector,
 }: WorkspaceHeaderProps) {
@@ -39,7 +35,7 @@ export function WorkspaceHeader({
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
   }
 
-  const navItems: Array<{
+  const utilityItems: Array<{
     key: string
     label: string
     active: boolean
@@ -50,18 +46,6 @@ export function WorkspaceHeader({
       label: 'Navegación',
       active: leftPanelOpen,
       onClick: onToggleLeftPanel,
-    },
-    {
-      key: 'writing',
-      label: 'Escritura',
-      active: workspaceView === 'editor',
-      onClick: () => onViewChange('editor'),
-    },
-    {
-      key: 'map',
-      label: 'Mapa',
-      active: workspaceView === 'graph',
-      onClick: () => onViewChange('graph'),
     },
     {
       key: 'context',
@@ -83,8 +67,27 @@ export function WorkspaceHeader({
 
       <div className="workspace-header-actions">
         <div className="workspace-header-primary-actions minimal-header-actions">
-          <nav className="workspace-header-nav" aria-label="Vistas del workspace">
-            {navItems.map((item) => (
+          <div className="view-mode-toggle" role="tablist" aria-label="Modo de vista">
+            <button
+              type="button"
+              className={workspaceView === 'editor' ? 'view-mode-button active' : 'view-mode-button'}
+              aria-selected={workspaceView === 'editor'}
+              onClick={() => onViewChange('editor')}
+            >
+              Escritura
+            </button>
+            <button
+              type="button"
+              className={workspaceView === 'graph' ? 'view-mode-button active' : 'view-mode-button'}
+              aria-selected={workspaceView === 'graph'}
+              onClick={() => onViewChange('graph')}
+            >
+              Mapa
+            </button>
+          </div>
+
+          <nav className="workspace-header-nav" aria-label="Paneles">
+            {utilityItems.map((item) => (
               <button
                 key={item.key}
                 type="button"
@@ -95,15 +98,6 @@ export function WorkspaceHeader({
               </button>
             ))}
           </nav>
-
-          <button
-            type="button"
-            className={godMode ? 'header-utility-button active' : 'header-utility-button'}
-            onClick={onToggleGodMode}
-            aria-pressed={godMode}
-          >
-            {godMode ? 'Modo mapa' : 'God Mode'}
-          </button>
 
           <button
             type="button"

@@ -1,26 +1,22 @@
 
-/* Zen Mode / Parchment Override */
-:root:has(.workspace-stage.focus-mode) {
-  --surface-base: #fcfbf9; /* Cream/Parchment */
-  --surface-glass: rgba(252, 251, 249, 0.95);
-  --surface-glass-hover: rgba(245, 244, 241, 0.98);
-  --color-parchment: #fcfbf9;
-  --color-primary: #00e5ff;
-  --text-primary: #1e293b;
-  --text-body: #1e293b;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --brand-accent: var(--color-primary);
-  --brand-accent-hover: #22d3ee;
-  --border-subtle: rgba(15, 23, 42, 0.08);
-  --border-active: rgba(0, 229, 255, 0.28);
-  --border-focus: var(--border-active);
-  --shadow-glass: 0 12px 40px rgba(15, 23, 42, 0.06);
+/* AppShell theme-scoped tokens (isolated from global theme tokens) */
+:root,
+:root[data-theme="light"] {
+  --app-shell-main-bg: var(--bg-editor);
+  --app-shell-panel-bg: var(--bg-sidebar);
+  --app-shell-separator: rgba(15, 23, 42, 0.1);
+}
 
-  color-scheme: light;
-  background: var(
-    --surface-base
-  ); /* Textura papel simulada via SVG de ser necesario */
+:root.dark,
+:root[data-theme="dark"] {
+  --app-shell-main-bg: var(--bg-editor);
+  --app-shell-panel-bg: var(--bg-sidebar);
+  --app-shell-separator: rgba(255, 255, 255, 0.1);
+}
+
+.app-shell:has(.workspace-stage.focus-mode) {
+  --app-shell-main-bg: var(--bg-editor);
+  --app-shell-panel-bg: var(--bg-sidebar);
 }
 
 /* APP-SHELL — Background refuerzo Parchment / Obsidian */
@@ -444,4 +440,33 @@
   .main-column.is-spectral {
     opacity: 1;
   }
+}
+
+/* Immersive workspace: remove boxed center and let canvas touch side panels */
+.workspace-grid {
+  gap: 0;
+}
+
+.main-column {
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: var(--app-shell-main-bg);
+  box-shadow: none;
+}
+
+.left-workspace-panel,
+.inspector-panel-shell {
+  z-index: 10;
+  background: var(--app-shell-panel-bg);
+}
+
+.left-workspace-panel.open {
+  border-right: 1px solid var(--app-shell-separator);
+  box-shadow: 1px 0 0 color-mix(in srgb, var(--app-shell-separator) 70%, transparent);
+}
+
+.inspector-panel-shell.open {
+  border-left: 1px solid var(--app-shell-separator);
+  box-shadow: -1px 0 0 color-mix(in srgb, var(--app-shell-separator) 70%, transparent);
 }

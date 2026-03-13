@@ -108,6 +108,8 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
     if (!canvas) return
     const context = canvas.getContext('2d')
     if (!context) return
+    const root = document.documentElement
+    const isDarkTheme = root.classList.contains('dark') || root.getAttribute('data-theme') === 'dark'
 
     context.clearRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT)
     context.lineCap = 'round'
@@ -145,7 +147,9 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
 
       context.save()
       context.globalAlpha = alpha
-      context.fillStyle = isActive ? 'rgba(120, 168, 255, 1)' : 'rgba(20, 24, 36, 0.95)'
+      context.fillStyle = isActive
+        ? (isDarkTheme ? 'rgba(125, 166, 255, 0.95)' : 'rgba(15, 23, 42, 0.94)')
+        : 'rgba(20, 24, 36, 0.95)'
       context.strokeStyle = isActive ? 'rgba(153, 190, 255, 1)' : 'rgba(145, 162, 210, 0.88)'
       context.lineWidth = isActive ? 2.4 : 1.2
       context.beginPath()
@@ -156,7 +160,7 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
 
       context.save()
       context.globalAlpha = alpha
-      context.fillStyle = 'rgba(226, 232, 255, 0.95)'
+      context.fillStyle = isDarkTheme ? 'rgba(226, 232, 255, 0.95)' : 'rgba(15, 23, 42, 0.92)'
       context.font = '12px Inter, sans-serif'
       context.textAlign = 'center'
       context.textBaseline = 'top'
@@ -300,27 +304,6 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
           setDraggingNodeId(null)
         }}
       >
-        {/* SVG Defs: glow filters for stellar map effect */}
-        <defs>
-          <filter id="glow-active" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <filter id="glow-related" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <radialGradient id="halo-gradient" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="var(--color-primary-glow)" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="var(--color-primary-glow)" stopOpacity="0" />
-          </radialGradient>
-        </defs>
         {graphModel.edges.map((edge) => {
           const source = nodeById.get(edge.source)
           const target = nodeById.get(edge.target)
@@ -348,7 +331,6 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
                 key={node.id}
                 className={isActive ? 'graph-node active' : isConnected ? 'graph-node related' : 'graph-node'}
                 opacity={isActive || isConnected ? 1 : activeEntityId ? 0.22 : 1}
-                filter={isActive ? 'url(#glow-active)' : isConnected ? 'url(#glow-related)' : undefined}
                 onClick={() => {
                   if (relationSourceId && relationSourceId !== node.id && onCreateRelation) {
                     onCreateRelation(relationSourceId, node.id)
@@ -378,11 +360,12 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
                 cx={node.x}
                 cy={node.y}
                 r={isActive ? 16 : 10}
-                fill={isActive ? 'var(--brand-accent)' : 'var(--surface-base)'}
+                className="graph-node-circle"
+                fill={isActive ? 'var(--text-primary)' : 'var(--surface-base)'}
                 stroke={isActive ? 'var(--brand-accent-hover)' : 'var(--border-focus)'}
                 strokeWidth={isActive ? '2.4' : '1.4'}
               />
-              <text x={node.x} y={node.y + 24} textAnchor="middle" fill="var(--text-primary)">
+              <text className="graph-node-text" x={node.x} y={node.y + 24} textAnchor="middle">
                 {node.title.length > 18 ? `${node.title.slice(0, 18)}…` : node.title}
               </text>
             </g>

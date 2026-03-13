@@ -79,14 +79,25 @@
   font-weight: 500;
 }
 
-/* Star clusters: tab-based color coding */
-.graph-node.active circle {
-  filter: drop-shadow(0 0 8px var(--color-primary-glow));
+.graph-node-text {
+  fill: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  pointer-events: none;
+  paint-order: stroke fill;
+  stroke: var(--bg-surface-primary, #ffffff);
+  stroke-width: 4px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.graph-node.related circle {
-  filter: drop-shadow(0 0 4px var(--color-primary-dim));
+.graph-node.active .graph-node-circle {
+  fill: var(--text-primary);
 }
+
+/* Star clusters: tab-based color coding */
+
 
 /* Canvas: direct GPU compositing */
 .graph-canvas {
