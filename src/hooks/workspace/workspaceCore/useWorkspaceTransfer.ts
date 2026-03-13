@@ -14,10 +14,10 @@ type UseWorkspaceTransferArgs = {
 }
 
 export function useWorkspaceTransfer({ activeProject, setData, setToast }: UseWorkspaceTransferArgs) {
-  const exportActiveProject = useCallback(() => {
+  const exportActiveProject = useCallback(async () => {
     if (!activeProject) return
     addBreadcrumb('Export de proyecto', 'workspace.export', { projectId: activeProject.id })
-    downloadProjectAsJson(activeProject)
+    await downloadProjectAsJson(activeProject)
     setToast(`Proyecto "${activeProject.name}" exportado.`)
   }, [activeProject, setToast])
 

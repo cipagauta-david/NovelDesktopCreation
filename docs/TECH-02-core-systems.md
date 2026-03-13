@@ -65,3 +65,27 @@ Campos iniciales:
 - importación local de binarios por entidad,
 - trazabilidad de ruta/identificador dentro del proyecto,
 - políticas de copia/exportación para mantener portabilidad del workspace.
+
+## 11. Estado de implementación (2026-03-12)
+
+Checks completados en este hito:
+
+1. **Sync offline-first + merge strategy + base CRDT**
+	- Se implementó un motor de sincronización local con cola offline y merge LWW por entidad/proyecto.
+	- Base CRDT aplicada mediante unión por ID + resolución de conflicto por `updatedAt`.
+
+2. **Vault cifrado para credenciales IA**
+	- `apiKey` ya no forma parte del estado persistido.
+	- Se añadió vault local cifrado (AES-GCM vía WebCrypto) para guardar/leer claves por proveedor.
+
+3. **Platform Adapter formal (web/desktop)**
+	- Se desacopló acceso a filesystem (import/export) y storage de estado (worker) mediante adapters.
+	- Runtime web usa APIs del navegador; runtime desktop queda preparado para bridge nativo.
+
+4. **Contrato de integridad import/export**
+	- Export incluye `version`, `checksumAlgorithm` y `checksum` SHA-256 del proyecto.
+	- Import valida versión y checksum antes de aceptar contenido.
+
+5. **Sistema base de plugins/skills con capabilities**
+	- Se incorporó `PluginManager` con registro/ejecución.
+	- Sandbox por permisos: `workspace:read` y `workspace:write` con contexto congelado para lectura.

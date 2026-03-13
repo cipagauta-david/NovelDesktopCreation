@@ -69,6 +69,7 @@ export async function requestLlmStreaming(
   addBreadcrumb('Inicio de solicitud LLM', 'llm.request', {
     provider: validatedInput.provider,
     model: validatedInput.model,
+    correlationId: validatedInput.correlationId,
   })
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -82,6 +83,7 @@ export async function requestLlmStreaming(
       provider: validatedInput.provider,
       model: validatedInput.model,
       attempt,
+      correlationId: validatedInput.correlationId,
     })
     let firstTokenMarked = false
 
@@ -94,6 +96,7 @@ export async function requestLlmStreaming(
           const firstTokenSpan = startSpan('llm.first_token', {
             provider: validatedInput.provider,
             model: validatedInput.model,
+            correlationId: validatedInput.correlationId,
           })
           endSpanOk(firstTokenSpan, { firstTokenMs })
           requestSpan.setAttribute('firstTokenMs', firstTokenMs)
@@ -131,6 +134,7 @@ export async function requestLlmStreaming(
             provider: validatedInput.provider,
             model: validatedInput.model,
             attempt,
+            correlationId: validatedInput.correlationId,
           })
         }
         return

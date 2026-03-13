@@ -14,6 +14,8 @@ import type { LlmRequestInput } from '../../../services/llm/types'
 import { LlmError } from '../../../services/llmErrors'
 import { addBreadcrumb, captureException } from '../../../services/observability'
 import { buildFallbackProposal } from './proposalFactory'
+import { readProviderApiKey } from '../../../services/security/apiKeyVault'
+import { createCorrelationId } from '../../../services/correlation'
 
 type UseAiStreamingArgs = {
   activeTab: CollectionTab | null
@@ -94,10 +96,13 @@ function useAiStreaming({
       return
     }
 
+    const correlationId = createCorrelationId('intent-ai-generate')
+    const providerApiKey = await readProviderApiKey(settings.provider)
     const input: LlmRequestInput = {
       provider: settings.provider,
       model: settings.model,
-      apiKey: settings.apiKey,
+      apiKey: providerApiKey,
+      correlationId,
       tabPrompt: activeTab.prompt,
       entityTitle: activeEntity.title,
       entityContent: activeEntity.content,
@@ -107,6 +112,7 @@ function useAiStreaming({
     addBreadcrumb('Inicio de streaming IA', 'llm.stream.start', {
       provider: settings.provider,
       model: settings.model,
+      correlationId,
     })
 
     try {
@@ -142,6 +148,7 @@ function useAiStreaming({
           addBreadcrumb('Streaming IA completado', 'llm.stream.done', {
             provider: settings.provider,
             chars: fullText.length,
+            correlationId,
           })
           setStreamStatus('done')
           setToast('Propuesta IA generada con streaming. Revisa y confirma.')

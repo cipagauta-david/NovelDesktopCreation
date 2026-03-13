@@ -2,6 +2,7 @@ import * as Comlink from 'comlink'
 import type { EntityRecord, PersistedState } from '../types/workspace'
 import { withSpan } from '../services/tracing'
 import { migratePersistedState } from '../utils/workspace'
+import { getStateStorageAdapter } from '../platform/stateStorageAdapter'
 import {
   EntityRecordSchema,
   FtsSearchResultSchema,
@@ -11,55 +12,28 @@ import {
 import { SearchIndex } from './search/SearchIndex'
 import type { FtsSearchResult } from './search/types'
 
-export interface AppWorker {
-  init(): Promise<void>
-  persistState(state: PersistedState): Promise<void>
-  loadState(): Promise<PersistedState | null>
-  searchEntities(query: string, entities: EntityRecord[]): Promise<EntityRecord[]>
-  // ── FTS5 index API ──────────────────────────────────
-  ftsIndex(entities: EntityRecord[]): Promise<number>
-  ftsSearch(query: string): Promise<FtsSearchResult[]>
-  ftsUpsert(entity: EntityRecord): Promise<void>
-  ftsRemove(entityId: string): Promise<void>
+type WorkerRequestMeta = {
+  correlationId?: string
+  origin?: string
 }
 
-const DB_NAME = 'novel-desktop-worker-db'
-const DB_VERSION = 1
-const STATE_STORE = 'workspace-state'
-const STATE_ID = 'latest'
+export interface AppWorker {
+  init(): Promise<void>
+  persistState(state: PersistedState, meta?: WorkerRequestMeta): Promise<void>
+  loadState(): Promise<PersistedState | null>
+  searchEntities(query: string, entities: EntityRecord[], meta?: WorkerRequestMeta): Promise<EntityRecord[]>
+  // ── FTS5 index API ──────────────────────────────────
+  ftsIndex(entities: EntityRecord[], meta?: WorkerRequestMeta): Promise<number>
+  ftsSearch(query: string, meta?: WorkerRequestMeta): Promise<FtsSearchResult[]>
+  ftsUpsert(entity: EntityRecord, meta?: WorkerRequestMeta): Promise<void>
+  ftsRemove(entityId: string, meta?: WorkerRequestMeta): Promise<void>
+}
 
 let fallbackState: PersistedState | null = null
+const stateStorage = getStateStorageAdapter()
 
 // Instancia singleton del índice FTS
 const searchIndex = new SearchIndex()
-
-type PersistedStateRecord = {
-  id: string
-  value: PersistedState
-}
-
-function formatErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message
-  }
-  return String(error ?? 'error desconocido')
-}
-
-function openDatabase(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION)
-    request.onupgradeneeded = () => {
-      const db = request.result
-      if (!db.objectStoreNames.contains(STATE_STORE)) {
-        db.createObjectStore(STATE_STORE, { keyPath: 'id' })
-      }
-    }
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => {
-      reject(new Error(`No se pudo abrir IndexedDB: ${formatErrorMessage(request.error)}`))
-    }
-  })
-}
 
 async function saveStateToIndexedDb(state: PersistedState): Promise<void> {
   const normalizedState = migratePersistedState(state)
@@ -70,36 +44,11 @@ async function saveStateToIndexedDb(state: PersistedState): Promise<void> {
     message: 'PersistedState inválido al persistir',
   })
 
-  const db = await openDatabase()
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STATE_STORE, 'readwrite')
-    tx.objectStore(STATE_STORE).put({ id: STATE_ID, value: normalizedState } satisfies PersistedStateRecord)
-    tx.oncomplete = () => resolve()
-    tx.onerror = () => reject(new Error(`No se pudo guardar estado: ${formatErrorMessage(tx.error)}`))
-    tx.onabort = () => {
-      const abortDetail = tx.error ? formatErrorMessage(tx.error) : 'sin detalle de transacción'
-      reject(new Error(`Transacción abortada al guardar estado: ${abortDetail}`))
-    }
-  })
-  db.close()
+  await stateStorage.saveState(normalizedState)
 }
 
 async function loadStateFromIndexedDb(): Promise<PersistedState | null> {
-  const db = await openDatabase()
-  const result = await new Promise<PersistedState | null>((resolve, reject) => {
-    const tx = db.transaction(STATE_STORE, 'readonly')
-    const request = tx.objectStore(STATE_STORE).get(STATE_ID)
-    request.onsuccess = () => {
-      const record = request.result as PersistedStateRecord | undefined
-      resolve(record?.value ?? null)
-    }
-    request.onerror = () => reject(new Error(`No se pudo leer estado: ${formatErrorMessage(request.error)}`))
-    tx.onabort = () => {
-      const abortDetail = tx.error ? formatErrorMessage(tx.error) : 'sin detalle de transacción'
-      reject(new Error(`Transacción abortada al leer estado: ${abortDetail}`))
-    }
-  })
-  db.close()
+  const result = await stateStorage.loadState()
   if (!result) {
     return null
   }
@@ -112,15 +61,10 @@ async function loadStateFromIndexedDb(): Promise<PersistedState | null> {
 
 const workerObj: AppWorker = {
   async init(): Promise<void> {
-    console.log('[Worker] Initializing FTS Index Engine + IndexedDB...')
-    if (typeof indexedDB === 'undefined') {
-      console.warn('[Worker] IndexedDB no disponible, usando fallback en memoria')
-      return
-    }
+    console.log('[Worker] Initializing FTS Index Engine + State Storage Adapter...')
 
     try {
-      const db = await openDatabase()
-      db.close()
+      await stateStorage.init()
 
       // Intentar cargar estado y construir el índice FTS de inmediato
       const savedState = await loadStateFromIndexedDb()
@@ -134,8 +78,12 @@ const workerObj: AppWorker = {
     }
   },
 
-  async persistState(state: PersistedState): Promise<void> {
-    await withSpan('worker.persist_state', { projects: state.projects.length }, async () => {
+  async persistState(state: PersistedState, meta?: WorkerRequestMeta): Promise<void> {
+    await withSpan('worker.persist_state', {
+      projects: state.projects.length,
+      correlationId: meta?.correlationId,
+      origin: meta?.origin,
+    }, async () => {
       const validatedState = migratePersistedState(parseWithContract(PersistedStateSchema, state, {
         provider: 'Local/Ollama',
         contract: 'ipc-worker-persist-state',
@@ -145,37 +93,32 @@ const workerObj: AppWorker = {
       const allEntities = validatedState.projects.flatMap((p) => p.entities)
       searchIndex.buildFromEntities(allEntities)
 
-      if (typeof indexedDB === 'undefined') {
-        fallbackState = validatedState
-        return
-      }
-
       try {
         await saveStateToIndexedDb(validatedState)
       } catch (error) {
-        console.error('[Worker] Fallo guardando en IndexedDB, persistiendo en memoria', error)
+        console.error('[Worker] Fallo guardando estado en adapter, persistiendo en memoria', error)
         fallbackState = validatedState
       }
     })
   },
 
   async loadState(): Promise<PersistedState | null> {
-    if (typeof indexedDB === 'undefined') {
-      return fallbackState
-    }
-
     try {
       const saved = await loadStateFromIndexedDb()
       return saved ? migratePersistedState(saved) : fallbackState
     } catch (error) {
-      console.error('[Worker] Fallo leyendo IndexedDB, usando fallback en memoria', error)
+      console.error('[Worker] Fallo leyendo estado desde adapter, usando fallback en memoria', error)
       return fallbackState
     }
   },
 
   // Mantener compatibilidad con el API original (filtro lineal)
-  async searchEntities(query: string, entities: EntityRecord[]): Promise<EntityRecord[]> {
-    return withSpan('worker.search_entities', { queryLength: query.length }, async () => {
+  async searchEntities(query: string, entities: EntityRecord[], meta?: WorkerRequestMeta): Promise<EntityRecord[]> {
+    return withSpan('worker.search_entities', {
+      queryLength: query.length,
+      correlationId: meta?.correlationId,
+      origin: meta?.origin,
+    }, async () => {
       const normalized = query.trim().toLowerCase()
       if (!normalized) return []
 
@@ -195,8 +138,12 @@ const workerObj: AppWorker = {
 
   // ── FTS5 Index API ──────────────────────────────────
 
-  async ftsIndex(entities: EntityRecord[]): Promise<number> {
-    return withSpan('worker.fts_index', { entities: entities.length }, async () => {
+  async ftsIndex(entities: EntityRecord[], meta?: WorkerRequestMeta): Promise<number> {
+    return withSpan('worker.fts_index', {
+      entities: entities.length,
+      correlationId: meta?.correlationId,
+      origin: meta?.origin,
+    }, async () => {
       const validatedEntities = entities.map((entity) => parseWithContract(EntityRecordSchema, entity, {
         provider: 'Local/Ollama',
         contract: 'ipc-worker-fts-index',
@@ -207,8 +154,12 @@ const workerObj: AppWorker = {
     })
   },
 
-  async ftsSearch(query: string): Promise<FtsSearchResult[]> {
-    return withSpan('worker.fts_search', { queryLength: query.length }, async () => {
+  async ftsSearch(query: string, meta?: WorkerRequestMeta): Promise<FtsSearchResult[]> {
+    return withSpan('worker.fts_search', {
+      queryLength: query.length,
+      correlationId: meta?.correlationId,
+      origin: meta?.origin,
+    }, async () => {
       const results = searchIndex.search(query)
       return results.map((result) => parseWithContract(FtsSearchResultSchema, result, {
         provider: 'Local/Ollama',
@@ -218,7 +169,7 @@ const workerObj: AppWorker = {
     })
   },
 
-  async ftsUpsert(entity: EntityRecord): Promise<void> {
+  async ftsUpsert(entity: EntityRecord, _meta?: WorkerRequestMeta): Promise<void> {
     const validatedEntity = parseWithContract(EntityRecordSchema, entity, {
       provider: 'Local/Ollama',
       contract: 'ipc-worker-fts-upsert',
@@ -227,7 +178,7 @@ const workerObj: AppWorker = {
     searchIndex.upsertEntity(validatedEntity)
   },
 
-  async ftsRemove(entityId: string): Promise<void> {
+  async ftsRemove(entityId: string, _meta?: WorkerRequestMeta): Promise<void> {
     searchIndex.removeEntity(entityId)
   },
 }

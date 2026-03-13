@@ -1,0 +1,9 @@
+{
+  "choices": [
+    {
+      "delta": {
+        "content": "Hola mundo"
+      }
+    }
+  ]
+}

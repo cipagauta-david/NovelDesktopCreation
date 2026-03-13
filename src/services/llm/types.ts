@@ -4,6 +4,7 @@ export type LlmRequestInput = {
   provider: Provider
   model: string
   apiKey?: string
+  correlationId?: string
   tabPrompt: string
   entityTitle: string
   entityContent: string

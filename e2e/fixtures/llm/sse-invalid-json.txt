@@ -1,0 +1,6 @@
+data: {"choices":[{"delta":{"content":"Hola"}}]}
+
+data: {"choices": [ INVALID_JSON ]}
+
+data: [DONE]
+

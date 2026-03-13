@@ -15,7 +15,6 @@ export type AppSettings = {
   provider: Provider
   model: string
   apiKeyHint: string
-  apiKey?: string
 }
 
 export type OnboardingPayload = {
@@ -196,6 +195,7 @@ export type LlmStreamStatus =
 
 export type LlmTraceEntry = {
   id: string
+  correlationId?: string
   timestamp: string
   provider: Provider
   model: string
@@ -214,6 +214,8 @@ export type GraphLayoutMap = Record<string, { x: number; y: number }>
 export type ExportedProject = {
   version: number
   exportedAt: string
+  checksum: string
+  checksumAlgorithm: 'SHA-256'
   project: Project
 }
 

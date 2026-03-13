@@ -20,6 +20,7 @@ export function buildTrace(
 ): LlmTraceEntry {
   return {
     id: traceUid('trace'),
+    correlationId: input.correlationId,
     timestamp: new Date().toISOString(),
     provider,
     model: input.model,

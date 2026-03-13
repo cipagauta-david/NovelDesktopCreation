@@ -80,8 +80,20 @@ function historyEventToChangeEvent(params: {
 }
 
 export function migratePersistedState(state: PersistedState): PersistedState {
+  const sanitizedSettings = state.settings
+    ? {
+        authorName: state.settings.authorName,
+        provider: state.settings.provider,
+        model: state.settings.model,
+        apiKeyHint: state.settings.apiKeyHint,
+      }
+    : null
+
   if (state.changeLog.length > 0) {
-    return state
+    return {
+      ...state,
+      settings: sanitizedSettings,
+    }
   }
 
   const migrated = state.projects.flatMap((project) => {
@@ -112,6 +124,7 @@ export function migratePersistedState(state: PersistedState): PersistedState {
 
   return {
     ...state,
+    settings: sanitizedSettings,
     changeLog: migrated,
   }
 }

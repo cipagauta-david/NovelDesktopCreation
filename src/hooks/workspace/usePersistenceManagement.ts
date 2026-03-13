@@ -77,6 +77,7 @@ export function usePersistenceManagement(
           tabId: activeEntity.tabId,
           entityId: activeEntity.id,
         }))
+        const correlationId = withChangeEvent.changeLog[withChangeEvent.changeLog.length - 1]?.id
 
         // Fire & Forget to worker (Off-main-thread write)
         addBreadcrumb('Autosave persistido en worker', 'workspace.save', {
@@ -86,8 +87,12 @@ export function usePersistenceManagement(
         withSpan('worker.persist_state', {
           projectId: activeProject.id,
           entityId: activeEntity.id,
+          correlationId,
         }, async () => {
-          await worker.persistState(withChangeEvent)
+          await worker.persistState(withChangeEvent, {
+            correlationId,
+            origin: 'autosave',
+          })
         }).catch(console.error)
 
         return withChangeEvent

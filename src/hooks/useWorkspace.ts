@@ -15,6 +15,9 @@ import { useWorkspaceOrdering } from './workspace/workspaceCore/useWorkspaceOrde
 import { useWorkspaceTransfer } from './workspace/workspaceCore/useWorkspaceTransfer'
 import * as Comlink from 'comlink'
 import type { AppWorker } from '../data/worker'
+import { saveProviderApiKey } from '../services/security/apiKeyVault'
+import { useSyncManagement } from './workspace/useSyncManagement'
+import { createPluginManager } from '../services/plugins/manager'
 
 const defaultPanels: PanelVisibility = { sidebar: true, entities: true, inspector: false }
 
@@ -30,6 +33,7 @@ export function useWorkspace(
   const [referenceSuggestion, setReferenceSuggestion] = useState<{ start: number, end: number, query: string } | null>(null)
   const [panels, setPanels] = useState<PanelVisibility>(defaultPanels)
   const [graphLayouts, setGraphLayouts] = useState<PersistedGraphLayouts>(initialData.graphLayouts ?? {})
+  const pluginManager = useMemo(() => createPluginManager(), [])
 
   const activeProject = useMemo(() => data.projects.find((p) => p.id === data.activeProjectId) ?? data.projects[0], [data.activeProjectId, data.projects])
   const activeTab = useMemo(() => activeProject?.tabs.find((t) => t.id === data.activeTabId) ?? activeProject?.tabs[0] ?? null, [activeProject, data.activeTabId])
@@ -100,8 +104,11 @@ export function useWorkspace(
       provider: payload.provider,
       model: payload.model,
       apiKeyHint: payload.apiKey ? `••••${payload.apiKey.slice(-4)}` : 'Modo local',
-      apiKey: payload.apiKey || undefined,
     }
+
+    void saveProviderApiKey(payload.provider, payload.apiKey).catch((error) => {
+      console.error('[Vault] No se pudo guardar API key', error)
+    })
     setData((c) => ({ ...c, settings }))
     setToast('Workspace configurado. Todo listo para escribir.')
   }, [setData, setToast])
@@ -122,6 +129,14 @@ export function useWorkspace(
     activeTab,
     withProjectUpdate: projectManagement.withProjectUpdate,
   })
+  const syncManagement = useSyncManagement(data)
+
+  const runPluginCommand = useCallback(async (pluginId: string, commandName: string, payload?: unknown) => {
+    await pluginManager.runCommand(pluginId, { name: commandName, payload }, {
+      workspace: data,
+      applyWorkspaceUpdate: (updater) => setData((current) => updater(current)),
+    })
+  }, [data, pluginManager, setData])
 
   return {
     providerModels, data, toast, setToast, saveStatus, workspaceView, setWorkspaceView, searchQuery, setSearchQuery,
@@ -142,5 +157,7 @@ export function useWorkspace(
     // New features
     exportActiveProject: transfer.exportActiveProject, importProject: transfer.importProject, reorderEntities: ordering.reorderEntities, reorderTabs: ordering.reorderTabs,
     updateGraphNodePosition: graphManagement.updateGraphNodePosition, resetGraphLayout: graphManagement.resetGraphLayout,
+    syncStatus: syncManagement.syncStatus, inspectPendingSync: syncManagement.inspectPendingSync, clearPendingSync: syncManagement.clearPendingSync,
+    registerPlugin: pluginManager.register, listPlugins: pluginManager.list, runPluginCommand,
   }
 }

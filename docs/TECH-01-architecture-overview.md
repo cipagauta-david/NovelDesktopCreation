@@ -65,3 +65,8 @@ Implementación esperada:
 - Referencias internas soportadas por identificadores estables (no por texto visible).
 - Integración de IA encapsulada por interfaz de provider para evitar acoplamiento.
 - Preparación explícita para empaquetado desktop sin reescritura de dominio.
+
+## 7. Arquitectura target post-MVP
+La definición consolidada de arquitectura objetivo (sync, plugins, desktop, seguridad y observabilidad) se documenta en:
+
+- [TECH-04-target-architecture-post-mvp.md](TECH-04-target-architecture-post-mvp.md)

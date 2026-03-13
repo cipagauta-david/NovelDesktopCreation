@@ -11,6 +11,7 @@ export const LlmRequestInputSchema = z.object({
   provider: ProviderSchema,
   model: z.string().trim().min(1),
   apiKey: z.string().trim().min(1).optional(),
+  correlationId: z.string().optional(),
   tabPrompt: z.string(),
   entityTitle: z.string().trim().min(1),
   entityContent: z.string(),
@@ -138,6 +139,7 @@ export const PersistedStateSchema = z.object({
   graphLayouts: z.record(z.string(), z.record(z.string(), z.object({ x: z.number(), y: z.number() }))).optional(),
   llmTraces: z.array(z.object({
     id: z.string(),
+    correlationId: z.string().optional(),
     timestamp: z.string(),
     provider: ProviderSchema,
     model: z.string(),

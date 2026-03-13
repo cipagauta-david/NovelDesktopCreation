@@ -3,6 +3,7 @@ import type { Project, SearchResult } from '../../types/workspace'
 import type { AppWorker } from '../../data/worker'
 import { withSpan } from '../../services/tracing'
 import * as Comlink from 'comlink'
+import { createCorrelationId } from '../../services/correlation'
 
 export function useSearchManagement(
   activeProject: Project | undefined,
@@ -15,8 +16,12 @@ export function useSearchManagement(
   useEffect(() => {
     if (!activeProject || !worker) return
     const activeEntities = activeProject.entities.filter((e) => e.status === 'active')
-    withSpan('worker.fts_index', { entities: activeEntities.length }, async () => {
-      await worker.ftsIndex(activeEntities)
+    const correlationId = createCorrelationId('intent-search-index')
+    withSpan('worker.fts_index', {
+      entities: activeEntities.length,
+      correlationId,
+    }, async () => {
+      await worker.ftsIndex(activeEntities, { correlationId, origin: 'search-index' })
     }).catch(console.error)
   }, [activeProject, activeProject?.entities.length, worker])
 
@@ -28,7 +33,11 @@ export function useSearchManagement(
     }
     
     const timeoutId = setTimeout(() => {
-      withSpan('worker.fts_search', { queryLength: searchQuery.length }, () => worker.ftsSearch(searchQuery))
+      const correlationId = createCorrelationId('intent-search-query')
+      withSpan('worker.fts_search', {
+        queryLength: searchQuery.length,
+        correlationId,
+      }, () => worker.ftsSearch(searchQuery, { correlationId, origin: 'search-query' }))
         .then((results) => {
            setSearchResults(results.slice(0, 12))
         })
@@ -36,7 +45,7 @@ export function useSearchManagement(
           console.error('[Search] FTS search failed, falling back to linear', err)
           // Fallback a búsqueda lineal si FTS falla
           const activeEntities = activeProject.entities.filter((e) => e.status === 'active')
-          worker.searchEntities(searchQuery, activeEntities)
+          worker.searchEntities(searchQuery, activeEntities, { correlationId, origin: 'search-fallback' })
             .then((entities) => {
                const mapped = entities.map((entity) => ({
                  entityId: entity.id,

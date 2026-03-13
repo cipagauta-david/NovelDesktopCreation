@@ -1,5 +1,6 @@
 import type { ExportedProject, Project } from '../../types/workspace'
 import { isoNow } from '../workspace'
+import { getPlatformFileAdapter } from '../../platform/fileAdapter'
 
 const CURRENT_EXPORT_VERSION = 1
 
@@ -11,25 +12,28 @@ function sanitizeFilename(name: string): string {
     .slice(0, 80)
 }
 
-export function exportProject(project: Project): string {
+async function sha256Hex(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input)
+  const digest = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('')
+}
+
+export async function exportProject(project: Project): Promise<string> {
+  const projectPayload = JSON.stringify(project)
+  const checksum = await sha256Hex(projectPayload)
+
   const exported: ExportedProject = {
     version: CURRENT_EXPORT_VERSION,
     exportedAt: isoNow(),
+    checksum,
+    checksumAlgorithm: 'SHA-256',
     project,
   }
   return JSON.stringify(exported, null, 2)
 }
 
-export function downloadProjectAsJson(project: Project): void {
-  const json = exportProject(project)
-  const blob = new Blob([json], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${sanitizeFilename(project.name)}-${Date.now()}.json`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+export async function downloadProjectAsJson(project: Project): Promise<void> {
+  const json = await exportProject(project)
+  const fileName = `${sanitizeFilename(project.name)}-${Date.now()}.json`
+  await getPlatformFileAdapter().downloadTextFile(fileName, json, 'application/json')
 }

@@ -1,6 +1,13 @@
 import type { Project } from '../../types/workspace'
 import { createHistoryEvent, isoNow, uid } from '../workspace'
 import type { ImportResult } from './types'
+import { getPlatformFileAdapter } from '../../platform/fileAdapter'
+
+async function sha256Hex(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input)
+  const digest = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('')
+}
 
 function remapReferences(content: string, idMap: Map<string, string>): string {
   return content.replace(
@@ -12,7 +19,7 @@ function remapReferences(content: string, idMap: Map<string, string>): string {
   )
 }
 
-export function parseImportedProject(rawJson: string): ImportResult {
+export async function parseImportedProject(rawJson: string): Promise<ImportResult> {
   let parsed: unknown
   try {
     parsed = JSON.parse(rawJson)
@@ -28,6 +35,22 @@ export function parseImportedProject(rawJson: string): ImportResult {
 
   let project: Record<string, unknown>
   if (typeof candidate.version === 'number' && candidate.project) {
+    if (candidate.version !== 1) {
+      return { ok: false, error: `Versión de exportación no soportada: ${String(candidate.version)}.` }
+    }
+
+    if (typeof candidate.checksum === 'string' && candidate.checksum) {
+      const algorithm = candidate.checksumAlgorithm
+      if (algorithm !== 'SHA-256') {
+        return { ok: false, error: 'Algoritmo de checksum no soportado. Se esperaba SHA-256.' }
+      }
+
+      const projectCandidate = candidate.project as Record<string, unknown>
+      const computed = await sha256Hex(JSON.stringify(projectCandidate))
+      if (computed !== candidate.checksum) {
+        return { ok: false, error: 'El checksum del archivo no coincide. El proyecto puede estar corrupto o alterado.' }
+      }
+    }
     project = candidate.project as Record<string, unknown>
   } else if (typeof candidate.name === 'string' && Array.isArray(candidate.tabs)) {
     project = candidate
@@ -132,33 +155,11 @@ export function parseImportedProject(rawJson: string): ImportResult {
 }
 
 export function promptFileImport(): Promise<ImportResult> {
-  return new Promise((resolve) => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '.json,application/json'
-
-    input.onchange = () => {
-      const file = input.files?.[0]
-      if (!file) {
-        resolve({ ok: false, error: 'No se seleccionó archivo.' })
-        return
-      }
-
-      const reader = new FileReader()
-      reader.onload = () => {
-        const text = reader.result as string
-        resolve(parseImportedProject(text))
-      }
-      reader.onerror = () => {
-        resolve({ ok: false, error: 'Error leyendo el archivo.' })
-      }
-      reader.readAsText(file)
+  return (async () => {
+    const rawText = await getPlatformFileAdapter().pickTextFile('.json,application/json')
+    if (!rawText) {
+      return { ok: false, error: 'Importación cancelada.' }
     }
-
-    input.oncancel = () => {
-      resolve({ ok: false, error: 'Importación cancelada.' })
-    }
-
-    input.click()
-  })
+    return parseImportedProject(rawText)
+  })()
 }
