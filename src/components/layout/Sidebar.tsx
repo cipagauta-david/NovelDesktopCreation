@@ -44,7 +44,7 @@ export const Sidebar = memo(function Sidebar({
   const [showProjectForm, setShowProjectForm] = useState(false)
 
   return (
-    <aside className="sidebar sidebar-compact ghosting-panel">
+    <aside className="sidebar sidebar-compact">
       <div className="sidebar-identity">
         <span className="eyebrow">Espacio narrativo</span>
         <strong>{settings.authorName}</strong>
@@ -138,10 +138,13 @@ export const Sidebar = memo(function Sidebar({
       >
         <div className="template-list template-list-compact">
           {activeTemplates.map((template) => (
-            <article key={template.id} className="template-card">
-              <strong>{template.name}</strong>
-              <span>{template.description}</span>
-              <small>{template.fields.join(' · ')}</small>
+            <article key={template.id} className="template-card template-row">
+              <span className="template-row-icon" aria-hidden="true">◦</span>
+              <div>
+                <strong>{template.name}</strong>
+                <span>{template.description}</span>
+                <small>{template.fields.join(' · ')}</small>
+              </div>
             </article>
           ))}
         </div>

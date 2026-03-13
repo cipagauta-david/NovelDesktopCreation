@@ -14,7 +14,7 @@ export function renderInlineContent(text: string) {
     return (
       <span
         key={`${token.raw}-${index}`}
-        className="editor-inline-pill"
+        className="editor-inline-pill entity-reference"
         contentEditable={false}
         spellCheck={false}
       >

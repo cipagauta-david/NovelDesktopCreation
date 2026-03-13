@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, type DragEvent } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { EditorPanel } from '../panels/EditorPanel'
 import { EntityList } from '../panels/EntityList'
 import { GraphPanel } from '../panels/GraphPanel'
@@ -20,7 +20,6 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   const [zenMode, setZenMode] = useState(false)
   const [searchPaletteOpen, setSearchPaletteOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
-  const [globalDragging, setGlobalDragging] = useState(false)
   const [spectralMode, setSpectralMode] = useState(false)
   const [renameProjectOpen, setRenameProjectOpen] = useState(false)
   const [renameTabOpen, setRenameTabOpen] = useState(false)
@@ -39,7 +38,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   const hasInspectorPanel = !zenMode && workspace.panels.inspector
 
   // Destructure stable callbacks to avoid re-running effect on every render
-  const { togglePanel, panels, selectEntity, attachImages, setWorkspaceView } = workspace
+  const { togglePanel, panels, selectEntity, setWorkspaceView } = workspace
 
   useEffect(() => {
     function handleKeydown(e: KeyboardEvent) {
@@ -74,16 +73,6 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   }, [panels.sidebar, panels.entities, togglePanel])
 
   const handleSelectResult = useCallback((entityId: string, tabId: string) => { selectEntity(entityId, tabId); setSearchPaletteOpen(false) }, [selectEntity])
-  const handleGlobalDrop = useCallback((event: DragEvent<HTMLElement>) => {
-    event.preventDefault()
-    setGlobalDragging(false)
-    const files = event.dataTransfer.files
-    if (!files || files.length === 0) {
-      return
-    }
-    void attachImages(files)
-  }, [attachImages])
-
   const handleGraphSelectEntity = useCallback((eId: string, tId: string) => {
     selectEntity(eId, tId)
     if (!zenMode && !panels.inspector) togglePanel('inspector')
@@ -131,23 +120,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
 
   return (
     <main
-      className={[globalDragging ? 'app-shell global-dragging' : 'app-shell', godMode ? 'god-mode' : '', spectralMode ? 'is-spectral' : ''].filter(Boolean).join(' ')}
-      onDragOver={(event) => {
-        if (!Array.from(event.dataTransfer.items).some((item) => item.kind === 'file')) {
-          return
-        }
-        event.preventDefault()
-        if (!globalDragging) {
-          setGlobalDragging(true)
-        }
-      }}
-      onDragLeave={(event) => {
-        if (event.currentTarget.contains(event.relatedTarget as Node)) {
-          return
-        }
-        setGlobalDragging(false)
-      }}
-      onDrop={handleGlobalDrop}
+      className={['app-shell', godMode ? 'god-mode' : '', spectralMode ? 'is-spectral' : ''].filter(Boolean).join(' ')}
     >
     <div className={[zenMode ? 'workspace-header-shell is-hidden' : 'workspace-header-shell', spectralMode ? 'is-spectral' : ''].filter(Boolean).join(' ')}>
         <WorkspaceHeader project={workspace.activeProject} searchResultsCount={workspace.searchResults.length} workspaceView={workspace.workspaceView} godMode={godMode} leftPanelOpen={hasLeftPanel} inspectorOpen={hasInspectorPanel} hasActiveSearch={workspace.searchQuery.trim().length > 0} onOpenSearch={() => setSearchPaletteOpen(true)} onViewChange={workspace.setWorkspaceView} onToggleGodMode={() => { setZenMode(false); setWorkspaceView(godMode ? 'editor' : 'graph') }} onToggleLeftPanel={handleToggleNav} onToggleInspector={() => workspace.togglePanel('inspector')} />
@@ -185,13 +158,6 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
       {searchPaletteOpen && <CommandPalette searchQuery={workspace.searchQuery} searchResults={workspace.searchResults} onSearchChange={workspace.setSearchQuery} onSelectResult={handleSelectResult} onClose={() => setSearchPaletteOpen(false)} />}
       <ShortcutsOverlay open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       {workspace.toast && <div className="toast">{workspace.toast}</div>}
-      {globalDragging && (
-        <div className="global-drop-overlay" aria-live="polite">
-          <strong>Suelta imágenes para anexarlas a la entidad activa</strong>
-          <span>Funciona en cualquier vista del workspace.</span>
-        </div>
-      )}
-
       <Dialog open={renameProjectOpen} onOpenChange={setRenameProjectOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>Renombrar proyecto</DialogTitle></DialogHeader>

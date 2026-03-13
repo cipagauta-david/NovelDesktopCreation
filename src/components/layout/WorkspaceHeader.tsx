@@ -36,6 +36,38 @@ export function WorkspaceHeader({
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
   }
 
+  const navItems: Array<{
+    key: string
+    label: string
+    active: boolean
+    onClick: () => void
+  }> = [
+    {
+      key: 'navigation',
+      label: 'Navegación',
+      active: leftPanelOpen,
+      onClick: onToggleLeftPanel,
+    },
+    {
+      key: 'writing',
+      label: 'Escritura',
+      active: workspaceView === 'editor',
+      onClick: () => onViewChange('editor'),
+    },
+    {
+      key: 'map',
+      label: 'Mapa',
+      active: workspaceView === 'graph',
+      onClick: () => onViewChange('graph'),
+    },
+    {
+      key: 'context',
+      label: 'Contexto',
+      active: inspectorOpen,
+      onClick: onToggleInspector,
+    },
+  ]
+
   return (
     <header className="workspace-header">
       <div className="workspace-header-title">
@@ -47,64 +79,44 @@ export function WorkspaceHeader({
       </div>
 
       <div className="workspace-header-actions">
-        <div className="workspace-header-primary-actions">
-          <button
-            type="button"
-            className={leftPanelOpen ? 'toggle-chip active' : 'toggle-chip'}
-            onClick={onToggleLeftPanel}
-          >
-            Navegación
-          </button>
-
-          <div className="segmented-control">
-            <button
-              type="button"
-              className={workspaceView === 'editor' ? 'active' : ''}
-              onClick={() => onViewChange('editor')}
-            >
-              Escritura
-            </button>
-            <button
-              type="button"
-              className={workspaceView === 'graph' ? 'active' : ''}
-              onClick={() => onViewChange('graph')}
-            >
-              Mapa
-            </button>
-          </div>
+        <div className="workspace-header-primary-actions minimal-header-actions">
+          <nav className="workspace-header-nav" aria-label="Vistas del workspace">
+            {navItems.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={item.active ? 'workspace-nav-item active' : 'workspace-nav-item'}
+                onClick={item.onClick}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
 
           <button
             type="button"
-            className={inspectorOpen ? 'toggle-chip active' : 'toggle-chip'}
-            onClick={onToggleInspector}
-          >
-            Contexto
-          </button>
-
-          <button
-            type="button"
-            className={godMode ? 'mode-switch-pill active' : 'mode-switch-pill'}
+            className={godMode ? 'header-utility-button active' : 'header-utility-button'}
             onClick={onToggleGodMode}
             aria-pressed={godMode}
           >
-            {godMode ? 'Salir God Mode' : 'God Mode'}
+            {godMode ? 'Modo mapa' : 'God Mode'}
           </button>
 
           <button
             type="button"
-            className="theme-switcher-pill"
+            className="header-utility-button"
             onClick={handleToggleTheme}
             aria-label={resolvedTheme === 'dark' ? 'Cambiar a modo día' : 'Cambiar a modo noche'}
             title={resolvedTheme === 'dark' ? 'Modo Parchment (Día)' : 'Modo Obsidian Ink (Noche)'}
           >
-            <span className="theme-switcher-icon" aria-hidden="true">
+            <span className="theme-switcher-icon minimal-theme-icon" aria-hidden="true">
               {resolvedTheme === 'dark' ? '☀' : '☽'}
             </span>
           </button>
 
           <button
             type="button"
-            className={hasActiveSearch ? 'search-trigger active' : 'search-trigger'}
+            className={hasActiveSearch ? 'header-search-trigger active' : 'header-search-trigger'}
             onClick={onOpenSearch}
           >
             <span>Buscar…</span>

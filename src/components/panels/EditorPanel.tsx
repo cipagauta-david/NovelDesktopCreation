@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type DragEvent,
   type ReactNode,
   type RefObject,
 } from 'react'
@@ -95,6 +96,7 @@ export function EditorPanel({
     top: number
   } | null>(null)
   const [hoverPayload, setHoverPayload] = useState<EntityHoverPayload | null>(null)
+  const [assetDragActive, setAssetDragActive] = useState(false)
   const previewPaneRef = useRef<HTMLDivElement | null>(null)
   const writingLaneRef = useRef<HTMLDivElement | null>(null)
   const entityById = useMemo(() => new Map(allEntities.map((entry) => [entry.id, entry])), [allEntities])
@@ -134,6 +136,28 @@ export function EditorPanel({
   )
   const hoveredEntity = hoveredReference ? (entityById.get(hoveredReference.entityId) ?? null) : null
   const isAiStreaming = streamStatus === 'streaming'
+
+  const hasValidImageDrag = useCallback((event: DragEvent<HTMLElement>) => {
+    const { dataTransfer } = event
+    if (!dataTransfer) {
+      return false
+    }
+
+    if (!Array.from(dataTransfer.types).includes('Files')) {
+      return false
+    }
+
+    if (dataTransfer.items.length === 0) {
+      return true
+    }
+
+    return Array.from(dataTransfer.items).some((item) => {
+      if (item.kind !== 'file') {
+        return false
+      }
+      return item.type === '' || item.type.startsWith('image/')
+    })
+  }, [])
 
   function handleCursorActivity(selectionEnd: number | null) {
     setCursorPosition(Math.max(selectionEnd ?? 0, 0))
@@ -392,9 +416,40 @@ export function EditorPanel({
         className={[
           zenMode ? 'writing-lane zen-writing-lane' : 'writing-lane',
           isAiStreaming ? 'ai-streaming' : '',
+          assetDragActive ? 'is-file-dragging' : '',
         ].filter(Boolean).join(' ')}
         aria-live="polite"
         aria-busy={isAiStreaming || undefined}
+        onDragEnter={(event) => {
+          if (!hasValidImageDrag(event)) {
+            return
+          }
+          event.preventDefault()
+          setAssetDragActive(true)
+        }}
+        onDragOver={(event) => {
+          if (!hasValidImageDrag(event)) {
+            return
+          }
+          event.preventDefault()
+          event.dataTransfer.dropEffect = 'copy'
+          if (!assetDragActive) {
+            setAssetDragActive(true)
+          }
+        }}
+        onDragLeave={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+            setAssetDragActive(false)
+          }
+        }}
+        onDrop={(event) => {
+          if (!hasValidImageDrag(event)) {
+            return
+          }
+          event.preventDefault()
+          setAssetDragActive(false)
+          void onAttachImages(event.dataTransfer.files)
+        }}
       >
         <span className="visually-hidden">
           {isAiStreaming ? 'La inteligencia artificial está generando contenido.' : 'La generación de inteligencia artificial está detenida.'}
@@ -411,28 +466,10 @@ export function EditorPanel({
 
         <EntityHover position={hoveredReference} entity={hoveredEntity} />
 
-        {!zenMode && (
-          <div
-            className="dropzone"
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => {
-              event.preventDefault()
-              void onAttachImages(event.dataTransfer.files)
-            }}
-          >
-            <span>Arrastra imágenes aquí o</span>
-            <label className="inline-upload">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={(event) => {
-                  void onAttachImages(event.target.files)
-                  event.target.value = ''
-                }}
-              />
-              súbelas desde disco
-            </label>
+        {assetDragActive && (
+          <div className="editor-drop-overlay" aria-live="polite">
+            <strong>Suelta imágenes para anexarlas a la entidad activa</strong>
+            <span>Se agregarán al panel de assets de esta entidad.</span>
           </div>
         )}
       </div>
@@ -480,7 +517,7 @@ export function EditorPanel({
             onRemoveField={onRemoveField}
           />
 
-          <EditorAssets assets={entity.assets} />
+          <EditorAssets assets={entity.assets} onAttachImages={onAttachImages} />
         </div>
       </div>
     </section>
