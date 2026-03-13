@@ -15,7 +15,14 @@ import { useWorkspaceOrdering } from './workspace/workspaceCore/useWorkspaceOrde
 import { useWorkspaceTransfer } from './workspace/workspaceCore/useWorkspaceTransfer'
 import * as Comlink from 'comlink'
 import type { AppWorker } from '../data/worker'
-import { saveProviderApiKey } from '../services/security/apiKeyVault'
+import {
+  deleteProviderApiKey,
+  rotateProviderApiKey,
+  saveProviderApiKey,
+  saveWorkspaceSyncToken,
+  deleteWorkspaceSyncToken,
+  readProviderVaultMetadata,
+} from '../services/security/apiKeyVault'
 import { useSyncManagement } from './workspace/useSyncManagement'
 import { createPluginManager } from '../services/plugins/manager'
 
@@ -58,6 +65,8 @@ export function useWorkspace(
 
   const entityManagement = useEntityManagement(setData, activeProject, activeTab, activeEntity, activeDraft, tabEntities, setDraft, referenceSuggestion, setReferenceSuggestion, setWorkspaceView, projectManagement.withProjectUpdate, setToast)
   const aiManagement = useAiManagement(
+    data,
+    setData,
     activeProject,
     activeTab,
     activeEntity,
@@ -71,7 +80,12 @@ export function useWorkspace(
   // Motor de persistencia optimista con el worker
   usePersistenceManagement(activeProject, activeEntity, draft, setData, setSaveStatus, saveStatus, worker)
 
-  const graphManagement = useGraphManagement({ activeProject, graphLayouts, setGraphLayouts })
+  const graphManagement = useGraphManagement({
+    activeProject,
+    graphLayouts,
+    setGraphLayouts,
+    withProjectUpdate: projectManagement.withProjectUpdate,
+  })
 
   // Persist graph layouts alongside data
   useEffect(() => {
@@ -129,7 +143,104 @@ export function useWorkspace(
     activeTab,
     withProjectUpdate: projectManagement.withProjectUpdate,
   })
-  const syncManagement = useSyncManagement(data)
+  const syncManagement = useSyncManagement(data, setData)
+
+  const restoreCheckpoint = useCallback((checkpointId: string) => {
+    setData((current) => {
+      const checkpoint = (current.checkpoints ?? []).find((entry) => entry.id === checkpointId)
+      if (!checkpoint) return current
+      return {
+        ...structuredClone(checkpoint.state),
+        checkpoints: current.checkpoints,
+      }
+    })
+    setToast('Checkpoint restaurado.')
+  }, [setData, setToast])
+
+  const rotateProviderCredential = useCallback(async () => {
+    const provider = data.settings?.provider
+    if (!provider) return
+    const next = window.prompt(`Nueva API key para ${provider}`) ?? ''
+    if (!next.trim()) return
+    await rotateProviderApiKey(provider, next)
+    setData((current) => ({
+      ...current,
+      settings: current.settings
+        ? {
+            ...current.settings,
+            apiKeyHint: `••••${next.trim().slice(-4)}`,
+          }
+        : current.settings,
+    }))
+    setToast(`Key de ${provider} rotada.`)
+  }, [data.settings?.provider, setData, setToast])
+
+  const invalidateProviderCredential = useCallback(async () => {
+    const provider = data.settings?.provider
+    if (!provider) return
+    const ok = window.confirm(`¿Invalidar y borrar la API key de ${provider}?`)
+    if (!ok) return
+    await deleteProviderApiKey(provider)
+    setData((current) => ({
+      ...current,
+      settings: current.settings
+        ? {
+            ...current.settings,
+            apiKeyHint: 'Sin key guardada',
+          }
+        : current.settings,
+    }))
+    setToast(`Key de ${provider} invalidada.`)
+  }, [data.settings?.provider, setData, setToast])
+
+  const configureRemoteSync = useCallback(async () => {
+    if (!activeProject) return
+    const endpoint = window.prompt('Endpoint remoto de sync', data.syncRemoteConfig?.endpoint ?? '') ?? ''
+    if (!endpoint.trim()) return
+    const workspaceId = window.prompt('Workspace ID remoto', data.syncRemoteConfig?.workspaceId ?? activeProject.id) ?? activeProject.id
+    const token = window.prompt('Token Bearer de sync remoto (se guarda en vault)') ?? ''
+
+    if (token.trim()) {
+      await saveWorkspaceSyncToken(workspaceId, token)
+    }
+
+    setData((current) => ({
+      ...current,
+      syncRemoteConfig: {
+        endpoint: endpoint.trim(),
+        workspaceId: workspaceId.trim() || activeProject.id,
+        authTokenHint: token.trim() ? `••••${token.trim().slice(-4)}` : (current.syncRemoteConfig?.authTokenHint ?? 'sin token'),
+      },
+    }))
+    setToast('Sync remoto configurado.')
+  }, [activeProject, data.syncRemoteConfig?.authTokenHint, data.syncRemoteConfig?.endpoint, data.syncRemoteConfig?.workspaceId, setData, setToast])
+
+  const clearRemoteSyncCredential = useCallback(async () => {
+    const workspaceId = data.syncRemoteConfig?.workspaceId
+    if (!workspaceId) return
+    await deleteWorkspaceSyncToken(workspaceId)
+    setData((current) => ({
+      ...current,
+      syncRemoteConfig: current.syncRemoteConfig
+        ? {
+            ...current.syncRemoteConfig,
+            authTokenHint: 'sin token',
+          }
+        : current.syncRemoteConfig,
+    }))
+    setToast('Token de sync remoto eliminado del vault.')
+  }, [data.syncRemoteConfig?.workspaceId, setData, setToast])
+
+  const refreshVaultMetadata = useCallback(async () => {
+    const provider = data.settings?.provider
+    if (!provider) return
+    const metadata = await readProviderVaultMetadata(provider)
+    if (!metadata) {
+      setToast('No hay metadata de vault para el proveedor activo.')
+      return
+    }
+    setToast(`Key ${provider} rotada: ${new Date(metadata.rotatedAt).toLocaleString()}`)
+  }, [data.settings?.provider, setToast])
 
   const runPluginCommand = useCallback(async (pluginId: string, commandName: string, payload?: unknown) => {
     await pluginManager.runCommand(pluginId, { name: commandName, payload }, {
@@ -157,7 +268,12 @@ export function useWorkspace(
     // New features
     exportActiveProject: transfer.exportActiveProject, importProject: transfer.importProject, reorderEntities: ordering.reorderEntities, reorderTabs: ordering.reorderTabs,
     updateGraphNodePosition: graphManagement.updateGraphNodePosition, resetGraphLayout: graphManagement.resetGraphLayout,
-    syncStatus: syncManagement.syncStatus, inspectPendingSync: syncManagement.inspectPendingSync, clearPendingSync: syncManagement.clearPendingSync,
+    addRelation: graphManagement.addRelation, removeRelation: graphManagement.removeRelation,
+    syncStatus: syncManagement.syncStatus, inspectPendingSync: syncManagement.inspectPendingSync, clearPendingSync: syncManagement.clearPendingSync, flushRemoteSync: syncManagement.flushRemoteSync,
+    syncStats: data.syncStats, syncRemoteConfig: data.syncRemoteConfig, configureRemoteSync, clearRemoteSyncCredential,
+    checkpoints: data.checkpoints ?? [], restoreCheckpoint,
+    correlationReports: data.correlationReports ?? [],
+    rotateProviderCredential, invalidateProviderCredential, refreshVaultMetadata,
     registerPlugin: pluginManager.register, listPlugins: pluginManager.list, runPluginCommand,
   }
 }

@@ -7,6 +7,7 @@ import { expect, test } from '@playwright/test'
 import { SearchIndex } from '../src/data/search/SearchIndex'
 import type { EntityRecord } from '../src/types/workspace'
 import { consumeSseStream } from '../src/services/llm/streamParser'
+import { PERF_BUDGETS } from './perf-budgets'
 
 function buildEntity(index: number): EntityRecord {
   return {
@@ -44,8 +45,8 @@ test('search indexing and query remain within regression budget', async () => {
 
   expect(index.indexedCount).toBe(1800)
   expect(results.length).toBeGreaterThan(0)
-  expect(buildMs).toBeLessThan(1400)
-  expect(searchMs).toBeLessThan(260)
+  expect(buildMs).toBeLessThan(PERF_BUDGETS.searchIndexBuildMs)
+  expect(searchMs).toBeLessThan(PERF_BUDGETS.searchQueryMs)
 })
 
 test('long SSE stream parse stays under baseline budget', async () => {
@@ -94,5 +95,5 @@ test('long SSE stream parse stays under baseline budget', async () => {
 
   const elapsed = performance.now() - start
   expect(parsed).toBe(tokenCount)
-  expect(elapsed).toBeLessThan(1800)
+  expect(elapsed).toBeLessThan(PERF_BUDGETS.longSseParseMs)
 })

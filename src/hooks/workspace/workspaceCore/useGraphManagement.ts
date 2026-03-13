@@ -3,14 +3,26 @@ import { useCallback, useMemo } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import type { PersistedGraphLayouts, Project } from '../../../types/workspace'
 import { getReferenceTokens } from '../../../utils/references'
+import { createHistoryEvent, isoNow, uid } from '../../../utils/workspace'
 
 type UseGraphManagementArgs = {
   activeProject: Project | undefined
   graphLayouts: PersistedGraphLayouts
   setGraphLayouts: Dispatch<SetStateAction<PersistedGraphLayouts>>
+  withProjectUpdate: (
+    projectId: string,
+    updater: (project: Project) => Project,
+    change?: {
+      label: string
+      details: string
+      actorType?: 'user' | 'ai' | 'system'
+      tabId?: string
+      entityId?: string
+    },
+  ) => void
 }
 
-export function useGraphManagement({ activeProject, graphLayouts, setGraphLayouts }: UseGraphManagementArgs) {
+export function useGraphManagement({ activeProject, graphLayouts, setGraphLayouts, withProjectUpdate }: UseGraphManagementArgs) {
   const graphModel = useMemo(() => {
     if (!activeProject) return { nodes: [], edges: [] }
     const layout = graphLayouts[activeProject.id] ?? {}
@@ -25,12 +37,22 @@ export function useGraphManagement({ activeProject, graphLayouts, setGraphLayout
         tabId: e.tabId,
       }
     })
-    const edges = activeProject.entities.flatMap((e) =>
+    const referencedEdges = activeProject.entities.flatMap((e) =>
       getReferenceTokens(e.content)
         .filter((token) => activeProject.entities.some((t) => t.id === token.entityId))
         .map((token) => ({ source: e.id, target: token.entityId })),
     )
-    return { nodes, edges }
+    const relationEdges = (activeProject.relations ?? []).map((relation) => ({
+      source: relation.sourceEntityId,
+      target: relation.targetEntityId,
+    }))
+
+    const edgeMap = new Map<string, { source: string; target: string }>()
+    for (const edge of [...referencedEdges, ...relationEdges]) {
+      edgeMap.set(`${edge.source}->${edge.target}`, edge)
+    }
+
+    return { nodes, edges: Array.from(edgeMap.values()) }
   }, [activeProject, graphLayouts])
 
   const updateGraphNodePosition = useCallback((entityId: string, x: number, y: number) => {
@@ -53,9 +75,68 @@ export function useGraphManagement({ activeProject, graphLayouts, setGraphLayout
     })
   }, [activeProject, setGraphLayouts])
 
+  const addRelation = useCallback((sourceEntityId: string, targetEntityId: string, relationType: string, label?: string) => {
+    if (!activeProject || !relationType.trim()) return
+    const now = isoNow()
+    withProjectUpdate(activeProject.id, (project) => {
+      const relations = project.relations ?? []
+      const existing = relations.find((relation) =>
+        relation.sourceEntityId === sourceEntityId &&
+        relation.targetEntityId === targetEntityId &&
+        relation.relationType === relationType.trim(),
+      )
+      if (existing) {
+        return project
+      }
+
+      return {
+        ...project,
+        relations: [
+          {
+            id: uid('rel'),
+            sourceEntityId,
+            targetEntityId,
+            relationType: relationType.trim(),
+            label: label?.trim() || undefined,
+            createdAt: now,
+            updatedAt: now,
+          },
+          ...relations,
+        ],
+        updatedAt: now,
+        history: [
+          createHistoryEvent('Relación creada', `Nueva relación ${relationType.trim()} entre entidades.`),
+          ...project.history,
+        ].slice(0, 40),
+      }
+    }, {
+      label: 'Relación creada',
+      details: `${relationType.trim()} entre entidades.`,
+      entityId: sourceEntityId,
+    })
+  }, [activeProject, withProjectUpdate])
+
+  const removeRelation = useCallback((relationId: string) => {
+    if (!activeProject) return
+    withProjectUpdate(activeProject.id, (project) => ({
+      ...project,
+      relations: (project.relations ?? []).filter((relation) => relation.id !== relationId),
+      updatedAt: isoNow(),
+      history: [
+        createHistoryEvent('Relación eliminada', 'Se eliminó una relación de dominio.'),
+        ...project.history,
+      ].slice(0, 40),
+    }), {
+      label: 'Relación eliminada',
+      details: 'Se eliminó una relación de dominio.',
+    })
+  }, [activeProject, withProjectUpdate])
+
   return {
     graphModel,
     updateGraphNodePosition,
     resetGraphLayout,
+    addRelation,
+    removeRelation,
   }
 }

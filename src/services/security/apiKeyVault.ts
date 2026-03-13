@@ -5,6 +5,11 @@ type VaultEnvelope = {
   cipherText: number[]
 }
 
+type ProviderVaultMetadata = {
+  provider: Provider
+  rotatedAt: string
+}
+
 const VAULT_DB = 'novel-desktop-vault-db'
 const VAULT_VERSION = 1
 const VAULT_STORE = 'api-key-vault'
@@ -70,6 +75,14 @@ function providerRecordId(provider: Provider): string {
   return `provider:${provider}`
 }
 
+function providerMetadataRecordId(provider: Provider): string {
+  return `provider-meta:${provider}`
+}
+
+function workspaceSyncTokenRecordId(workspaceId: string): string {
+  return `sync-token:${workspaceId}`
+}
+
 async function getOrCreateDeviceKey(): Promise<CryptoKey> {
   if (cachedCryptoKey) {
     return cachedCryptoKey
@@ -101,6 +114,7 @@ async function getOrCreateDeviceKey(): Promise<CryptoKey> {
 export async function saveProviderApiKey(provider: Provider, apiKey: string): Promise<void> {
   if (!apiKey.trim()) {
     await dbDelete(providerRecordId(provider))
+    await dbDelete(providerMetadataRecordId(provider))
     return
   }
 
@@ -114,6 +128,10 @@ export async function saveProviderApiKey(provider: Provider, apiKey: string): Pr
     cipherText: Array.from(new Uint8Array(cipher)),
   }
   await dbPut(providerRecordId(provider), envelope)
+  await dbPut(providerMetadataRecordId(provider), {
+    provider,
+    rotatedAt: new Date().toISOString(),
+  } satisfies ProviderVaultMetadata)
 }
 
 export async function readProviderApiKey(provider: Provider): Promise<string | undefined> {
@@ -134,4 +152,49 @@ export async function readProviderApiKey(provider: Provider): Promise<string | u
 
 export async function deleteProviderApiKey(provider: Provider): Promise<void> {
   await dbDelete(providerRecordId(provider))
+  await dbDelete(providerMetadataRecordId(provider))
+}
+
+export async function rotateProviderApiKey(provider: Provider, nextApiKey: string): Promise<void> {
+  await saveProviderApiKey(provider, nextApiKey)
+}
+
+export async function readProviderVaultMetadata(provider: Provider): Promise<ProviderVaultMetadata | null> {
+  return dbGet<ProviderVaultMetadata>(providerMetadataRecordId(provider))
+}
+
+export async function saveWorkspaceSyncToken(workspaceId: string, token: string): Promise<void> {
+  if (!token.trim()) {
+    await dbDelete(workspaceSyncTokenRecordId(workspaceId))
+    return
+  }
+
+  const key = await getOrCreateDeviceKey()
+  const iv = crypto.getRandomValues(new Uint8Array(12))
+  const plain = new TextEncoder().encode(token.trim())
+  const cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, plain)
+  await dbPut(workspaceSyncTokenRecordId(workspaceId), {
+    iv: Array.from(iv),
+    cipherText: Array.from(new Uint8Array(cipher)),
+  } satisfies VaultEnvelope)
+}
+
+export async function readWorkspaceSyncToken(workspaceId: string): Promise<string | undefined> {
+  const envelope = await dbGet<VaultEnvelope>(workspaceSyncTokenRecordId(workspaceId))
+  if (!envelope) {
+    return undefined
+  }
+
+  const key = await getOrCreateDeviceKey()
+  const plain = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: new Uint8Array(envelope.iv) },
+    key,
+    new Uint8Array(envelope.cipherText),
+  )
+
+  return new TextDecoder().decode(plain)
+}
+
+export async function deleteWorkspaceSyncToken(workspaceId: string): Promise<void> {
+  await dbDelete(workspaceSyncTokenRecordId(workspaceId))
 }

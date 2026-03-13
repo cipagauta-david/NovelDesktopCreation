@@ -1,10 +1,21 @@
 import { useEffect } from 'react'
-import { appendChangeEvent, createChangeEvent, draftPayload, draftFromEntity, createHistoryEvent, isoNow } from '../../utils/workspace'
+import {
+  appendChangeEvent,
+  appendCheckpoint,
+  appendCorrelationReport,
+  createChangeEvent,
+  createCheckpoint,
+  draftPayload,
+  draftFromEntity,
+  createHistoryEvent,
+  isoNow,
+} from '../../utils/workspace'
 import type { DraftState, EntityRecord, PersistedState, Project } from '../../types/workspace'
 import type { AppWorker } from '../../data/worker'
 import { addBreadcrumb } from '../../services/observability'
 import { withSpan } from '../../services/tracing'
 import * as Comlink from 'comlink'
+import { finalizeCorrelationIntent, startCorrelationIntent } from '../../services/correlation'
 
 export function usePersistenceManagement(
   activeProject: Project | undefined,
@@ -30,6 +41,7 @@ export function usePersistenceManagement(
     const frameId = window.requestAnimationFrame(() => setSaveStatus('saving'))
 
     const timeoutId = window.setTimeout(async () => {
+      const correlationId = startCorrelationIntent('entity.autosave')
       // Optimistic update of state locally
       setData((current) => {
         const nextState = {
@@ -72,12 +84,17 @@ export function usePersistenceManagement(
         const withChangeEvent = appendChangeEvent(nextState, createChangeEvent({
           label: 'Autosave',
           details: `Guardado automático de ${activeEntity.title}.`,
+          intent: 'entity.autosave',
+          correlationId,
           actorType: 'user',
           projectId: activeProject.id,
           tabId: activeEntity.tabId,
           entityId: activeEntity.id,
         }))
-        const correlationId = withChangeEvent.changeLog[withChangeEvent.changeLog.length - 1]?.id
+        const withCheckpoint = appendCheckpoint(withChangeEvent, createCheckpoint(withChangeEvent, {
+          label: 'Autosave',
+          correlationId,
+        }))
 
         // Fire & Forget to worker (Off-main-thread write)
         addBreadcrumb('Autosave persistido en worker', 'workspace.save', {
@@ -89,13 +106,13 @@ export function usePersistenceManagement(
           entityId: activeEntity.id,
           correlationId,
         }, async () => {
-          await worker.persistState(withChangeEvent, {
+          await worker.persistState(withCheckpoint, {
             correlationId,
             origin: 'autosave',
           })
         }).catch(console.error)
-
-        return withChangeEvent
+        const report = finalizeCorrelationIntent(correlationId, 'ok')
+        return report ? appendCorrelationReport(withCheckpoint, report) : withCheckpoint
       })
       
       setSaveStatus('saved')

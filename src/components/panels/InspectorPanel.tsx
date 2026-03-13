@@ -3,6 +3,7 @@ import { memo, useMemo, useState, type FormEvent } from 'react'
 import type {
   AiProposal,
   CollectionTab,
+  CorrelationReport,
   DraftState,
   EntityRecord,
   EntityTemplate,
@@ -10,6 +11,9 @@ import type {
   LlmStreamStatus,
   LlmTraceEntry,
   Project,
+  StateCheckpoint,
+  SyncQueueStats,
+  SyncRemoteConfig,
 } from '../../types/workspace'
 import { getReferenceTokens } from '../../utils/references'
 import { buildSnippet } from '../../utils/search'
@@ -30,10 +34,24 @@ type InspectorPanelProps = {
   streamStatus: LlmStreamStatus
   streamingText: string
   llmTraces: LlmTraceEntry[]
+  syncStatus: string
+  syncStats?: SyncQueueStats
+  syncRemoteConfig?: SyncRemoteConfig
+  checkpoints: StateCheckpoint[]
+  correlationReports: CorrelationReport[]
   onUpdateTabPrompt: (prompt: string) => void
   onConfirmProposal: () => void
   onDismissProposal: () => void
   onStopGeneration: () => void
+  onFlushRemoteSync: () => Promise<unknown>
+  onConfigureRemoteSync: () => Promise<void>
+  onClearRemoteSyncCredential: () => Promise<void>
+  onRestoreCheckpoint: (checkpointId: string) => void
+  onRotateProviderCredential: () => Promise<void>
+  onInvalidateProviderCredential: () => Promise<void>
+  onRefreshVaultMetadata: () => Promise<void>
+  onAddRelation: (sourceEntityId: string, targetEntityId: string, relationType: string, label?: string) => void
+  onRemoveRelation: (relationId: string) => void
   onCollapse: () => void
 }
 
@@ -51,15 +69,36 @@ export const InspectorPanel = memo(function InspectorPanel({
   streamStatus,
   streamingText,
   llmTraces,
+  syncStatus,
+  syncStats,
+  syncRemoteConfig,
+  checkpoints,
+  correlationReports,
   onUpdateTabPrompt,
   onConfirmProposal,
   onDismissProposal,
   onStopGeneration,
+  onFlushRemoteSync,
+  onConfigureRemoteSync,
+  onClearRemoteSyncCredential,
+  onRestoreCheckpoint,
+  onRotateProviderCredential,
+  onInvalidateProviderCredential,
+  onRefreshVaultMetadata,
+  onAddRelation,
+  onRemoveRelation,
   onCollapse,
 }: InspectorPanelProps) {
   const [activePanelTab, setActivePanelTab] = useState<'context' | 'meta' | 'history' | 'metrics'>('context')
   const [assistantDraft, setAssistantDraft] = useState('')
+  const [relationTargetId, setRelationTargetId] = useState('')
+  const [relationType, setRelationType] = useState('relates_to')
+  const [relationLabel, setRelationLabel] = useState('')
   const activeTemplate = activeTemplates.find((template) => template.id === activeDraft?.templateId)
+  const projectRelations = activeProject?.relations ?? []
+  const activeEntityRelations = activeEntity
+    ? projectRelations.filter((relation) => relation.sourceEntityId === activeEntity.id)
+    : []
   const referencedEntities = useMemo(() => {
     if (!activeDraft || !activeProject) {
       return []
@@ -195,32 +234,79 @@ export const InspectorPanel = memo(function InspectorPanel({
         {activePanelTab === 'meta' && (
           <PanelSection title="Metadatos de la entidad" meta={activeEntity?.title ?? 'Sin entidad activa'}>
             {activeDraft && activeEntity ? (
-              <div className="meta-summary-list">
-                <div className="meta-summary-item">
-                  <span>Plantilla</span>
-                  <strong>{activeTemplate?.name ?? 'Sin plantilla'}</strong>
+              <>
+                <div className="meta-summary-list">
+                  <div className="meta-summary-item">
+                    <span>Plantilla</span>
+                    <strong>{activeTemplate?.name ?? 'Sin plantilla'}</strong>
+                  </div>
+                  <div className="meta-summary-item">
+                    <span>Etiquetas</span>
+                    <strong>{activeDraft.tagsText || 'Sin etiquetas'}</strong>
+                  </div>
+                  <div className="meta-summary-item">
+                    <span>Alias</span>
+                    <strong>{activeDraft.aliasesText || 'Sin alias'}</strong>
+                  </div>
+                  <div className="meta-summary-item">
+                    <span>Última edición</span>
+                    <strong>{formatTimestamp(activeEntity.updatedAt)}</strong>
+                  </div>
+                  <div className="meta-summary-item">
+                    <span>Propiedades</span>
+                    <strong>{activeDraft.fields.length}</strong>
+                  </div>
+                  <div className="meta-summary-item">
+                    <span>Assets visuales</span>
+                    <strong>{activeEntity.assets.length}</strong>
+                  </div>
                 </div>
-                <div className="meta-summary-item">
-                  <span>Etiquetas</span>
-                  <strong>{activeDraft.tagsText || 'Sin etiquetas'}</strong>
-                </div>
-                <div className="meta-summary-item">
-                  <span>Alias</span>
-                  <strong>{activeDraft.aliasesText || 'Sin alias'}</strong>
-                </div>
-                <div className="meta-summary-item">
-                  <span>Última edición</span>
-                  <strong>{formatTimestamp(activeEntity.updatedAt)}</strong>
-                </div>
-                <div className="meta-summary-item">
-                  <span>Propiedades</span>
-                  <strong>{activeDraft.fields.length}</strong>
-                </div>
-                <div className="meta-summary-item">
-                  <span>Assets visuales</span>
-                  <strong>{activeEntity.assets.length}</strong>
-                </div>
-              </div>
+
+                <PanelSection title="Relaciones de dominio" meta={`${activeEntityRelations.length} salientes`} defaultOpen={false}>
+                  <div className="stacked-form">
+                    <select value={relationTargetId} onChange={(event) => setRelationTargetId(event.target.value)}>
+                      <option value="">Selecciona entidad destino</option>
+                      {(activeProject?.entities ?? [])
+                        .filter((entity) => entity.id !== activeEntity.id && entity.status === 'active')
+                        .map((entity) => (
+                          <option key={entity.id} value={entity.id}>{entity.title}</option>
+                        ))}
+                    </select>
+                    <input value={relationType} onChange={(event) => setRelationType(event.target.value)} placeholder="Tipo (ej. mentor_de)" />
+                    <input value={relationLabel} onChange={(event) => setRelationLabel(event.target.value)} placeholder="Etiqueta opcional" />
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={() => {
+                        if (!relationTargetId.trim() || !relationType.trim()) return
+                        onAddRelation(activeEntity.id, relationTargetId, relationType, relationLabel)
+                        setRelationLabel('')
+                      }}
+                    >
+                      Crear relación
+                    </button>
+                  </div>
+
+                  {activeEntityRelations.length > 0 ? (
+                    <div className="history-list">
+                      {activeEntityRelations.map((relation) => {
+                        const target = activeProject?.entities.find((entity) => entity.id === relation.targetEntityId)
+                        return (
+                          <article key={relation.id} className="history-item">
+                            <strong>{relation.relationType} → {target?.title ?? relation.targetEntityId}</strong>
+                            <p>{relation.label ?? 'Sin etiqueta'}</p>
+                            <button type="button" className="ghost-button compact-button" onClick={() => onRemoveRelation(relation.id)}>
+                              Eliminar
+                            </button>
+                          </article>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <div className="empty-mini-state">No hay relaciones formales para esta entidad.</div>
+                  )}
+                </PanelSection>
+              </>
             ) : (
               <div className="empty-mini-state">Abre una entidad para ver sus metadatos.</div>
             )}
@@ -240,9 +326,62 @@ export const InspectorPanel = memo(function InspectorPanel({
         )}
 
         {activePanelTab === 'metrics' && (
-          <PanelSection title="Métricas operativas" meta={`${llmTraces.length} trazas`}>
-            <InspectorMetricsDashboard traces={llmTraces} />
-          </PanelSection>
+          <>
+            <PanelSection title="Métricas operativas" meta={`${llmTraces.length} trazas`}>
+              <InspectorMetricsDashboard traces={llmTraces} />
+            </PanelSection>
+
+            <PanelSection title="Sync remoto" meta={syncStatus} defaultOpen={false}>
+              <div className="toolbar-group">
+                <button type="button" className="primary-button" onClick={() => void onFlushRemoteSync()}>
+                  Flush remoto
+                </button>
+                <button type="button" className="ghost-button" onClick={() => void onConfigureRemoteSync()}>
+                  Configurar
+                </button>
+                <button type="button" className="ghost-button" onClick={() => void onClearRemoteSyncCredential()}>
+                  Borrar token
+                </button>
+              </div>
+              <div className="meta-summary-list">
+                <div className="meta-summary-item"><span>Endpoint</span><strong>{syncRemoteConfig?.endpoint ?? 'No configurado'}</strong></div>
+                <div className="meta-summary-item"><span>Workspace</span><strong>{syncRemoteConfig?.workspaceId ?? '-'}</strong></div>
+                <div className="meta-summary-item"><span>Token</span><strong>{syncRemoteConfig?.authTokenHint ?? '-'}</strong></div>
+                <div className="meta-summary-item"><span>Pendientes</span><strong>{syncStats?.pending ?? 0}</strong></div>
+                <div className="meta-summary-item"><span>Retries</span><strong>{syncStats?.retries ?? 0}</strong></div>
+                <div className="meta-summary-item"><span>Conflictos</span><strong>{syncStats?.conflictsResolved ?? 0}</strong></div>
+              </div>
+            </PanelSection>
+
+            <PanelSection title="Vault IA" meta="Operaciones" defaultOpen={false}>
+              <div className="toolbar-group">
+                <button type="button" className="ghost-button" onClick={() => void onRotateProviderCredential()}>Rotar key</button>
+                <button type="button" className="ghost-button" onClick={() => void onInvalidateProviderCredential()}>Invalidar key</button>
+                <button type="button" className="ghost-button" onClick={() => void onRefreshVaultMetadata()}>Ver metadata</button>
+              </div>
+            </PanelSection>
+
+            <PanelSection title="Correlation reports" meta={`${correlationReports.length} registros`} defaultOpen={false}>
+              {correlationReports.slice(0, 10).map((report) => (
+                <article key={report.correlationId} className="history-item">
+                  <strong>{report.intent} · {report.status}</strong>
+                  <small>{report.correlationId}</small>
+                </article>
+              ))}
+            </PanelSection>
+
+            <PanelSection title="Checkpoints" meta={`${checkpoints.length} disponibles`} defaultOpen={false}>
+              {checkpoints.slice(0, 10).map((checkpoint) => (
+                <article key={checkpoint.id} className="history-item">
+                  <strong>{checkpoint.label}</strong>
+                  <small>{formatTimestamp(checkpoint.createdAt)}</small>
+                  <button type="button" className="ghost-button compact-button" onClick={() => onRestoreCheckpoint(checkpoint.id)}>
+                    Restaurar
+                  </button>
+                </article>
+              ))}
+            </PanelSection>
+          </>
         )}
       </div>
 

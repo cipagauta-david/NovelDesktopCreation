@@ -132,6 +132,27 @@ export async function parseImportedProject(rawJson: string): Promise<ImportResul
       })
     : []
 
+  const relations = Array.isArray(project.relations)
+    ? (project.relations as Array<Record<string, unknown>>)
+      .map((relation) => {
+        const sourceEntityId = idMap.get(String(relation.sourceEntityId ?? ''))
+        const targetEntityId = idMap.get(String(relation.targetEntityId ?? ''))
+        if (!sourceEntityId || !targetEntityId) {
+          return null
+        }
+        return {
+          id: uid('rel'),
+          sourceEntityId,
+          targetEntityId,
+          relationType: String(relation.relationType ?? 'related_to'),
+          label: typeof relation.label === 'string' ? relation.label : undefined,
+          createdAt: typeof relation.createdAt === 'string' ? relation.createdAt : isoNow(),
+          updatedAt: typeof relation.updatedAt === 'string' ? relation.updatedAt : isoNow(),
+        }
+      })
+      .filter((relation): relation is NonNullable<typeof relation> => Boolean(relation))
+    : []
+
   for (const entity of entities) {
     entity.content = remapReferences(entity.content, idMap)
   }
@@ -145,6 +166,7 @@ export async function parseImportedProject(rawJson: string): Promise<ImportResul
     updatedAt: now,
     tabs,
     entities,
+    relations,
     templates,
     history: [
       createHistoryEvent('Proyecto importado', `Importado desde archivo JSON con ${entities.length} entidades.`, 'system'),

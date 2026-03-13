@@ -22,5 +22,7 @@ export type PluginDefinition = {
   name: string
   version: string
   capabilities: PluginCapability[]
+  executionBudgetMs?: number
+  maxCommandsPerMinute?: number
   onCommand: (command: PluginCommand, context: PluginContext) => Promise<void> | void
 }

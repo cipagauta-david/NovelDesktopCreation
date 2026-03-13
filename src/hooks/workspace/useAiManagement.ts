@@ -8,11 +8,14 @@ import type {
   AppSettings,
   LlmStreamStatus,
   LlmTraceEntry,
+  PersistedState,
 } from '../../types/workspace'
 import { useAiProposalLifecycle } from './ai/useAiProposalLifecycle'
 import { useAiStreaming } from './ai/useAiStreaming'
 
 export function useAiManagement(
+  data: PersistedState,
+  setData: React.Dispatch<React.SetStateAction<PersistedState>>,
   activeProject: Project | undefined,
   activeTab: CollectionTab | null,
   activeEntity: EntityRecord | null,
@@ -33,7 +36,15 @@ export function useAiManagement(
   const [pendingProposal, setPendingProposal] = useState<AiProposal | null>(null)
   const [streamStatus, setStreamStatus] = useState<LlmStreamStatus>('idle')
   const [streamingText, setStreamingText] = useState('')
-  const [llmTraces, setLlmTraces] = useState<LlmTraceEntry[]>([])
+  const llmTraces = data.llmTraces ?? []
+
+  function appendTrace(trace: LlmTraceEntry) {
+    setData((current) => ({
+      ...current,
+      llmTraces: [trace, ...(current.llmTraces ?? [])].slice(0, 100),
+    }))
+  }
+
   const streaming = useAiStreaming({
     activeTab,
     activeEntity,
@@ -42,7 +53,7 @@ export function useAiManagement(
     setStreamStatus,
     setStreamingText,
     setPendingProposal,
-    setLlmTraces,
+    appendTrace,
     setToast,
   })
 

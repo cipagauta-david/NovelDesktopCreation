@@ -68,6 +68,8 @@ export const HistoryEventSchema = z.object({
 
 export const ChangeEventSchema = z.object({
   id: z.string(),
+  correlationId: z.string().optional(),
+  intent: z.string().optional(),
   timestamp: z.string(),
   actorType: z.enum(['user', 'ai', 'system']),
   label: z.string(),
@@ -123,6 +125,15 @@ export const PersistedStateSchema = z.object({
       icon: z.string(),
     })),
     entities: z.array(EntityRecordSchema),
+    relations: z.array(z.object({
+      id: z.string(),
+      sourceEntityId: z.string(),
+      targetEntityId: z.string(),
+      relationType: z.string(),
+      label: z.string().optional(),
+      createdAt: z.string(),
+      updatedAt: z.string(),
+    })).optional(),
     templates: z.array(z.object({
       id: z.string(),
       name: z.string(),
@@ -150,6 +161,37 @@ export const PersistedStateSchema = z.object({
     tokenEstimate: z.number(),
     status: z.enum(['ok', 'error', 'fallback', 'cancelled']),
     errorDetail: z.string().optional(),
+  })).optional(),
+  checkpoints: z.array(z.object({
+    id: z.string(),
+    correlationId: z.string().optional(),
+    createdAt: z.string(),
+    label: z.string(),
+    state: z.unknown(),
+  })).optional(),
+  syncRemoteConfig: z.object({
+    endpoint: z.string(),
+    workspaceId: z.string(),
+    authTokenHint: z.string(),
+  }).optional(),
+  syncStats: z.object({
+    pending: z.number(),
+    retries: z.number(),
+    conflictsResolved: z.number(),
+    lastError: z.string().optional(),
+    lastSyncedAt: z.string().optional(),
+  }).optional(),
+  correlationReports: z.array(z.object({
+    correlationId: z.string(),
+    intent: z.string(),
+    startedAt: z.string(),
+    finishedAt: z.string().optional(),
+    status: z.enum(['ok', 'error']),
+    events: z.array(z.object({
+      timestamp: z.string(),
+      stage: z.string(),
+      detail: z.string(),
+    })),
   })).optional(),
 })
 

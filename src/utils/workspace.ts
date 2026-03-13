@@ -1,11 +1,13 @@
 import type {
   ActorType,
   ChangeEvent,
+  CorrelationReport,
   DraftState,
   EntityDraft,
   EntityRecord,
   HistoryEvent,
   PersistedState,
+  StateCheckpoint,
 } from '../types/workspace'
 
 export function uid(prefix: string): string {
@@ -33,6 +35,8 @@ export function createHistoryEvent(
 export function createChangeEvent(params: {
   label: string
   details: string
+  correlationId?: string
+  intent?: string
   actorType?: ActorType
   projectId?: string
   tabId?: string
@@ -41,6 +45,8 @@ export function createChangeEvent(params: {
 }): ChangeEvent {
   return {
     id: uid('change'),
+    correlationId: params.correlationId,
+    intent: params.intent,
     timestamp: isoNow(),
     actorType: params.actorType ?? 'user',
     label: params.label,
@@ -56,6 +62,41 @@ export function appendChangeEvent(state: PersistedState, event: ChangeEvent): Pe
   return {
     ...state,
     changeLog: [...state.changeLog, event],
+  }
+}
+
+export function createCheckpoint(state: PersistedState, params: {
+  label: string
+  correlationId?: string
+}): StateCheckpoint {
+  return {
+    id: uid('checkpoint'),
+    correlationId: params.correlationId,
+    createdAt: isoNow(),
+    label: params.label,
+    state: structuredClone({
+      ...state,
+      checkpoints: [],
+    }),
+  }
+}
+
+export function appendCheckpoint(state: PersistedState, checkpoint: StateCheckpoint, max = 30): PersistedState {
+  const current = state.checkpoints ?? []
+  return {
+    ...state,
+    checkpoints: [checkpoint, ...current].slice(0, max),
+  }
+}
+
+export function appendCorrelationReport(
+  state: PersistedState,
+  report: CorrelationReport,
+  max = 100,
+): PersistedState {
+  return {
+    ...state,
+    correlationReports: [report, ...(state.correlationReports ?? [])].slice(0, max),
   }
 }
 

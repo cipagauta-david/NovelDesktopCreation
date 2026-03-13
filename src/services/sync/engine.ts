@@ -19,6 +19,40 @@ function writeQueue(queue: SyncQueueItem[]): void {
   localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue))
 }
 
+type RemoteSyncPayload = {
+  workspaceId: string
+  correlationId?: string
+  state: PersistedState
+}
+
+async function pushRemoteState(params: {
+  endpoint: string
+  workspaceId: string
+  authToken?: string
+  state: PersistedState
+  correlationId?: string
+}): Promise<PersistedState | null> {
+  const response = await fetch(`${params.endpoint.replace(/\/$/, '')}/sync`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(params.authToken ? { Authorization: `Bearer ${params.authToken}` } : {}),
+    },
+    body: JSON.stringify({
+      workspaceId: params.workspaceId,
+      correlationId: params.correlationId,
+      state: params.state,
+    } satisfies RemoteSyncPayload),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Sync remoto falló (${response.status})`)
+  }
+
+  const payload = await response.json().catch(() => null) as { state?: PersistedState } | null
+  return payload?.state ?? null
+}
+
 function mergeById<T extends { id: string }>(first: T[], second: T[], resolver: (a: T, b: T) => T): T[] {
   const map = new Map(first.map((item) => [item.id, item]))
   for (const item of second) {
@@ -68,6 +102,9 @@ function mergeProject(localProject: Project, remoteProject: Project): { project:
       updatedAt: remoteWins ? remoteProject.updatedAt : localProject.updatedAt,
       entities: mergedEntities,
       tabs: mergedTabs,
+      relations: mergeById(localProject.relations ?? [], remoteProject.relations ?? [], (localRelation, remoteRelation) =>
+        isRemoteNewer(localRelation.updatedAt, remoteRelation.updatedAt) ? remoteRelation : localRelation,
+      ),
       templates: mergedTemplates,
       history: mergedHistory,
     },
@@ -93,6 +130,24 @@ export function mergePersistedStates(localState: PersistedState, remoteState: Pe
     ...(remoteState.graphLayouts ?? {}),
   }
 
+  const mergedLlmTraces = mergeById(localState.llmTraces ?? [], remoteState.llmTraces ?? [], (localTrace, remoteTrace) =>
+    isRemoteNewer(localTrace.timestamp, remoteTrace.timestamp) ? remoteTrace : localTrace,
+  ).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+
+  const correlationMap = new Map((localState.correlationReports ?? []).map((report) => [report.correlationId, report]))
+  for (const report of remoteState.correlationReports ?? []) {
+    const current = correlationMap.get(report.correlationId)
+    if (!current) {
+      correlationMap.set(report.correlationId, report)
+      continue
+    }
+    const localTs = current.finishedAt ?? current.startedAt
+    const remoteTs = report.finishedAt ?? report.startedAt
+    correlationMap.set(report.correlationId, isRemoteNewer(localTs, remoteTs) ? report : current)
+  }
+  const mergedCorrelationReports = Array.from(correlationMap.values())
+    .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+
   return {
     merged: {
       ...localState,
@@ -103,7 +158,11 @@ export function mergePersistedStates(localState: PersistedState, remoteState: Pe
       activeEntityId: remoteState.activeEntityId || localState.activeEntityId,
       changeLog: mergedChangeLog,
       graphLayouts: mergedGraphLayouts,
-      llmTraces: localState.llmTraces,
+      llmTraces: mergedLlmTraces,
+      checkpoints: localState.checkpoints,
+      syncRemoteConfig: remoteState.syncRemoteConfig ?? localState.syncRemoteConfig,
+      syncStats: remoteState.syncStats ?? localState.syncStats,
+      correlationReports: mergedCorrelationReports,
     },
     conflictsResolved,
   }
@@ -116,6 +175,7 @@ export function createSyncEngine(): SyncEngine {
       queue.push({
         id: uid('sync-op'),
         enqueuedAt: new Date().toISOString(),
+        retries: 0,
         changeEventId: change.id,
         projectId: change.projectId,
         state,
@@ -129,6 +189,50 @@ export function createSyncEngine(): SyncEngine {
 
     async clearQueue() {
       writeQueue([])
+    },
+
+    async flushRemoteQueue(params) {
+      const queue = readQueue()
+      if (queue.length === 0) {
+        return { pushed: 0, conflictsResolved: 0, retries: 0 }
+      }
+
+      let pushed = 0
+      let conflictsResolved = 0
+      let retries = 0
+      let lastError: string | undefined
+      const nextQueue: SyncQueueItem[] = []
+
+      for (const item of queue) {
+        try {
+          const remote = await pushRemoteState({
+            endpoint: params.endpoint,
+            workspaceId: params.workspaceId,
+            authToken: params.authToken,
+            state: item.state,
+            correlationId: item.changeEventId,
+          })
+
+          if (remote) {
+            const merged = mergePersistedStates(item.state, remote)
+            conflictsResolved += merged.conflictsResolved
+          }
+          pushed += 1
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Error de sync remoto'
+          const retryCount = item.retries + 1
+          retries += 1
+          lastError = message
+          nextQueue.push({
+            ...item,
+            retries: retryCount,
+            lastError: message,
+          })
+        }
+      }
+
+      writeQueue(nextQueue)
+      return { pushed, conflictsResolved, retries, lastError }
     },
 
     mergeRemoteState(localState: PersistedState, remoteState: PersistedState) {

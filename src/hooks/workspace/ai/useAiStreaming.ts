@@ -1,5 +1,4 @@
 import { useCallback, useRef } from 'react'
-import type { Dispatch, SetStateAction } from 'react'
 
 import type {
   AiProposal,
@@ -25,7 +24,7 @@ type UseAiStreamingArgs = {
   setStreamStatus: (status: LlmStreamStatus) => void
   setStreamingText: (value: string) => void
   setPendingProposal: (proposal: AiProposal | null) => void
-  setLlmTraces: Dispatch<SetStateAction<LlmTraceEntry[]>>
+  appendTrace: (trace: LlmTraceEntry) => void
   setToast: (msg: string) => void
 }
 
@@ -37,7 +36,7 @@ function useAiStreaming({
   setStreamStatus,
   setStreamingText,
   setPendingProposal,
-  setLlmTraces,
+  appendTrace,
   setToast,
 }: UseAiStreamingArgs) {
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -187,7 +186,7 @@ function useAiStreaming({
           setStreamStatus('error')
         },
         onTrace(trace) {
-          setLlmTraces((prev) => [trace, ...prev].slice(0, 50))
+          appendTrace(trace)
         },
       })
     } catch {

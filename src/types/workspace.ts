@@ -47,6 +47,8 @@ export type HistoryEvent = {
 
 export type ChangeEvent = {
   id: string
+  correlationId?: string
+  intent?: string
   timestamp: string
   actorType: ActorType
   label: string
@@ -55,6 +57,16 @@ export type ChangeEvent = {
   tabId?: string
   entityId?: string
   source: 'legacy-history' | 'mutation'
+}
+
+export type DomainRelation = {
+  id: string
+  sourceEntityId: string
+  targetEntityId: string
+  relationType: string
+  label?: string
+  createdAt: string
+  updatedAt: string
 }
 
 export type EntityTemplate = {
@@ -96,8 +108,44 @@ export type Project = {
   updatedAt: string
   tabs: CollectionTab[]
   entities: EntityRecord[]
+  relations?: DomainRelation[]
   templates: EntityTemplate[]
   history: HistoryEvent[]
+}
+
+export type StateCheckpoint = {
+  id: string
+  correlationId?: string
+  createdAt: string
+  label: string
+  state: PersistedState
+}
+
+export type SyncRemoteConfig = {
+  endpoint: string
+  workspaceId: string
+  authTokenHint: string
+}
+
+export type SyncQueueStats = {
+  pending: number
+  retries: number
+  conflictsResolved: number
+  lastError?: string
+  lastSyncedAt?: string
+}
+
+export type CorrelationReport = {
+  correlationId: string
+  intent: string
+  startedAt: string
+  finishedAt?: string
+  status: 'ok' | 'error'
+  events: Array<{
+    timestamp: string
+    stage: string
+    detail: string
+  }>
 }
 
 export type PersistedState = {
@@ -109,6 +157,10 @@ export type PersistedState = {
   changeLog: ChangeEvent[]
   graphLayouts?: PersistedGraphLayouts
   llmTraces?: LlmTraceEntry[]
+  checkpoints?: StateCheckpoint[]
+  syncRemoteConfig?: SyncRemoteConfig
+  syncStats?: SyncQueueStats
+  correlationReports?: CorrelationReport[]
 }
 
 export type EntityDraft = {
