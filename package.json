@@ -9,6 +9,7 @@
     "build:desktop": "npm run build && electron-builder",
     "desktop:dev": "concurrently -k \"vite\" \"wait-on tcp:5173 && electron .\"",
     "desktop:start": "electron .",
+    "css:organize": "node scripts/extract_and_centralize_css.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test:e2e": "playwright test",

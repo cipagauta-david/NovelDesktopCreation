@@ -143,3 +143,15 @@
   font-weight: 650;
   letter-spacing: -0.02em;
 }
+
+.ai-button {
+  background: #e0e7ff;
+  border: 1px solid #c7d2fe;
+  color: #3730a3;
+  font-weight: 600;
+}
+
+.ai-button:hover {
+  background: #c7d2fe;
+  border-color: #a5b4fc;
+}

@@ -175,10 +175,11 @@ async function run() {
 
         modifiedComponents++;
 
-        // Importación silenciosa al TSX
+        // Importación silenciosa al TSX (sin duplicar si ya existe import al mismo CSS)
         let tsxContent = fs.readFileSync(compPath, 'utf8');
         const importStmt = `import './${cssFilename}';\n`;
-        if (!tsxContent.includes(importStmt)) {
+        const existingCssImportRegex = new RegExp(`^\\s*import\\s+['\"][^'\"]*\\/${cssFilename}['\"];?\\s*$`, 'm');
+        if (!existingCssImportRegex.test(tsxContent)) {
             const importMatch = [...tsxContent.matchAll(/^import .*? from .*?;?$/gm)];
             if (importMatch.length > 0) {
                 const last = importMatch[importMatch.length - 1];
