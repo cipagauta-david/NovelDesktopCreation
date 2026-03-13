@@ -1,6 +1,6 @@
 type InspectorTabsProps = {
-  activeTab: 'context' | 'meta' | 'history'
-  onChange: (tab: 'context' | 'meta' | 'history') => void
+  activeTab: 'context' | 'meta' | 'history' | 'metrics'
+  onChange: (tab: 'context' | 'meta' | 'history' | 'metrics') => void
 }
 
 export function InspectorTabs({ activeTab, onChange }: InspectorTabsProps) {
@@ -26,6 +26,13 @@ export function InspectorTabs({ activeTab, onChange }: InspectorTabsProps) {
         onClick={() => onChange('history')}
       >
         Historial
+      </button>
+      <button
+        type="button"
+        className={activeTab === 'metrics' ? 'context-tab active' : 'context-tab'}
+        onClick={() => onChange('metrics')}
+      >
+        Métricas
       </button>
     </div>
   )

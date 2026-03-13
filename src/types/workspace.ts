@@ -202,6 +202,7 @@ export type LlmTraceEntry = {
   promptSnippet: string
   responseSnippet: string
   durationMs: number
+  firstTokenMs?: number
   tokenEstimate: number
   status: 'ok' | 'error' | 'fallback' | 'cancelled'
   errorDetail?: string

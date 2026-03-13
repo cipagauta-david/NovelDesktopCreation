@@ -86,13 +86,14 @@ export async function requestLlmStreaming(
       correlationId: validatedInput.correlationId,
     })
     let firstTokenMarked = false
+    let firstTokenMs: number | undefined
 
     const tracedCallbacks: StreamCallbacks = {
       ...callbacks,
       onToken(chunk) {
         if (!firstTokenMarked) {
           firstTokenMarked = true
-          const firstTokenMs = Date.now() - startTime
+          firstTokenMs = Date.now() - startTime
           const firstTokenSpan = startSpan('llm.first_token', {
             provider: validatedInput.provider,
             model: validatedInput.model,
@@ -102,6 +103,13 @@ export async function requestLlmStreaming(
           requestSpan.setAttribute('firstTokenMs', firstTokenMs)
         }
         callbacks.onToken(chunk)
+      },
+      onTrace(trace) {
+        if (firstTokenMs == null || trace.firstTokenMs != null) {
+          callbacks.onTrace(trace)
+          return
+        }
+        callbacks.onTrace({ ...trace, firstTokenMs })
       },
     }
 
@@ -120,7 +128,11 @@ export async function requestLlmStreaming(
       })
 
       if (llmErr.category === 'cancelled') {
-        callbacks.onTrace(buildTrace(validatedInput, validatedInput.provider, '', Date.now() - startTime, 'cancelled'))
+        callbacks.onTrace(
+          buildTrace(validatedInput, validatedInput.provider, '', Date.now() - startTime, 'cancelled', undefined, {
+            firstTokenMs,
+          }),
+        )
         callbacks.onError(llmErr)
         return
       }
@@ -128,7 +140,11 @@ export async function requestLlmStreaming(
       if (!llmErr.retryable || attempt === MAX_RETRIES) {
         const fallbackResult = await tryFallbackProviders(validatedInput, signal, callbacks)
         if (!fallbackResult) {
-          callbacks.onTrace(buildTrace(validatedInput, validatedInput.provider, '', Date.now() - startTime, 'error', llmErr.message))
+          callbacks.onTrace(
+            buildTrace(validatedInput, validatedInput.provider, '', Date.now() - startTime, 'error', llmErr.message, {
+              firstTokenMs,
+            }),
+          )
           callbacks.onError(llmErr)
           captureException(llmErr, {
             provider: validatedInput.provider,

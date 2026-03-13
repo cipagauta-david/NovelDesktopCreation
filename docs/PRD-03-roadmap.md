@@ -69,3 +69,8 @@ Entregables:
 - Entidades como núcleo del dominio, organizadas por colecciones.
 - Assets gestionados localmente dentro del proyecto autocontenido.
 - Sincronización cloud y CRDT fuera del alcance del MVP (post-fase 3).
+
+## 16. Gobernanza de ejecución por épica
+- La planificación operativa del producto final se gobierna por épicas con **Definition of Done** explícita.
+- Cada épica debe cerrar con: build en verde, smoke/regresión crítica en verde y documentación técnica actualizada.
+- La matriz DoD detallada vive en [`ROADMAP.md`](./ROADMAP.md), y se considera fuente de verdad para aceptación de entrega.

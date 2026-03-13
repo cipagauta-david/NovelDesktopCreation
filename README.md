@@ -1,64 +1,53 @@
 # NovelDesktopCreation
 
-NovelDesktopCreation es un workspace narrativo **web-first, local-first y preparado para desktop** para escritores, worldbuilders y diseñadores narrativos que necesitan unir escritura, organización del lore, referencias cruzadas, búsqueda rápida y asistencia con IA en una sola herramienta coherente.
+Workspace narrativo **local-first** para escritura estructurada, gestión de entidades, referencias cruzadas y asistencia IA con control explícito del autor.
 
-## Documento base del proyecto
-- PRD formal: [`docs/PRD-formal.md`](./docs/PRD-formal.md)
-- Arquitectura técnica inicial: [`docs/technical-architecture-initial.md`](./docs/technical-architecture-initial.md)
-- Roadmap de salida a producto final: [`docs/ROADMAP-final-product.md`](./docs/ROADMAP-final-product.md)
-
-## MVP ejecutable
-Este repositorio ya incluye un MVP web-first/local-first implementado con React + Vite.
-
-### Cómo arrancarlo
+## Inicio rápido
 ```bash
 npm install
 npm run dev
 ```
 
-### Qué incluye el MVP actual
-- onboarding inicial para proveedor/modelo con hint seguro de API key,
-- soporte de proveedores OpenAI, Anthropic, Google Gemini, OpenRouter y Local/Ollama,
-- gestión de múltiples proyectos narrativos,
-- tabs iniciales y personalizadas con prompt contextual editable,
-- entidades con documento editable + fields tipados,
-- templates reutilizables y guardado del contexto actual como template,
-- referencias estructuradas `{{}}` con sugerencias,
-- hover preview y navegación solo con **Ctrl + click**,
-- historial visible por entidad y actividad de proyecto,
-- drag & drop inicial de imágenes,
-- búsqueda textual priorizada,
-- propuesta de IA con confirmación explícita,
-- y primera vista de grafo narrativa.
+Comandos útiles:
 
-## Estado actual (post-MVP)
-- persistencia de workspace en worker con IndexedDB (fallback en memoria),
-- conexión IA en modo real para OpenAI, OpenRouter, Anthropic, Google Gemini y Ollama (con fallback local),
-- mapa narrativo con nodos arrastrables y reordenamiento manual,
-- drag & drop de imágenes tanto en editor como a nivel global del workspace,
-- y roadmap explícito de cierre E2E hacia producto final.
+```bash
+npm run build
+npm run test:e2e
+```
 
-## Organización del código
-La app quedó separada por responsabilidad:
-- `src/types`: tipos de dominio y UI,
-- `src/data`: constantes, seeds y persistencia inicial,
-- `src/utils`: referencias, búsqueda y helpers de workspace,
-- `src/hooks`: coordinación central del estado y acciones,
-- `src/components`: onboarding, layout, paneles y controles reutilizables.
+## Estado actual del producto
+- Editor + entidades + tabs de colección operativos.
+- `{{}}` references con sugerencias y navegación contextual.
+- Streaming IA multi-provider (OpenAI, OpenRouter, Anthropic, Gemini, Ollama/local) con stop/cancel.
+- Persistencia en worker con storage adapter y migración de estado.
+- `ChangeEvent` append-only global + base de sync offline-first.
+- Import/export con contrato versionado + checksum SHA-256.
+- Correlation ID extremo a extremo (UI, IA, worker, persistencia).
+- Dashboard interno de métricas operativas en inspector (latencia p95, error rate, tiempo a primer token p95).
 
-## Decisiones actuales del MVP
-- editor híbrido de markdown enriquecido con referencias `{{}}`,
-- proyectos autocontenidos local-first en worker y carpeta de assets,
-- entidades con contenido libre + fields tipados,
-- búsqueda textual local inicial en worker (migración a SQLite + FTS5 planificada),
-- historial con revisiones incrementales por entidad,
-- drag & drop inicial de imágenes,
-- y primera vista de grafo/board.
+## Documentación oficial
 
-## Fuera de alcance por ahora
-- colaboración multiusuario en tiempo real,
-- búsqueda semántica/vectorial,
-- editor por bloques completo,
-- runtime abierto de plugins/skills,
-- timeline avanzada,
-- y soporte robusto de video.
+Producto:
+- [PRD visión](./docs/PRD-01-vision.md)
+- [PRD features](./docs/PRD-02-features.md)
+- [PRD roadmap](./docs/PRD-03-roadmap.md)
+
+Diseño:
+- [Design system](./docs/DESIGN-01-design-system.md)
+- [Visual journey](./docs/DESIGN-02-visual-journey.md)
+
+Arquitectura técnica:
+- [Overview](./docs/TECH-01-architecture-overview.md)
+- [Core systems](./docs/TECH-02-core-systems.md)
+- [Infrastructure](./docs/TECH-03-infrastructure.md)
+- [Target post-MVP](./docs/TECH-04-target-architecture-post-mvp.md)
+
+Plan de ejecución:
+- [Roadmap operativo](./docs/ROADMAP.md)
+
+## Estructura principal
+- `src/components`: layout, paneles, onboarding, editor e inspector.
+- `src/hooks`: orquestación de estado de workspace por dominios.
+- `src/services`: LLM, observabilidad, tracing, sync, plugins, seguridad.
+- `src/data`: worker, seed, constantes e indexación de búsqueda.
+- `src/utils`: utilidades de workspace, referencias e import/export.

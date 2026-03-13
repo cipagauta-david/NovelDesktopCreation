@@ -137,3 +137,43 @@ Integrar de forma progresiva las librerías instaladas para mejorar:
 - Listas grandes sin jank perceptible.
 - Streaming estable y abortable en todos los providers activos.
 - Errores y latencias observables con contexto accionable.
+
+---
+
+## Gobernanza de Roadmap (Producto final)
+
+### Epic A — Núcleo editorial
+**Definition of Done**
+- CRUD completo de entidades/tabs/proyectos con persistencia estable en worker.
+- Referencias `{{}}` resueltas por ID y navegación sin pérdida de contexto.
+- Regresión de edición validada en smoke E2E.
+
+### Epic B — IA asistida y trazabilidad
+**Definition of Done**
+- Streaming funcional para providers activos con `AbortController` en caliente.
+- Errores clasificados (`auth`, `rate-limit`, `network`, `contract`, etc.).
+- `llmTraces` persistidos con `correlationId`, `durationMs` y `firstTokenMs` cuando aplica.
+
+### Epic C — Rendimiento y escalado UI
+**Definition of Done**
+- Render de grafo sin bloqueo perceptible en datasets grandes (ruta Canvas habilitada).
+- Regresión de performance automatizada (index/search/parse SSE) en e2e.
+- Sin degradación funcional en paneles clave (editor, entities, inspector).
+
+### Epic D — Plataforma y seguridad
+**Definition of Done**
+- API keys fuera del estado serializado, almacenadas en vault cifrado local.
+- Adapters web/desktop activos para storage y file IO.
+- Import/export rechazado cuando checksum o versión no coinciden.
+
+### Epic E — Sync y extensibilidad
+**Definition of Done**
+- Cola offline + merge base CRDT/LWW operativa para cambios de workspace.
+- Registro global append-only de `ChangeEvent` como base de auditoría.
+- Plugin manager con capabilities mínimas (`workspace:read`, `workspace:write`) y contexto readonly por defecto.
+
+### Criterios transversales de cierre por épica
+- Build en verde (`npm run build`).
+- Smoke y contratos críticos en verde (`npm run test:e2e`).
+- Documentación técnica actualizada en `docs/` dentro del mismo PR.
+- Riesgos abiertos y decisiones registradas en roadmap o arquitectura target.

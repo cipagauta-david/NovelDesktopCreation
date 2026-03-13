@@ -146,6 +146,7 @@ export const PersistedStateSchema = z.object({
     promptSnippet: z.string(),
     responseSnippet: z.string(),
     durationMs: z.number(),
+    firstTokenMs: z.number().optional(),
     tokenEstimate: z.number(),
     status: z.enum(['ok', 'error', 'fallback', 'cancelled']),
     errorDetail: z.string().optional(),

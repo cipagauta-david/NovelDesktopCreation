@@ -17,6 +17,7 @@ import { formatTimestamp } from '../../utils/workspace'
 import { PanelSection } from '../common/PanelSection'
 import { InspectorAssistantComposer } from '../inspector/InspectorAssistantComposer'
 import { InspectorHistory } from '../inspector/InspectorHistory'
+import { InspectorMetricsDashboard } from '../inspector/InspectorMetricsDashboard'
 import { InspectorTabs } from '../inspector/InspectorTabs'
 
 type InspectorPanelProps = {
@@ -56,7 +57,7 @@ export const InspectorPanel = memo(function InspectorPanel({
   onStopGeneration,
   onCollapse,
 }: InspectorPanelProps) {
-  const [activePanelTab, setActivePanelTab] = useState<'context' | 'meta' | 'history'>('context')
+  const [activePanelTab, setActivePanelTab] = useState<'context' | 'meta' | 'history' | 'metrics'>('context')
   const [assistantDraft, setAssistantDraft] = useState('')
   const activeTemplate = activeTemplates.find((template) => template.id === activeDraft?.templateId)
   const referencedEntities = useMemo(() => {
@@ -236,6 +237,12 @@ export const InspectorPanel = memo(function InspectorPanel({
               {activeProject ? renderHistory(activeProject.history.slice(0, 10)) : <div className="empty-mini-state">Sin proyecto activo.</div>}
             </PanelSection>
           </>
+        )}
+
+        {activePanelTab === 'metrics' && (
+          <PanelSection title="Métricas operativas" meta={`${llmTraces.length} trazas`}>
+            <InspectorMetricsDashboard traces={llmTraces} />
+          </PanelSection>
         )}
       </div>
 

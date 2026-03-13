@@ -17,6 +17,7 @@ export function buildTrace(
   durationMs: number,
   status: LlmTraceEntry['status'],
   errorDetail?: string,
+  options?: { firstTokenMs?: number },
 ): LlmTraceEntry {
   return {
     id: traceUid('trace'),
@@ -27,6 +28,7 @@ export function buildTrace(
     promptSnippet: buildUserPrompt(input).slice(0, 200),
     responseSnippet: response.slice(0, 300),
     durationMs,
+    firstTokenMs: options?.firstTokenMs,
     tokenEstimate: estimateTokens(buildUserPrompt(input) + response),
     status,
     errorDetail,
