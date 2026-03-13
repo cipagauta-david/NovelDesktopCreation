@@ -1,0 +1,27 @@
+.context-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+  padding: 0.3rem;
+  border-radius: 18px;
+  background: rgba(14, 23, 38, 0.62);
+}
+
+.context-tab {
+  padding: 0.6rem 0.75rem;
+  border-radius: 14px;
+  background: transparent;
+  color: #9fb0c9;
+  font-size: 0.84rem;
+}
+
+.context-tab.active {
+  background: rgba(37, 99, 235, 0.16);
+  color: #f8fafc;
+}
+
+@media (max-width: 1200px) {
+  .context-tabs {
+    grid-template-columns: 1fr;
+  }
+}

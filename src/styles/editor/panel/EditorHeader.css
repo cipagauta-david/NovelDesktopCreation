@@ -1,0 +1,145 @@
+.editor-heading {
+  display: grid;
+  gap: 0.45rem;
+  padding-top: 0.75rem;
+}
+
+.editor-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.95rem;
+}
+
+/* Editor title: large serif in zen, sans in god mode */
+.title-inline-input {
+  flex: 1 1 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: clamp(1.7rem, 2.1vw, 2.55rem);
+  line-height: 0.98;
+  font-weight: 650;
+  color: #f8fafc;
+  box-shadow: none;
+}
+
+.title-inline-input:hover,
+.title-inline-input:focus {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.title-inline-input::placeholder {
+  color: rgba(248, 250, 252, 0.45);
+}
+
+.entity-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.editor-meta-inline {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+.editor-reference-hint {
+  margin-left: auto;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.editor-mode-icon-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.16rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--accent-surface);
+}
+
+.editor-mode-icon-toggle button {
+  min-width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 7px;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background: transparent;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.editor-mode-icon-toggle button:hover {
+  border: 0;
+  transform: none;
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+}
+
+.editor-mode-icon-toggle button.active {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--text-primary) 12%, transparent);
+}
+
+.save-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.42);
+}
+
+.save-indicator.saving .save-indicator-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.12);
+}
+
+.save-indicator.saved .save-indicator-dot {
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+}
+
+.mode-switch-pill {
+  border-radius: 999px;
+  padding-inline: 0.9rem;
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.12);
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+
+.mode-switch-pill:hover {
+  transform: translateY(-1px) scale(1.01);
+}
+
+:root.dark .mode-switch-pill {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.mode-switch-pill {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--surface-glass) 90%, transparent);
+  border-color: var(--border-subtle);
+}
+
+.title-inline-input {
+  font-family: var(--font-serif);
+  color: var(--text-heading);
+  font-size: clamp(1.7rem, 2.1vw, 2.55rem);
+  line-height: 0.98;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}

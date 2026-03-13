@@ -1,5 +1,8 @@
 import type { FormEvent } from 'react'
 import type { LlmStreamStatus } from '../../types/workspace'
+import '../../styles/inspector/InspectorAssistantComposer.css';
+
+
 
 type InspectorAssistantComposerProps = {
   value: string

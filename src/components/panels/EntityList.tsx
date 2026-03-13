@@ -20,6 +20,9 @@ import { CSS } from '@dnd-kit/utilities'
 
 import type { EntityRecord, EntityTemplate } from '../../types/workspace'
 import { PanelSection } from '../common/PanelSection'
+import '../../styles/panels/EntityList.css';
+
+
 
 // ── Sortable entity card ──────────────────────────────────
 

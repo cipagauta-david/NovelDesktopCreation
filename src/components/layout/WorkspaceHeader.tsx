@@ -1,5 +1,8 @@
 import type { Project, WorkspaceView } from '../../types/workspace'
 import { useTheme } from '../../hooks/useTheme'
+import '../../styles/layout/WorkspaceHeader.css';
+
+
 
 type WorkspaceHeaderProps = {
   project: Project | undefined

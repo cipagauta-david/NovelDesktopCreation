@@ -32,6 +32,9 @@ import { EditorMetadata } from '../editor/panel/EditorMetadata'
 import { EditorProperties } from '../editor/panel/EditorProperties'
 import { EditorSuggestions } from '../editor/panel/EditorSuggestions'
 import { EntityHover } from '../editor/panel/EntityHover'
+import '../../styles/panels/EditorPanel.css';
+
+
 
 type EditorPanelProps = {
   entity: EntityRecord

@@ -3,6 +3,9 @@ import { memo, useState } from 'react'
 import type { AppSettings, EntityTemplate, Project } from '../../types/workspace'
 import { ActionMenu } from '../common/ActionMenu'
 import { PanelSection } from '../common/PanelSection'
+import '../../styles/layout/Sidebar.css';
+
+
 
 type SidebarProps = {
   settings: AppSettings

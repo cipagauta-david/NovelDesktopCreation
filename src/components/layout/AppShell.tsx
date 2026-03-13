@@ -14,6 +14,9 @@ import { useWorkspace } from '../../hooks/useWorkspace'
 import type { PersistedState } from '../../types/workspace'
 import * as Comlink from 'comlink'
 import type { AppWorker } from '../../data/worker'
+import '../../styles/layout/AppShell.css';
+
+
 
 export function AppShell({ initialData, worker }: { initialData: PersistedState, worker: Comlink.Remote<AppWorker> }) {
   const workspace = useWorkspace(initialData, worker)

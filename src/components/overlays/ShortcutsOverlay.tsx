@@ -1,4 +1,7 @@
 import { useEffect } from 'react'
+import '../../styles/overlays/ShortcutsOverlay.css';
+
+
 
 const shortcuts: { keys: string; description: string }[] = [
   { keys: 'Ctrl + K', description: 'Abrir búsqueda / Command Palette' },

@@ -4,6 +4,9 @@ import { useAppWorker } from './hooks/useAppWorker'
 import { ThemeProvider, useTheme } from './hooks/useTheme'
 import { getDefaultPersistedState } from './data/seed/project'
 import type { PersistedState } from './types/workspace'
+import './styles/App.css';
+
+
 
 function App() {
   return (

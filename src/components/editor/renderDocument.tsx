@@ -1,6 +1,9 @@
 import { type ReactNode } from 'react'
 import type { RenderDocumentOptions } from '../../types/editor'
 import { getReferenceTokens } from '../../utils/references'
+import '../../styles/editor/renderDocument.css';
+
+
 
 export const REFERENCE_TOKEN_PATTERN = /(\{\{entity:[^|}]+\|[^}]+\}\})/g
 

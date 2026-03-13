@@ -1,5 +1,8 @@
 import type { FieldValue } from '../../../types/workspace'
 import { PanelSection } from '../../common/PanelSection'
+import '../../../styles/editor/panel/EditorProperties.css';
+
+
 
 type EditorPropertiesProps = {
   fields: FieldValue[]

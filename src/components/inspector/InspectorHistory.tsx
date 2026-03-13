@@ -3,6 +3,9 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 
 import type { HistoryEvent } from '../../types/workspace'
 import { formatTimestamp } from '../../utils/workspace'
+import '../../styles/inspector/InspectorHistory.css';
+
+
 
 const actorIcons: Record<string, string> = {
   user: '✍',

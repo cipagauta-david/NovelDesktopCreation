@@ -1,0 +1,447 @@
+
+/* Zen Mode / Parchment Override */
+:root:has(.workspace-stage.focus-mode) {
+  --surface-base: #fcfbf9; /* Cream/Parchment */
+  --surface-glass: rgba(252, 251, 249, 0.95);
+  --surface-glass-hover: rgba(245, 244, 241, 0.98);
+  --color-parchment: #fcfbf9;
+  --color-primary: #00e5ff;
+  --text-primary: #1e293b;
+  --text-body: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --brand-accent: var(--color-primary);
+  --brand-accent-hover: #22d3ee;
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-active: rgba(0, 229, 255, 0.28);
+  --border-focus: var(--border-active);
+  --shadow-glass: 0 12px 40px rgba(15, 23, 42, 0.06);
+
+  color-scheme: light;
+  background: var(
+    --surface-base
+  ); /* Textura papel simulada via SVG de ser necesario */
+}
+
+/* APP-SHELL — Background refuerzo Parchment / Obsidian */
+
+.app-shell {
+  position: relative;
+  isolation: isolate;
+  height: 100vh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  overflow: hidden;
+  background-color: transparent;
+  background-image:
+    radial-gradient(
+      circle at 16% 8%,
+      rgba(99, 102, 241, 0.05),
+      transparent 36%
+    ),
+    radial-gradient(
+      circle at 84% 86%,
+      rgba(14, 165, 233, 0.05),
+      transparent 32%
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size:
+    auto,
+    auto,
+    220px 220px;
+  background-repeat: no-repeat, no-repeat, repeat;
+}
+
+:root.dark .app-shell {
+  background-image:
+    radial-gradient(
+      ellipse at 15% 5%,
+      rgba(0, 212, 238, 0.06),
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse at 85% 90%,
+      rgba(99, 102, 241, 0.08),
+      transparent 36%
+    ),
+    linear-gradient(180deg, rgba(8, 17, 31, 0.95), rgba(8, 17, 31, 1));
+  background-size: auto, auto, auto;
+}
+
+.workspace-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  transition:
+    opacity 300ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.workspace-stage.focus-mode {
+  gap: 0;
+}
+
+.workspace-header-shell {
+  overflow: visible; /* Cambiado de hidden para permitir sombras y bordes */
+  max-height: 200px;
+  opacity: 1;
+  transform: translateY(0);
+  will-change: transform, opacity;
+  transition:
+    max-height 220ms ease,
+    opacity 180ms ease,
+    transform 220ms ease,
+    margin 220ms ease;
+}
+
+.workspace-header-shell.is-hidden {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-18px);
+  pointer-events: none;
+}
+
+.workspace-grid {
+  display: flex;
+  gap: 0.8rem;
+  align-items: stretch;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.left-workspace-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 0 0 0;
+  min-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0.9rem;
+  border-radius: 24px;
+  background: rgba(8, 14, 25, 0.68);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  transform: translate3d(-8px, 0, 0);
+  will-change: transform, opacity;
+  transition:
+    flex-basis 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.18s ease,
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.left-workspace-panel.open {
+  flex-basis: 360px;
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.left-panel-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.left-panel-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+  overscroll-behavior: contain;
+}
+
+.left-panel-upper {
+  display: grid;
+  gap: 1rem;
+  flex: 0 0 auto;
+}
+
+.left-panel-lower {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.85rem;
+}
+
+.left-panel-lower > .entity-column {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.left-panel-lower .section-card {
+  height: 100%;
+  min-height: 0;
+}
+
+.inspector-panel-shell {
+  flex: 0 0 0;
+  min-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translate3d(8px, 0, 0);
+  will-change: transform, opacity;
+  transition:
+    flex-basis 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.18s ease,
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.inspector-panel-shell.open {
+  flex-basis: 360px;
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.toast {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  padding: 0.9rem 1.1rem;
+}
+
+.app-shell.global-dragging .workspace-stage {
+  filter: saturate(0.78);
+}
+
+.main-column.focus-mode {
+  display: flex;
+  justify-content: center;
+  padding: clamp(2.6rem, 6vw, 4.2rem) 1.5rem;
+}
+
+.main-column.focus-mode > * {
+  width: min(100%, 820px);
+}
+
+.main-column {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.3rem clamp(1.1rem, 2vw, 2.2rem) 3rem;
+  border-radius: 24px;
+  background: transparent;
+  transform: scale(1) translateY(0);
+  transition:
+    transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 220ms ease;
+}
+
+.workspace-stage.focus-mode .main-column {
+  transform: scale(1.012) translateY(-2px);
+}
+
+.workspace-header-shell {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.workspace-grid {
+  gap: 0;
+}
+
+.left-workspace-panel {
+  padding: 1rem 0.9rem;
+  border-radius: 0;
+  background: var(--bg-sidebar);
+}
+
+.main-column {
+  border-radius: 0;
+  background: var(--bg-editor);
+  padding: 1.6rem clamp(1.25rem, 3vw, 3rem) 3rem;
+}
+
+@media (max-width: 1200px) {
+  .left-workspace-panel,
+  .left-workspace-panel.open,
+  .inspector-panel-shell,
+  .inspector-panel-shell.open {
+    flex-basis: auto;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.app-shell {
+  background-color: var(--surface-base);
+  background-image:
+    radial-gradient(
+      ellipse at 12% 8%,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 46%
+    ),
+    radial-gradient(
+      ellipse at 86% 84%,
+      rgba(124, 58, 237, 0.06),
+      transparent 40%
+    );
+}
+
+:root.dark .app-shell {
+  background-color: var(--color-obsidian);
+  background-image:
+    radial-gradient(
+      ellipse at 15% 5%,
+      rgba(0, 212, 238, 0.06),
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse at 85% 90%,
+      rgba(99, 102, 241, 0.08),
+      transparent 36%
+    ),
+    linear-gradient(180deg, rgba(8, 17, 31, 0.95), rgba(8, 17, 31, 1));
+}
+
+/* LEFT PANEL — Glass Obsidian raised */
+
+.left-workspace-panel {
+  background: var(--surface-glass);
+  border-color: var(--border-subtle);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+:root.dark .left-workspace-panel {
+  background: rgba(14, 26, 46, 0.72);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* GOD MODE — Clase `is-god-mode` a nivel workspace */
+
+
+.app-shell.god-mode {
+  --god-mode-transition:
+    transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 220ms ease;
+}
+
+.app-shell.god-mode .main-column {
+  transform: scale(0.992) translateY(0);
+  transition: var(--god-mode-transition);
+}
+
+.workspace-stage.god-mode .left-workspace-panel.open,
+.workspace-stage.god-mode .inspector-panel-shell.open {
+  flex-basis: 380px;
+}
+
+/* God Mode: Editor retrocede, paneles se expanden */
+.app-shell.god-mode .workspace-header {
+  border-color: var(--border-active);
+}
+
+:root.dark .app-shell.god-mode .workspace-header {
+  box-shadow:
+    0 1px 12px rgba(0, 212, 238, 0.12),
+    inset 0 0 0 1px rgba(0, 212, 238, 0.06);
+}
+
+/* God Mode indicator (subtle glow on header's god-mode pill) */
+.app-shell.god-mode .mode-switch-pill.active {
+  background: var(--color-primary-dim);
+  border-color: var(--border-active);
+  color: var(--text-heading);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-primary) 28%, transparent),
+    0 0 14px var(--color-primary-glow);
+}
+
+.app-shell.god-mode .title-inline-input {
+  font-family: var(--font-sans);
+  font-size: clamp(1.3rem, 1.6vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Time travel mode: freeze tint on the entire layout */
+.app-shell.time-travel-mode {
+  filter: hue-rotate(-8deg) saturate(0.85);
+}
+
+.app-shell.time-travel-mode .main-column {
+  box-shadow: inset 0 0 60px
+    color-mix(in srgb, var(--color-info) 8%, transparent);
+}
+
+.left-workspace-panel {
+  transform: translate3d(-8px, 0, 0);
+}
+
+.left-workspace-panel.open {
+  transform: translate3d(0, 0, 0);
+}
+
+.inspector-panel-shell {
+  transform: translate3d(8px, 0, 0);
+}
+
+.inspector-panel-shell.open {
+  transform: translate3d(0, 0, 0);
+}
+
+/* Smooth 60fps panel collapse — hardware accelerated */
+.left-workspace-panel,
+.inspector-panel-shell {
+  transition:
+    flex-basis 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.18s ease,
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Workspace grid: flex container for 60fps layout */
+.workspace-grid {
+  contain: layout style;
+}
+
+/* Main column: optimize scroll performance */
+.main-column {
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+/* Spectral Mode (scroll-based ghosting) */
+.app-shell.is-spectral .workspace-header-shell {
+  opacity: 0.65;
+  transition: opacity var(--motion-fast);
+}
+
+.app-shell.is-spectral .ghosting-panel {
+  opacity: 0.15;
+  transition: opacity var(--motion-fast);
+}
+
+.main-column.is-spectral {
+  opacity: 0.65;
+  transition:
+    opacity var(--motion-fast),
+    transform var(--motion-fast);
+}
+
+:root:not(.dark) .app-shell.is-spectral .workspace-header-shell,
+:root:not(.dark) .app-shell.is-spectral .ghosting-panel,
+:root:not(.dark) .main-column.is-spectral {
+  opacity: 1;
+}
+
+:root[data-theme="light"] .app-shell.is-spectral .workspace-header-shell,
+:root[data-theme="light"] .app-shell.is-spectral .ghosting-panel,
+:root[data-theme="light"] .main-column.is-spectral,
+:root:not(.dark) .app-shell.is-spectral .workspace-header-shell,
+:root:not(.dark) .app-shell.is-spectral .ghosting-panel,
+:root:not(.dark) .main-column.is-spectral {
+  opacity: 1 !important;
+}
+
+@media (max-width: 1200px) {
+  .app-shell.is-spectral .workspace-header-shell,
+  .app-shell.is-spectral .ghosting-panel,
+  .main-column.is-spectral {
+    opacity: 1;
+  }
+}

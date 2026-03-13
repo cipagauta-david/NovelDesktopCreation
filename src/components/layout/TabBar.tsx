@@ -2,6 +2,9 @@ import { memo, useState } from 'react'
 
 import type { CollectionTab } from '../../types/workspace'
 import { ActionMenu } from '../common/ActionMenu'
+import '../../styles/layout/TabBar.css';
+
+
 
 type TabBarProps = {
   tabs: CollectionTab[]

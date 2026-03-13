@@ -1,4 +1,7 @@
 import type { LlmTraceEntry, Provider } from '../../types/workspace'
+import '../../styles/inspector/InspectorMetricsDashboard.css';
+
+
 
 type InspectorMetricsDashboardProps = {
   traces: LlmTraceEntry[]

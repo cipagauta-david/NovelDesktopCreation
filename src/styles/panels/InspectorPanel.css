@@ -1,0 +1,236 @@
+.ghosting-panel {
+  opacity: 0.3;
+  transition:
+    opacity 300ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ghosting-panel:hover,
+.ghosting-panel:focus-within {
+  opacity: 1;
+  filter: saturate(1);
+}
+
+:root.dark .ghosting-panel {
+  opacity: 0.2;
+}
+
+.panel-dock-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panel-dock-header-right {
+  justify-content: flex-end;
+}
+
+.proposal-card {
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+  border: 0;
+}
+
+.proposal-card-staged {
+  padding: 1rem;
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(59, 130, 246, 0.12),
+    rgba(37, 99, 235, 0.05)
+  );
+  border: 1px solid rgba(96, 165, 250, 0.26);
+  box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.05);
+}
+
+.proposal-card-staged .primary-button {
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.22);
+}
+
+.proposal-card h4 {
+  margin: 0 0 0.35rem;
+}
+
+.reference-card-list,
+.meta-summary-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.reference-card-mini,
+.meta-summary-item {
+  padding: 0.85rem 0.95rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.reference-card-mini {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.reference-card-mini p {
+  margin: 0;
+  color: #9fb0c9;
+}
+
+.meta-summary-item {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.meta-summary-item span {
+  font-size: 12px;
+  color: rgba(203, 213, 225, 0.52);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.meta-summary-item strong {
+  color: #fff;
+  font-weight: 700;
+}
+
+.inspector-column {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+  padding: 0.95rem;
+  border-radius: 24px;
+  background: rgba(8, 14, 25, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+:root.dark .inspector-column {
+  background: rgba(14, 26, 46, 0.72);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ghosting-panel {
+    transition-duration: 0ms;
+  }
+}
+
+.inspector-sticky-head {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  gap: 0.55rem;
+  padding-bottom: 0.25rem;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 14, 25, 0.98),
+    rgba(8, 14, 25, 0.9)
+  );
+}
+
+.inspector-scroll-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  gap: 1rem;
+  padding-right: 0.15rem;
+}
+
+/* ── Streaming / AI indicator ──────────────────────────── */
+
+.streaming-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.streaming-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--brand-accent);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.streaming-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand-accent);
+  animation: streaming-pulse 1.2s ease-in-out infinite;
+}
+
+.streaming-preview {
+  font-family: var(--font-serif);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  padding: 0.5rem;
+  background: var(--surface-glass);
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+}
+
+/* SIDEBAR GHOSTING — Revelación Progresiva */
+
+.ghosting-panel {
+  opacity: 0.4;
+  filter: saturate(0.92);
+  transition:
+    opacity 300ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ghosting-panel:hover,
+.ghosting-panel:focus-within {
+  opacity: 1;
+  filter: saturate(1);
+}
+
+:root.dark .ghosting-panel {
+  opacity: 0.2;
+}
+
+:root.dark .ghosting-panel:hover,
+:root.dark .ghosting-panel:focus-within {
+  opacity: 1;
+}
+
+:root:not(.dark) .ghosting-panel {
+  opacity: 1;
+  filter: none;
+}
+
+:root[data-theme="light"] .ghosting-panel,
+:root:not(.dark) .ghosting-panel {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* INSPECTOR COLUMN — Glass with obsidian raise */
+.inspector-column {
+  background: var(--surface-glass);
+  border-color: var(--border-subtle);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-glass);
+}
+
+:root.dark .inspector-column {
+  background: rgba(14, 26, 46, 0.72);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: var(--shadow-glass);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ghosting-panel {
+    transition-duration: 0ms;
+  }
+}

@@ -1,4 +1,7 @@
 import { useState, type ReactNode } from 'react'
+import '../../styles/common/PanelSection.css';
+
+
 
 type PanelSectionProps = {
   title: string

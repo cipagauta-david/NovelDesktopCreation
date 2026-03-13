@@ -1,3 +1,5 @@
+import '../../styles/inspector/InspectorTabs.css';
+
 type InspectorTabsProps = {
   activeTab: 'context' | 'meta' | 'history' | 'metrics'
   onChange: (tab: 'context' | 'meta' | 'history' | 'metrics') => void

@@ -1,0 +1,41 @@
+.asset-grid {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.asset-card {
+  margin: 0;
+  padding: 0.45rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.asset-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.assets-inline-upload {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.45rem;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.assets-inline-upload:hover {
+  background: var(--accent-surface);
+  color: var(--text-primary);
+}
+
+.assets-inline-upload input {
+  display: none;
+}

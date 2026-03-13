@@ -23,6 +23,9 @@ import { InspectorAssistantComposer } from '../inspector/InspectorAssistantCompo
 import { InspectorHistory } from '../inspector/InspectorHistory'
 import { InspectorMetricsDashboard } from '../inspector/InspectorMetricsDashboard'
 import { InspectorTabs } from '../inspector/InspectorTabs'
+import '../../styles/panels/InspectorPanel.css';
+
+
 
 type InspectorPanelProps = {
   activeTab: CollectionTab | null

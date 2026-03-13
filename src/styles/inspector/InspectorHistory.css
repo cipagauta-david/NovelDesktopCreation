@@ -1,0 +1,19 @@
+/* Actor-type visual differentiation */
+.history-actor-icon {
+  display: inline-block;
+  margin-right: 0.35rem;
+  font-size: 0.85em;
+}
+
+.history-actor-ai .history-actor-icon {
+  color: var(--color-primary);
+  filter: drop-shadow(0 0 3px var(--color-primary-glow));
+}
+
+.history-actor-system .history-actor-icon {
+  color: var(--text-ghost);
+}
+
+.history-actor-user .history-actor-icon {
+  color: var(--text-muted);
+}

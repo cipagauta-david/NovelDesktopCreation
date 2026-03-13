@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import '../../styles/common/ActionMenu.css';
+
+
 
 type ActionItem = {
   label: string

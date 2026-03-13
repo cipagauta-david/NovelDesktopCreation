@@ -1,0 +1,82 @@
+.assistant-composer {
+  margin-top: auto;
+  flex-shrink: 0;
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.15rem 0 0;
+  background: transparent;
+  border: 0;
+}
+
+.assistant-composer-input-shell {
+  position: relative;
+}
+
+.assistant-composer textarea {
+  min-height: 96px;
+  padding-right: 3.1rem;
+  resize: none;
+  border-radius: 14px;
+  border: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--bg-editor) 82%, transparent);
+}
+
+.assistant-composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.assistant-composer-footer small {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.assistant-send-button {
+  position: absolute;
+  right: 0.55rem;
+  bottom: 0.55rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--text-muted) 22%, transparent);
+  background: color-mix(in srgb, var(--text-muted) 15%, transparent);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: none;
+  transition:
+    background-color var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast);
+}
+
+.assistant-send-button:hover:not(:disabled) {
+  transform: none;
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 24%, transparent);
+  color: var(--text-primary);
+}
+
+.assistant-send-button:disabled {
+  opacity: 1;
+  color: var(--text-muted);
+  border-color: color-mix(in srgb, var(--text-muted) 16%, transparent);
+  background: color-mix(in srgb, var(--text-muted) 10%, transparent);
+}
+
+/* AI stop button: red translucent shadow */
+.assistant-stop-button {
+  border-color: color-mix(in srgb, var(--color-error) 24%, transparent);
+  background: color-mix(in srgb, var(--color-error) 16%, transparent);
+  color: #fca5a5;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-error) 12%, transparent);
+}
+
+.assistant-stop-button:hover {
+  border-color: color-mix(in srgb, var(--color-error) 36%, transparent);
+  background: color-mix(in srgb, var(--color-error) 24%, transparent);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--color-error) 18%, transparent);
+}

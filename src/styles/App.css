@@ -1,0 +1,12 @@
+/* ===== Semantic Token Binding (inherited from ARIS tokens) ===== */
+
+.app-loading-state {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  background: var(--surface-float);
+  border: 1px solid var(--border-subtle);
+}

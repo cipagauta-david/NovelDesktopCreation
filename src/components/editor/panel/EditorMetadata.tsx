@@ -1,5 +1,8 @@
 import type { DraftState, EntityTemplate } from '../../../types/workspace'
 import { PanelSection } from '../../common/PanelSection'
+import '../../../styles/editor/panel/EditorMetadata.css';
+
+
 
 type EditorMetadataProps = {
   draft: DraftState

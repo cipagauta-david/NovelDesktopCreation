@@ -1,5 +1,8 @@
 import type { EntityRecord } from '../../../types/workspace'
 import { formatTimestamp } from '../../../utils/workspace'
+import '../../../styles/editor/panel/EntityHover.css';
+
+
 
 type HoverPosition = {
   left: number

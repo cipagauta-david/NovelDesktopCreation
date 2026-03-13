@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import type { SearchResult } from '../../types/workspace'
+import '../../styles/overlays/CommandPalette.css';
+
+
 
 interface CommandPaletteProps {
   searchQuery: string

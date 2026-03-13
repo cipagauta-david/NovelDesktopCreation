@@ -1,0 +1,69 @@
+.entity-list-layout {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.8rem;
+  min-height: 0;
+  height: 100%;
+}
+
+.entity-composer {
+  padding-bottom: 0.2rem;
+}
+
+.entity-list-scrollable {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+}
+
+.create-entity-button {
+  justify-self: start;
+}
+
+/* ── Drag & Drop entity list sortable ──────────────────── */
+
+.sortable-entity-wrapper {
+  touch-action: none;
+}
+
+.entity-list .list-card {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.entity-list .list-card .drag-handle {
+  cursor: grab;
+  opacity: 0.35;
+  font-size: 1rem;
+  line-height: 1;
+  user-select: none;
+  flex-shrink: 0;
+  padding: 0.15rem 0;
+  transition: opacity 0.15s;
+}
+
+.entity-list .list-card .drag-handle:hover {
+  opacity: 0.85;
+}
+
+.entity-list .list-card .drag-handle:active {
+  cursor: grabbing;
+}
+
+.list-card-content {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.entity-list .list-card.dragging {
+  opacity: 0.5;
+  outline: 2px dashed var(--brand-accent);
+}
+
+.entity-list .list-card.drop-target {
+  border-top: 2px solid var(--brand-accent);
+}

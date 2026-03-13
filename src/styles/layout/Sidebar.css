@@ -1,0 +1,80 @@
+.sidebar-compact {
+  gap: 0.8rem;
+}
+
+.sidebar-identity {
+  display: grid;
+  gap: 0.14rem;
+  padding: 0.1rem 0;
+}
+
+.sidebar-identity strong {
+  font-size: 0.96rem;
+  color: #f8fafc;
+}
+
+.sidebar-identity small {
+  color: #8ea0b9;
+  font-size: 0.78rem;
+}
+
+.project-switcher-stack {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.project-switcher-summary {
+  display: grid;
+  gap: 0.16rem;
+}
+
+.project-switcher-summary div {
+  display: grid;
+  gap: 0.16rem;
+}
+
+.project-switcher-summary strong {
+  color: #f8fafc;
+  font-size: 0.92rem;
+}
+
+.project-switcher-summary span {
+  color: #8ea0b9;
+  font-size: 0.82rem;
+}
+
+.compact-project-form textarea {
+  min-height: 96px;
+}
+
+.template-card {
+  padding: 0.85rem 0.95rem;
+  border-radius: 18px;
+  display: grid;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 0;
+}
+
+.template-list-compact {
+  gap: 0.55rem;
+}
+
+.template-list-compact .template-card {
+  padding: 0.65rem 0.8rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.template-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.35rem;
+}
+
+.template-row-icon {
+  color: var(--text-muted);
+  margin-top: 0.12rem;
+}

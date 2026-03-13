@@ -1,5 +1,8 @@
 import type { EntityRecord } from '../../../types/workspace'
 import { PanelSection } from '../../common/PanelSection'
+import '../../../styles/editor/panel/EditorAssets.css';
+
+
 
 type EditorAssetsProps = {
   assets: EntityRecord['assets']

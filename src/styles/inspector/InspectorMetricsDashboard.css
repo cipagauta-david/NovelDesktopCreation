@@ -1,0 +1,31 @@
+.metrics-dashboard,
+.metrics-provider-list,
+.metrics-grid {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.metrics-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metric-card {
+  padding: 0.85rem 0.95rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+  display: grid;
+  gap: 0.22rem;
+}
+
+.metric-card span,
+.metric-card small {
+  font-size: 0.76rem;
+  color: rgba(203, 213, 225, 0.52);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.metric-card strong {
+  color: #fff;
+  font-weight: 700;
+}

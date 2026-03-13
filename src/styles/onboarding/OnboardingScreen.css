@@ -1,0 +1,64 @@
+.onboarding-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.1fr minmax(360px, 460px);
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.hero-panel {
+  padding: 2.25rem;
+  display: grid;
+  gap: 1.5rem;
+  align-content: center;
+}
+
+.hero-panel h1 {
+  font-size: clamp(2.4rem, 4vw, 4.8rem);
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.hero-feature {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: rgba(20, 31, 53, 0.9);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+}
+
+.hero-feature span {
+  color: #9fb0c9;
+}
+
+.onboarding-card {
+  padding: 2rem;
+  display: grid;
+  gap: 1rem;
+  align-content: center;
+}
+
+.section-title {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.section-title h2 {
+  margin: 0;
+}
+
+.inline-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.form-hint {
+  color: #8ea0b9;
+  font-size: 0.88rem;
+}

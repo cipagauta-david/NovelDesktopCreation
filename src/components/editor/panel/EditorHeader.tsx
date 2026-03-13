@@ -2,6 +2,9 @@ import type { DraftState, EntityRecord } from '../../../types/workspace'
 import type { EditorMode } from '../../../types/editor'
 import { formatTimestamp } from '../../../utils/workspace'
 import { ActionMenu } from '../../common/ActionMenu'
+import '../../../styles/editor/panel/EditorHeader.css';
+
+
 
 type EditorHeaderProps = {
   draft: DraftState

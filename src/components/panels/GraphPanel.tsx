@@ -1,5 +1,8 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 import type { GraphModel } from '../../types/workspace'
+import '../../styles/panels/GraphPanel.css';
+
+
 
 const VIEW_WIDTH = 520
 const VIEW_HEIGHT = 440
