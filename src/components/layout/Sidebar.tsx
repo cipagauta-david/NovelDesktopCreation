@@ -63,7 +63,7 @@ export const Sidebar = memo(function Sidebar({
           <>
             <button
               type="button"
-              className="ghost-button compact-button"
+              className="secondary-button compact-button"
               onClick={() => setShowProjectForm((current) => !current)}
             >
               {showProjectForm ? 'Cerrar' : 'Nuevo'}

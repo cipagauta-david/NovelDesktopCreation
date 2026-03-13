@@ -88,7 +88,7 @@ export function EditorHeader({
         </div>
       </div>
       <div className="toolbar-group">
-        <button className="ghost-button" type="button" onClick={onGenerateAiProposal}>
+        <button className="ai-button" type="button" onClick={onGenerateAiProposal}>
           Sugerencia IA
         </button>
         <button className="ghost-button mode-switch-pill" type="button" onClick={onToggleZenMode}>

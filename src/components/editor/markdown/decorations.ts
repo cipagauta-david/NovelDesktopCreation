@@ -106,21 +106,46 @@ const hiddenSyntaxMatcher = new MatchDecorator({
   decoration: Decoration.mark({ class: 'cm-format-token' }),
 })
 
-export const sourceModeExtension = ViewPlugin.fromClass(
-  class {
-    decorations: DecorationSet
+export const entityMatcher = new MatchDecorator({
+  regexp: /\{\{entity:[^|}]+\|([^}]+)\}\}/g,
+  decoration: (match) => Decoration.replace({ widget: new ReferenceWidget(match[1]) }),
+})
 
-    constructor(view: EditorView) {
-      this.decorations = hiddenSyntaxMatcher.createDeco(view)
-    }
+export const sourceModeExtension = [
+  ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet
 
-    update(update: ViewUpdate) {
-      if (update.docChanged || update.viewportChanged) {
-        this.decorations = hiddenSyntaxMatcher.updateDeco(update, this.decorations)
+      constructor(view: EditorView) {
+        this.decorations = hiddenSyntaxMatcher.createDeco(view)
       }
-    }
-  },
-  {
-    decorations: (plugin) => plugin.decorations,
-  },
-)
+
+      update(update: ViewUpdate) {
+        if (update.docChanged || update.viewportChanged) {
+          this.decorations = hiddenSyntaxMatcher.updateDeco(update, this.decorations)
+        }
+      }
+    },
+    {
+      decorations: (plugin) => plugin.decorations,
+    },
+  ),
+  ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet
+
+      constructor(view: EditorView) {
+        this.decorations = entityMatcher.createDeco(view)
+      }
+
+      update(update: ViewUpdate) {
+        if (update.docChanged || update.viewportChanged) {
+          this.decorations = entityMatcher.updateDeco(update, this.decorations)
+        }
+      }
+    },
+    {
+      decorations: (plugin) => plugin.decorations,
+    },
+  )
+]

@@ -167,7 +167,7 @@ export const GraphPanel = memo(function GraphPanel({ graphModel, activeEntityId,
   }, [activeEntityId, connectedNodeIds, graphModel.edges, nodeById, nodesWithPosition, useCanvasRenderer])
 
   return (
-    <section className="panel surface-panel">
+    <section className="panel surface-panel graph-panel">
       <div className="panel-header">
         <div>
           <h3>Mapa narrativo</h3>

@@ -1,3 +1,15 @@
+:root,
+:root[data-theme="light"] {
+  --bg-surface-primary: #ffffff;
+  --bg-surface-secondary: #f8fafc;
+
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-accent: #0284c7;
+
+  --border-subtle: #e2e8f0;
+}
+
 /* ===== Semantic Token Binding (inherited from ARIS tokens) ===== */
 
 .app-loading-state {

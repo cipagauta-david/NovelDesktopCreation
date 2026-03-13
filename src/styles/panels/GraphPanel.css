@@ -3,6 +3,17 @@
   transition: opacity 140ms ease;
 }
 
+.graph-panel {
+  background: var(--bg-surface-primary, #ffffff);
+  border: 1px solid var(--border-subtle);
+}
+
+:root.dark .graph-panel,
+:root[data-theme="dark"] .graph-panel {
+  background: rgba(10, 16, 28, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
 .graph-node circle {
   transition:
     cx 90ms linear,
@@ -30,7 +41,7 @@
       color-mix(in srgb, var(--color-primary) 10%, transparent),
       transparent 56%
     ),
-    var(--surface-base);
+    var(--bg-surface-primary, #ffffff);
 }
 
 :root.dark .graph-canvas {

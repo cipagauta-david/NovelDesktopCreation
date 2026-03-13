@@ -124,6 +124,15 @@
   padding-bottom: 0.25rem;
   background: linear-gradient(
     180deg,
+    color-mix(in srgb, var(--surface-glass) 98%, var(--bg-surface-primary, #ffffff)),
+    color-mix(in srgb, var(--surface-glass) 90%, transparent)
+  );
+}
+
+:root.dark .inspector-sticky-head,
+:root[data-theme="dark"] .inspector-sticky-head {
+  background: linear-gradient(
+    180deg,
     rgba(8, 14, 25, 0.98),
     rgba(8, 14, 25, 0.9)
   );

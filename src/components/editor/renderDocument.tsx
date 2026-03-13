@@ -7,6 +7,8 @@ import '../../styles/editor/renderDocument.css';
 
 export const REFERENCE_TOKEN_PATTERN = /(\{\{entity:[^|}]+\|[^}]+\}\})/g
 
+const RAW_REFERENCE_PATTERN = /^\{\{entity:([^|}]+)\|([^}]+)\}\}$/
+
 export function renderInlineContent(text: string) {
   return text.split(REFERENCE_TOKEN_PATTERN).map((chunk, index) => {
     const token = getReferenceTokens(chunk)[0]
@@ -30,6 +32,26 @@ export function renderInlineContent(text: string) {
   })
 }
 
+function renderRawInlineContent(line: string) {
+  return line.split(REFERENCE_TOKEN_PATTERN).map((chunk, index) => {
+    const tokenMatch = RAW_REFERENCE_PATTERN.exec(chunk)
+    if (!tokenMatch) {
+      return <span key={`${chunk}-${index}`}>{chunk}</span>
+    }
+
+    const [, entityId, label] = tokenMatch
+    return (
+      <span key={`${chunk}-${index}`} className="doc-entity-token" contentEditable={false} spellCheck={false}>
+        <span className="doc-entity-prefix">{'{{entity:'}</span>
+        <span className="doc-entity-id">{entityId}</span>
+        <span className="doc-entity-separator">|</span>
+        <span className="doc-entity-label">{label}</span>
+        <span className="doc-entity-suffix">{'}}'}</span>
+      </span>
+    )
+  })
+}
+
 export function renderDocument(content: string, options: RenderDocumentOptions = {}): ReactNode {
   const { activeBlockRange = null, showRawActiveBlock = false } = options
 
@@ -48,7 +70,7 @@ export function renderDocument(content: string, options: RenderDocumentOptions =
     if (renderRawLine) {
       return (
         <div key={`line-${index}`} className="doc-block doc-active-raw-line">
-          <span>{line || '\u200b'}</span>
+          <span>{line ? renderRawInlineContent(line) : '\u200b'}</span>
         </div>
       )
     }

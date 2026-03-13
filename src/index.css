@@ -75,7 +75,14 @@
   --color-warning: #f59e0b;
   --color-error: #ef4444;
   --color-info: #3b82f6;
-
+  
+  /* BUTTON TOKENS */
+  --btn-radius: 6px;
+  --btn-padding-sm: 4px 8px;
+  --btn-padding-md: 8px 16px;
+  --color-surface-hover: rgba(100, 116, 133, 0.1);
+  --color-border: #e2e8f0;
+  
   /* BACKWARD-COMPAT ALIASES */
   --surface-base: var(--color-parchment);
   --text-primary: var(--text-body);
@@ -242,9 +249,20 @@ input,
 select,
 textarea {
   border: 1px solid transparent;
-  background: rgba(12, 20, 34, 0.92);
+  background: var(--surface-float);
   color: inherit;
   border-radius: 14px;
+}
+
+:root.dark button,
+:root.dark input,
+:root.dark select,
+:root.dark textarea,
+:root[data-theme="dark"] button,
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea {
+  background: rgba(12, 20, 34, 0.92);
 }
 
 button {
@@ -302,9 +320,32 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: rgba(125, 211, 252, 0.28);
+  border-color: color-mix(in srgb, var(--brand-accent) 32%, transparent);
+  background: var(--bg-surface-primary, #ffffff);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-accent) 12%, transparent);
+}
+
+:root.dark input:focus,
+:root.dark select:focus,
+:root.dark textarea:focus,
+:root[data-theme="dark"] input:focus,
+:root[data-theme="dark"] select:focus,
+:root[data-theme="dark"] textarea:focus {
   background: rgba(11, 18, 30, 0.98);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
+}
+
+select,
+option {
+  background: var(--bg-surface-primary, #ffffff);
+  color: var(--text-primary);
+}
+
+:root.dark select,
+:root.dark option,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] option {
+  background: rgba(11, 18, 30, 0.98);
+  color: var(--text-primary);
 }
 
 textarea {
@@ -315,7 +356,7 @@ textarea {
 label {
   display: grid;
   gap: 0.45rem;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 #root {
@@ -389,8 +430,40 @@ label {
   font-weight: 700;
 }
 
+.secondary-button {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
 .ghost-button {
-  background: rgba(17, 24, 39, 0.7);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+}
+
+.ghost-button:hover {
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.ai-button {
+  background: #e0e7ff;
+  border: 1px solid #c7d2fe;
+  color: #3730a3;
+  font-weight: 600;
+}
+
+.ai-button:hover {
+  background: #c7d2fe;
+  border-color: #a5b4fc;
+}
+
+.outline-button {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
 }
 
 .icon-button {
@@ -547,8 +620,16 @@ label {
   height: 36px;
   padding: 0;
   border-radius: 999px;
-  background: rgba(17, 24, 39, 0.7);
-  border-color: rgba(148, 163, 184, 0.1);
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+
+.panel-dock-toggle:hover {
+  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+  transform: none;
 }
 
 .template-card small,

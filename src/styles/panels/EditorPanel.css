@@ -96,12 +96,12 @@
   height: 40px;
   padding: 0;
   border-radius: 10px;
-  background: rgba(12, 20, 34, 0.7);
-  border: 1px solid rgba(148, 163, 184, 0.08);
+  background: var(--bg-surface-primary, #ffffff);
+  border: 1px solid var(--border-subtle);
   display: inline-grid;
   place-items: center;
   font-size: 1.05rem;
-  color: #cbd5e1;
+  color: var(--text-secondary);
   transition:
     transform 120ms ease,
     border-color 120ms ease,
@@ -110,14 +110,28 @@
 }
 
 .zen-exit-button:hover {
-  transform: translateY(-2px);
-  border-color: rgba(125, 211, 252, 0.28);
-  background: rgba(17, 24, 39, 0.78);
+  transform: none;
+  border-color: var(--border-subtle);
+  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  color: var(--text-primary);
 }
 
 .zen-exit-button:focus {
   outline: none;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-accent) 14%, transparent);
+}
+
+:root.dark .zen-exit-button,
+:root[data-theme="dark"] .zen-exit-button {
+  background: rgba(12, 20, 34, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  color: #cbd5e1;
+}
+
+:root.dark .zen-exit-button:hover,
+:root[data-theme="dark"] .zen-exit-button:hover {
+  border-color: rgba(125, 211, 252, 0.28);
+  background: rgba(17, 24, 39, 0.78);
 }
 
 .writing-lane .cm-editor {

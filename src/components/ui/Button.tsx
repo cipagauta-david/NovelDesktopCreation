@@ -3,7 +3,7 @@ import { Slot } from "@radix-ui/react-slot"
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "ghost" | "glass" | "outline"
+  variant?: "primary" | "secondary" | "ghost" | "ai" | "glass" | "outline"
   size?: "sm" | "md" | "lg" | "icon"
   asChild?: boolean
 }
@@ -13,27 +13,30 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button"
     
     // Mapping our internal variants to the existing CSS classes in index.css
-    const variantClasses = {
+    const variantClasses: Record<string, string> = {
       primary: "primary-button",
+      secondary: "secondary-button",
       ghost: "ghost-button",
+      ai: "ai-button",
       glass: "panel", // Using the panel's glass effect
-      outline: ""
+      outline: "outline-button"
     }
     
     // Mapping sizes to our existing buttons or creating inline styles
     const sizeStyles: React.CSSProperties = size === "icon" ? {} : {
-      padding: size === "sm" ? "0.4rem 0.8rem" : size === "lg" ? "1rem 2rem" : "0.8rem 1.4rem",
+      padding: size === "sm" ? "var(--btn-padding-sm)" : size === "md" ? "var(--btn-padding-md)" : "1rem 2rem",
       fontSize: size === "sm" ? "0.85rem" : size === "lg" ? "1.1rem" : "0.95rem",
       height: "auto",
-      minHeight: size === "sm" ? "36px" : size === "lg" ? "52px" : "44px",
+      minHeight: size === "sm" ? "32px" : size === "lg" ? "52px" : "36px",
     }
 
     const baseStyle: React.CSSProperties = {
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
-      borderRadius: size === "icon" ? "12px" : "14px",
-      border: variant === "outline" ? "1px solid var(--border-subtle)" : undefined,
+      borderRadius: "var(--btn-radius)",
+      border: variant === "outline" ? "1px solid var(--color-border)" : undefined,
+      backgroundColor: variant === "outline" ? "transparent" : undefined,
       cursor: "pointer",
       gap: "0.5rem",
       ...sizeStyles,

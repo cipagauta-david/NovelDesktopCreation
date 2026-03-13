@@ -14,9 +14,16 @@
   gap: 0.3rem;
   padding: 0.45rem;
   border-radius: 16px;
+  background: var(--bg-surface-primary, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  box-shadow: var(--shadow-popover);
+  z-index: 20;
+}
+
+:root.dark .action-menu-popover,
+:root[data-theme="dark"] .action-menu-popover {
   background: rgba(10, 16, 28, 0.98);
   border: 1px solid rgba(148, 163, 184, 0.18);
-  z-index: 20;
 }
 
 .action-menu-popover-floating {
@@ -29,8 +36,28 @@
 .menu-item {
   text-align: left;
   padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-primary);
+}
+
+.menu-item:hover {
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  border-color: var(--border-subtle, #e2e8f0);
+  transform: none;
 }
 
 .menu-item.destructive {
+  color: #ef4444;
+}
+
+.menu-item.destructive:hover {
+  background: color-mix(in srgb, #ef4444 10%, transparent);
+  border-color: color-mix(in srgb, #ef4444 22%, var(--border-subtle, #e2e8f0));
+}
+
+:root.dark .menu-item.destructive,
+:root[data-theme="dark"] .menu-item.destructive {
   color: #fca5a5;
 }

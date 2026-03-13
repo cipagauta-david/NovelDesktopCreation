@@ -75,7 +75,7 @@ export const TabBar = memo(function TabBar({
       <div className="tab-toolbar">
         <button
           type="button"
-          className="ghost-button compact-button"
+          className="secondary-button compact-button"
           onClick={() => setShowComposer((current) => !current)}
         >
           {showComposer ? 'Cerrar' : 'Nueva colección'}
