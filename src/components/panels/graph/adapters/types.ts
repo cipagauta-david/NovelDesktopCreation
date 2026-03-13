@@ -1,6 +1,6 @@
 import type { GraphEdge, GraphNode } from '../../../../types/workspace'
 
-export type GraphRendererKind = 'native' | 'cosmograph'
+export type GraphRendererKind = 'native' | 'cosmograph' | 'd3-pixi'
 
 export type GraphRendererContext = {
   width: number

@@ -226,11 +226,18 @@ test('graph view renders nodes', async ({ page }) => {
     await graphToggle.click()
     await page.waitForTimeout(500)
 
-    // Should see SVG with nodes
+    // Should see SVG or Canvas graph renderer
     const svg = page.locator('svg[role="img"]')
+    const canvas = page.locator('canvas[role="img"], .graph-pixi-canvas')
+
     if (await svg.count() > 0) {
       const nodeCount = await svg.locator('.graph-node').count()
       expect(nodeCount).toBeGreaterThan(0)
+      return
+    }
+
+    if (await canvas.count() > 0) {
+      await expect(canvas.first()).toBeVisible()
     }
   }
 })

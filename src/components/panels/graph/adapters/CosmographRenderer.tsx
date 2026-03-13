@@ -43,6 +43,7 @@ export function CosmographRenderer({
   onAutoPauseAfterCenter,
 }: CosmographRendererProps) {
   const cosmographRef = useRef<CosmographRef>(undefined)
+  const lastCenterRequestIdRef = useRef(0)
   const points = useMemo(
     () =>
       nodes.map((node, index) => ({
@@ -142,9 +143,10 @@ export function CosmographRenderer({
   }, [simulationPaused])
 
   useEffect(() => {
-    if (!centerViewRequestId) {
+    if (!centerViewRequestId || centerViewRequestId === lastCenterRequestIdRef.current) {
       return
     }
+    lastCenterRequestIdRef.current = centerViewRequestId
 
     const cosmograph = cosmographRef.current
     if (!cosmograph) {

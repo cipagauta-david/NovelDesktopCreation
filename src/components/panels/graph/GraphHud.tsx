@@ -9,6 +9,7 @@ type GraphHudProps = {
   gravityStrength: number
   linkWeightStrength: number
   simulationPaused: boolean
+  position?: { x: number; y: number }
   disableSimulationToggle?: boolean
   onToggleCategory: (category: GraphCategory) => void
   onSearchTermChange: (value: string) => void
@@ -19,6 +20,7 @@ type GraphHudProps = {
   onLinkWeightStrengthChange: (value: number) => void
   onCenterView: () => void
   onToggleSimulation: () => void
+  onPositionChange?: (position: { x: number; y: number }) => void
 }
 
 export function GraphHud({
@@ -29,6 +31,7 @@ export function GraphHud({
   gravityStrength,
   linkWeightStrength,
   simulationPaused,
+  position,
   disableSimulationToggle,
   onToggleCategory,
   onSearchTermChange,
@@ -39,9 +42,55 @@ export function GraphHud({
   onLinkWeightStrengthChange,
   onCenterView,
   onToggleSimulation,
+  onPositionChange,
 }: GraphHudProps) {
+  const hudPosition = position ?? { x: 0, y: 0 }
+
   return (
-    <div className="graph-hud" aria-label="Controles del grafo">
+    <div
+      className="graph-hud"
+      aria-label="Controles del grafo"
+      style={{ top: `calc(0.9rem + ${hudPosition.y}px)`, left: `calc(0.9rem + ${hudPosition.x}px)` }}
+    >
+      <div
+        className="graph-hud-drag-handle"
+        role="button"
+        aria-label="Mover panel de controles"
+        title="Arrastra para mover"
+        onPointerDown={(event) => {
+          if (!onPositionChange) {
+            return
+          }
+          const startX = event.clientX
+          const startY = event.clientY
+          const initialX = hudPosition.x
+          const initialY = hudPosition.y
+          const target = event.currentTarget as HTMLDivElement
+          target.setPointerCapture(event.pointerId)
+
+          const handlePointerMove = (moveEvent: PointerEvent) => {
+            const deltaX = moveEvent.clientX - startX
+            const deltaY = moveEvent.clientY - startY
+            onPositionChange({
+              x: initialX + deltaX,
+              y: initialY + deltaY,
+            })
+          }
+
+          const clear = () => {
+            target.removeEventListener('pointermove', handlePointerMove)
+            target.removeEventListener('pointerup', clear)
+            target.removeEventListener('pointercancel', clear)
+          }
+
+          target.addEventListener('pointermove', handlePointerMove)
+          target.addEventListener('pointerup', clear)
+          target.addEventListener('pointercancel', clear)
+        }}
+      >
+        ⋮⋮ Mover
+      </div>
+
       <div className="graph-hud-row graph-hud-filters">
         {availableCategories.map((category) => (
           <button

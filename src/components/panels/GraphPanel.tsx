@@ -4,6 +4,7 @@ import { ENABLE_INCREMENTAL_GRAPH_HUD, GRAPH_RENDERER_KIND } from '../../data/co
 import type { GraphModel, GraphNode } from '../../types/workspace'
 import { resolveGraphRendererAdapter } from './graph/adapters'
 import { CosmographRenderer } from './graph/adapters/CosmographRenderer'
+import { D3PixiRenderer } from './graph/adapters/D3PixiRenderer'
 import { getNodeCategory } from './graph/category'
 import type { GraphCategory, GraphViewSettings } from './graph/contracts'
 import { GraphHud } from './graph/GraphHud'
@@ -40,12 +41,15 @@ export const GraphPanel = memo(function GraphPanel({
 }: GraphPanelProps) {
   const svgRef = useRef<SVGSVGElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const graphShellRef = useRef<HTMLDivElement | null>(null)
 
   const [nodeOverrides, setNodeOverrides] = useState<Record<string, { x: number; y: number }>>({})
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null)
   const [relationSourceId, setRelationSourceId] = useState<string | null>(null)
   const [simulationPaused, setSimulationPaused] = useState(false)
   const [centerViewRequestId, setCenterViewRequestId] = useState(0)
+  const [hudPosition, setHudPosition] = useState({ x: 0, y: 0 })
+  const [graphViewport, setGraphViewport] = useState({ width: VIEW_WIDTH, height: VIEW_HEIGHT })
   const [viewSettings, setViewSettings] = useState<GraphViewSettings>({
     repulsionStrength: 26,
     gravityStrength: 38,
@@ -61,6 +65,8 @@ export const GraphPanel = memo(function GraphPanel({
   const rendererAdapter = resolveGraphRendererAdapter(GRAPH_RENDERER_KIND)
   const rendererStatus = rendererAdapter.getStatus()
   const useCosmographRenderer = rendererAdapter.kind === 'cosmograph' && rendererStatus.ready
+  const useD3PixiRenderer = rendererAdapter.kind === 'd3-pixi' && rendererStatus.ready
+  const useSimulationRenderer = useCosmographRenderer || useD3PixiRenderer
 
   const positionedNodes = useMemo(
     () =>
@@ -96,7 +102,7 @@ export const GraphPanel = memo(function GraphPanel({
     [activeEntityId, graphViewModel.filteredEdges],
   )
 
-  const useCanvasRenderer = !useCosmographRenderer && graphViewModel.renderedNodes.length >= CANVAS_NODE_THRESHOLD
+  const useCanvasRenderer = !useSimulationRenderer && graphViewModel.renderedNodes.length >= CANVAS_NODE_THRESHOLD
 
   const getNodeRadius = useCallback(
     (nodeId: string, isActive: boolean) => {
@@ -191,8 +197,12 @@ export const GraphPanel = memo(function GraphPanel({
       setCenterViewRequestId((current) => current + 1)
       return
     }
+    if (useD3PixiRenderer) {
+      setCenterViewRequestId((current) => current + 1)
+      return
+    }
     resetLayout()
-  }, [resetLayout, useCosmographRenderer])
+  }, [resetLayout, useCosmographRenderer, useD3PixiRenderer])
 
   const submitSearchSelection = useCallback(() => {
     if (!graphViewModel.highlightedNodeId) {
@@ -203,6 +213,33 @@ export const GraphPanel = memo(function GraphPanel({
       handleNodeSelection(node)
     }
   }, [graphViewModel.highlightedNodeId, graphViewModel.nodeById, handleNodeSelection])
+
+  useEffect(() => {
+    const shell = graphShellRef.current
+    if (!shell) {
+      return
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (!entry) {
+        return
+      }
+
+      const nextWidth = Math.max(320, Math.floor(entry.contentRect.width))
+      const nextHeight = Math.max(300, Math.floor(entry.contentRect.height))
+      setGraphViewport((current) =>
+        current.width === nextWidth && current.height === nextHeight
+          ? current
+          : { width: nextWidth, height: nextHeight },
+      )
+    })
+
+    observer.observe(shell)
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
 
   useEffect(() => {
     if (!useCanvasRenderer) {
@@ -328,7 +365,7 @@ export const GraphPanel = memo(function GraphPanel({
         </div>
       </div>
 
-      <div className="graph-canvas-shell">
+      <div className="graph-canvas-shell" ref={graphShellRef}>
         {ENABLE_INCREMENTAL_GRAPH_HUD && (
           <GraphHud
             availableCategories={graphViewModel.availableCategories}
@@ -338,7 +375,8 @@ export const GraphPanel = memo(function GraphPanel({
             gravityStrength={viewSettings.gravityStrength}
             linkWeightStrength={viewSettings.linkWeightStrength}
             simulationPaused={simulationPaused}
-            disableSimulationToggle={!useCosmographRenderer}
+            position={hudPosition}
+            disableSimulationToggle={!useSimulationRenderer}
             onToggleCategory={(category: GraphCategory) => {
               setViewSettings((current) => ({
                 ...current,
@@ -371,11 +409,38 @@ export const GraphPanel = memo(function GraphPanel({
             }
             onCenterView={centerGraphView}
             onToggleSimulation={() => setSimulationPaused((current) => !current)}
+            onPositionChange={(nextPosition) => {
+              const maxX = Math.max(0, graphViewport.width - 360)
+              const maxY = Math.max(0, graphViewport.height - 280)
+              setHudPosition({
+                x: clamp(nextPosition.x, 0, maxX),
+                y: clamp(nextPosition.y, 0, maxY),
+              })
+            }}
           />
         )}
 
         {useCosmographRenderer ? (
           <CosmographRenderer
+            nodes={graphViewModel.renderedNodes}
+            edges={graphViewModel.filteredEdges}
+            activeEntityId={activeEntityId}
+            highlightedNodeId={graphViewModel.highlightedNodeId}
+            repulsionStrength={viewSettings.repulsionStrength}
+            gravityStrength={viewSettings.gravityStrength}
+            linkWeightStrength={viewSettings.linkWeightStrength}
+            simulationPaused={simulationPaused}
+            centerViewRequestId={centerViewRequestId}
+            degreeByNodeId={graphViewModel.degreeByNodeId}
+            onNodeSelect={handleNodeSelection}
+            onNodePositionChange={onNodePositionChange}
+            onAutoPauseAfterCenter={() => setSimulationPaused(true)}
+          />
+        ) : useD3PixiRenderer ? (
+          <D3PixiRenderer
+            width={graphViewport.width}
+            height={graphViewport.height}
+            padding={VIEW_PADDING}
             nodes={graphViewModel.renderedNodes}
             edges={graphViewModel.filteredEdges}
             activeEntityId={activeEntityId}

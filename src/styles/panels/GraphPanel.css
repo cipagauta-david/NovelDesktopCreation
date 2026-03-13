@@ -110,6 +110,7 @@
 
 .graph-canvas-shell {
   position: relative;
+  isolation: isolate;
 }
 
 .graph-node-label rect {
@@ -132,7 +133,8 @@
   left: 50%;
   bottom: 0.8rem;
   transform: translateX(-50%);
-  z-index: 4;
+  z-index: 10;
+  pointer-events: auto;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -154,7 +156,8 @@
   position: absolute;
   top: 0.9rem;
   left: 0.9rem;
-  z-index: 5;
+  z-index: 12;
+  pointer-events: auto;
   width: min(320px, calc(100% - 1.8rem));
   display: grid;
   gap: 0.55rem;
@@ -170,6 +173,25 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+.graph-hud-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  padding: 0.18rem 0.48rem;
+  border-radius: var(--radius-md);
+  border: 1px dashed color-mix(in srgb, var(--surface-panel-border, var(--border-subtle)) 80%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: grab;
+  user-select: none;
+}
+
+.graph-hud-drag-handle:active {
+  cursor: grabbing;
 }
 
 .graph-hud-filters {
@@ -251,4 +273,19 @@
   min-height: 540px;
   border-radius: 20px;
   overflow: hidden;
+}
+
+.graph-pixi {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.graph-pixi-canvas {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  width: 100%;
+  height: 100%;
+  display: block;
 }

@@ -6,7 +6,7 @@ export const ENABLE_INCREMENTAL_GRAPH_HUD =
   (import.meta.env.VITE_ENABLE_INCREMENTAL_GRAPH_HUD ?? '1') !== '0'
 
 export const GRAPH_RENDERER_KIND =
-  (import.meta.env.VITE_GRAPH_RENDERER_KIND as 'native' | 'cosmograph' | undefined) ?? 'cosmograph'
+  (import.meta.env.VITE_GRAPH_RENDERER_KIND as 'native' | 'cosmograph' | 'd3-pixi' | undefined) ?? 'd3-pixi'
 
 export const providerModels: Record<Provider, string[]> = {
   OpenAI: ['gpt-4.1', 'gpt-4o-mini'],
