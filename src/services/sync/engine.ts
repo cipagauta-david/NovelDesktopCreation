@@ -9,12 +9,13 @@ import type {
 import type { SyncEngine, SyncMergeResult, SyncQueueItem } from './types'
 import { uid } from '../../utils/workspace'
 import { mergeTextFromCrdt } from './crdtText'
+import { getSyncStorageAdapter } from '../../platform/syncStorageAdapter'
 
-const SYNC_QUEUE_KEY = 'novel.sync.queue.v2'
-const SYNC_LAST_STATE_KEY = 'novel.sync.last-state.v2'
 const DEFAULT_CONTRACT_VERSION: SyncContractVersion = '2026-03-sync-v2'
 const DEFAULT_MAX_RETRIES = 5
 const BASE_BACKOFF_MS = 1_250
+
+const syncStorage = getSyncStorageAdapter()
 
 type RemoteSyncPayload = {
   contractVersion: SyncContractVersion
@@ -27,33 +28,20 @@ type RemoteSyncResponse = {
   acceptedOperationIds?: string[]
 }
 
-function readQueue(): SyncQueueItem[] {
-  try {
-    const raw = localStorage.getItem(SYNC_QUEUE_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw) as SyncQueueItem[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
+async function readQueue(): Promise<SyncQueueItem[]> {
+  return syncStorage.readQueue()
 }
 
-function writeQueue(queue: SyncQueueItem[]): void {
-  localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue))
+async function writeQueue(queue: SyncQueueItem[]): Promise<void> {
+  await syncStorage.writeQueue(queue)
 }
 
-function readLastState(): PersistedState | null {
-  try {
-    const raw = localStorage.getItem(SYNC_LAST_STATE_KEY)
-    if (!raw) return null
-    return JSON.parse(raw) as PersistedState
-  } catch {
-    return null
-  }
+async function readLastState(): Promise<PersistedState | null> {
+  return syncStorage.readLastState()
 }
 
-function writeLastState(state: PersistedState): void {
-  localStorage.setItem(SYNC_LAST_STATE_KEY, JSON.stringify(state))
+async function writeLastState(state: PersistedState): Promise<void> {
+  await syncStorage.writeLastState(state)
 }
 
 function shouldAttempt(item: SyncQueueItem): boolean {
@@ -411,8 +399,9 @@ export function mergePersistedStates(localState: PersistedState, remoteState: Pe
 export function createSyncEngine(): SyncEngine {
   return {
     async enqueueStateFromChange(state: PersistedState, change: ChangeEvent) {
-      const queue = readQueue()
-      const previous = readLastState()
+      await syncStorage.init()
+      const queue = await readQueue()
+      const previous = await readLastState()
       const operations = deriveSyncOperations(previous, state, change)
       const nowIso = new Date().toISOString()
 
@@ -428,20 +417,23 @@ export function createSyncEngine(): SyncEngine {
         })
       }
 
-      writeQueue(queue)
-      writeLastState(state)
+      await writeQueue(queue)
+      await writeLastState(state)
     },
 
     async peekQueue() {
+      await syncStorage.init()
       return readQueue()
     },
 
     async clearQueue() {
-      writeQueue([])
+      await syncStorage.init()
+      await writeQueue([])
     },
 
     async flushRemoteQueue(params) {
-      const queue = readQueue()
+      await syncStorage.init()
+      const queue = await readQueue()
       if (queue.length === 0) {
         return { pushed: 0, conflictsResolved: 0, retries: 0, poisoned: 0 }
       }
@@ -472,7 +464,7 @@ export function createSyncEngine(): SyncEngine {
           })
 
           if (remote.state) {
-            const localSnapshot = readLastState() ?? remote.state
+            const localSnapshot = (await readLastState()) ?? remote.state
             const merged = mergePersistedStates(localSnapshot, remote.state)
             conflictsResolved += merged.conflictsResolved
           }
@@ -503,7 +495,7 @@ export function createSyncEngine(): SyncEngine {
         }
       }
 
-      writeQueue(nextQueue)
+      await writeQueue(nextQueue)
       return { pushed, conflictsResolved, retries, poisoned, lastError }
     },
 

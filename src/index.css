@@ -874,6 +874,9 @@ label {
   gap: 1rem;
   min-height: 0;
   height: 100%;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+  overscroll-behavior: contain;
 }
 
 .left-panel-upper {
@@ -1936,6 +1939,9 @@ label {
   right: 0;
   top: calc(100% + 0.45rem);
   min-width: 220px;
+  max-width: min(320px, calc(100vw - 16px));
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
   display: grid;
   gap: 0.3rem;
   padding: 0.45rem;
@@ -1943,6 +1949,13 @@ label {
   background: rgba(10, 16, 28, 0.98);
   border: 1px solid rgba(148, 163, 184, 0.18);
   z-index: 20;
+}
+
+.action-menu-popover-floating {
+  position: fixed;
+  right: auto;
+  top: 0;
+  z-index: 120;
 }
 
 .menu-item {
@@ -3340,6 +3353,126 @@ label,
 .main-column.is-spectral {
   opacity: 0.65;
   transition: opacity var(--motion-fast), transform var(--motion-fast);
+}
+
+:root:not(.dark) .app-shell.is-spectral .workspace-header-shell,
+:root:not(.dark) .app-shell.is-spectral .ghosting-panel,
+:root:not(.dark) .main-column.is-spectral {
+  opacity: 1;
+}
+
+:root:not(.dark) .ghosting-panel {
+  opacity: 1;
+  filter: none;
+}
+
+:root:not(.dark) .left-workspace-panel,
+:root:not(.dark) .inspector-column {
+  background: color-mix(in srgb, var(--surface-glass) 96%, white 4%);
+  border-color: color-mix(in srgb, var(--text-body) 14%, transparent);
+}
+
+:root:not(.dark) .sidebar-identity strong,
+:root:not(.dark) .project-switcher-summary strong,
+:root:not(.dark) .workspace-project-meta strong,
+:root:not(.dark) .meta-summary-item strong,
+:root:not(.dark) .metric-card strong,
+:root:not(.dark) .command-palette-empty strong {
+  color: var(--text-heading);
+}
+
+:root:not(.dark) .sidebar-identity small,
+:root:not(.dark) .project-switcher-summary span,
+:root:not(.dark) .tab-tree-copy small,
+:root:not(.dark) .template-card small,
+:root:not(.dark) .section-meta,
+:root:not(.dark) .metric-card span,
+:root:not(.dark) .metric-card small {
+  color: var(--text-muted);
+}
+
+:root:not(.dark) .list-card,
+:root:not(.dark) .search-result,
+:root:not(.dark) .tab-tree-item,
+:root:not(.dark) .template-card,
+:root:not(.dark) .history-item,
+:root:not(.dark) .reference-card-mini,
+:root:not(.dark) .meta-summary-item,
+:root:not(.dark) .metric-card {
+  background: color-mix(in srgb, var(--text-body) 4%, white);
+  border: 1px solid color-mix(in srgb, var(--text-body) 10%, transparent);
+}
+
+:root:not(.dark) .list-card span,
+:root:not(.dark) .search-result span,
+:root:not(.dark) .history-item p,
+:root:not(.dark) .reference-card-mini p {
+  color: var(--text-body);
+}
+
+:root[data-theme='light'] .ghosting-panel,
+:root:not(.dark) .ghosting-panel {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+:root[data-theme='light'] .app-shell.is-spectral .workspace-header-shell,
+:root[data-theme='light'] .app-shell.is-spectral .ghosting-panel,
+:root[data-theme='light'] .main-column.is-spectral,
+:root:not(.dark) .app-shell.is-spectral .workspace-header-shell,
+:root:not(.dark) .app-shell.is-spectral .ghosting-panel,
+:root:not(.dark) .main-column.is-spectral {
+  opacity: 1 !important;
+}
+
+:root[data-theme='light'] .workspace-header {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+}
+
+:root[data-theme='light'] .left-workspace-panel,
+:root[data-theme='light'] .inspector-column {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.14);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+:root[data-theme='light'] .list-card,
+:root[data-theme='light'] .search-result,
+:root[data-theme='light'] .tab-tree-item,
+:root[data-theme='light'] .template-card,
+:root[data-theme='light'] .history-item,
+:root[data-theme='light'] .reference-card-mini,
+:root[data-theme='light'] .meta-summary-item,
+:root[data-theme='light'] .metric-card {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+:root[data-theme='light'] .sidebar-identity strong,
+:root[data-theme='light'] .project-switcher-summary strong,
+:root[data-theme='light'] .workspace-project-meta strong,
+:root[data-theme='light'] .meta-summary-item strong,
+:root[data-theme='light'] .metric-card strong,
+:root[data-theme='light'] .tab-tree-copy strong,
+:root[data-theme='light'] .list-card strong,
+:root[data-theme='light'] .search-result strong {
+  color: #0f172a;
+}
+
+:root[data-theme='light'] .sidebar-identity small,
+:root[data-theme='light'] .project-switcher-summary span,
+:root[data-theme='light'] .tab-tree-copy small,
+:root[data-theme='light'] .template-card small,
+:root[data-theme='light'] .section-meta,
+:root[data-theme='light'] .metric-card span,
+:root[data-theme='light'] .metric-card small,
+:root[data-theme='light'] .list-card span,
+:root[data-theme='light'] .search-result span,
+:root[data-theme='light'] .history-item p,
+:root[data-theme='light'] .reference-card-mini p {
+  color: #475569;
 }
 
 @media (max-width: 1200px) {

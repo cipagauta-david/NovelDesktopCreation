@@ -26,6 +26,7 @@ import {
 import { useSyncManagement } from './workspace/useSyncManagement'
 import { createPluginManager } from '../services/plugins/manager'
 import { getDefaultPersistedState } from '../data/seed/project'
+import { clearSyncStoragePersistence } from '../platform/syncStorageAdapter'
 
 const defaultPanels: PanelVisibility = { sidebar: true, entities: true, inspector: false }
 
@@ -130,8 +131,7 @@ export function useWorkspace(
 
   const clearWorkspace = useCallback(async () => {
     await worker.resetWorkspace()
-    localStorage.removeItem('novel.sync.queue.v2')
-    localStorage.removeItem('novel.sync.last-state.v2')
+    await clearSyncStoragePersistence()
     setData(getDefaultPersistedState())
     setDraft(null)
     setSearchQuery('')

@@ -4,6 +4,9 @@ import type { AppWorker } from '../../data/worker'
 import { withSpan } from '../../services/tracing'
 import * as Comlink from 'comlink'
 import { createCorrelationId } from '../../services/correlation'
+import { getDesktopSearchAdapter } from '../../platform/desktopSearchAdapter'
+
+const desktopSearch = getDesktopSearchAdapter()
 
 export function useSearchManagement(
   activeProject: Project | undefined,
@@ -34,10 +37,23 @@ export function useSearchManagement(
     
     const timeoutId = setTimeout(() => {
       const correlationId = createCorrelationId('intent-search-query')
-      withSpan('worker.fts_search', {
+      withSpan('workspace.search', {
         queryLength: searchQuery.length,
         correlationId,
-      }, () => worker.ftsSearch(searchQuery, { correlationId, origin: 'search-query' }))
+      }, async () => {
+        if (desktopSearch.runtime === 'desktop') {
+          const sqliteResults = await desktopSearch.ftsSearch({
+            projectId: activeProject.id,
+            query: searchQuery,
+            limit: 12,
+          })
+          if (sqliteResults.length > 0) {
+            return sqliteResults
+          }
+        }
+
+        return worker.ftsSearch(searchQuery, { correlationId, origin: 'search-query' })
+      })
         .then((results) => {
            setSearchResults(results.slice(0, 12))
         })

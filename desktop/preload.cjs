@@ -12,4 +12,15 @@ contextBridge.exposeInMainWorld('__NOVEL_DESKTOP__', {
     loadState: () => ipcRenderer.invoke('novel:state:load'),
     clearState: () => ipcRenderer.invoke('novel:state:clear'),
   },
+  syncStorage: {
+    init: () => ipcRenderer.invoke('novel:sync:init'),
+    readQueue: () => ipcRenderer.invoke('novel:sync:read-queue'),
+    writeQueue: (queue) => ipcRenderer.invoke('novel:sync:write-queue', queue),
+    readLastState: () => ipcRenderer.invoke('novel:sync:read-last-state'),
+    writeLastState: (state) => ipcRenderer.invoke('novel:sync:write-last-state', state),
+    clear: () => ipcRenderer.invoke('novel:sync:clear'),
+  },
+  search: {
+    ftsSearch: (payload) => ipcRenderer.invoke('novel:search:fts', payload),
+  },
 })
