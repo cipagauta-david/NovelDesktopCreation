@@ -1,31 +1,67 @@
-# Arquitectura Técnica Inicial — NovelDesktopCreation (Part 2: Subsistemas de Máquinas)
+# Arquitectura Técnica Inicial — NovelDesktopCreation (Parte 2: Sistemas Core)
 
-## 5. El State y Persistencia (Worker-Driven Transactions)
-### 5.0 Contrato Inter-Procesos (IPC/Worker Bridge)
-La UI despacha un "intent" (ej. `SAVE_FIELD`). La Interfaz sigue fluyendo (optimista), el "Worker" ejecuta sobre las tablas SQL puras e indexa el historial. Toda transacción emite evento silencioso de validación confirmada o empuja estado compensatorio al fallar sin arruinar el flujo general del autor.
+## 5. Estado y persistencia
 
-### 5.1 Fisiología del Local Store
-Seccionado en: Docs JSON/Blob, Índices FTS5 pre-calculados al fondo de memoria sin bloquear las Master Tables, Storage System multimedia, Event-Logger puramente Appending y Vault Crypto para almacenar Secretos del sistema seguro.
+### 5.1 Contrato transaccional
+La UI envía intents al worker (por ejemplo, `CREATE_ENTITY`, `UPDATE_CONTENT`, `SEARCH_QUERY`). El worker ejecuta la transacción, confirma el resultado y publica eventos de sincronización.
 
-## 6. Malla de Información Inversa (FTS Indexado Permanente)
-Índices re-armados en base de tokens, en un loop en background, sobre Títulos, aliases temporales de personajes, body content. Asegura cruce veloz ante inputs como `<Jon>` proveyendo el UUID nativo interno para la macro-búsqueda semántica instantánea. Soporte arquitectónico listado para Embeddings RAG posteriores.
+Resultado esperado por operación:
+- `ack` con payload canónico cuando aplica,
+- `error` estructurado con código, mensaje y contexto recuperable,
+- `event` para actualización de índices y vistas derivadas.
 
-## 7. Hyper-Text References System (`{{` Lexer-Engine)
-1. Al teclear `{{` en la view UI de Prosemirror o bloque un pre-loader rápido intercepta FTS5 del store local y muestra candidatos `[Rey Fuego - ID:192]`.
-2. UI inyecta componente especial Node en DOM, pero serializa string al Save Event como bloque universal portable de texto.
-3. Permuta inmunitaria contra Renombrados que destrocen el "World Lore".
+### 5.2 Estructura mínima del store local
+- datos canónicos de proyecto y entidades,
+- índices de búsqueda,
+- registro append-only de cambios,
+- referencias a assets,
+- almacenamiento protegido de configuración sensible.
 
-## 8. Abstracciones Neurales y AI Control System
-Aislamiento por Drivers: Providers -> Assembler -> Streaming Output Pipeline.
-### 8.1 Las "Directivas de Hierro AI" (UX)
-- `Streaming`: Cada Output generado DEBE bajar Token-by-Token directo inyectado a la interface evitando esperas monolíticas del Request entero HTTP o Socket local.
-- `Botonera Nuclear`: El autor siempre debe visualizar su mando explícito con interrupción condicional de flujo LLM (`AbortController.abort()`). Deteniendo cobros/tiempo-máquina innecesario u outputs envenenados (Rambling AI).
-- Autoridad Delegada Limitada: Una pre-visualización Modal (Validation Orchestrator). Nada altera permanentemente la Tabulación General del Universo Lore del BD SQL si el Humano no ha aprobado los efectos mariposa.
+## 6. Sistema de indexación y búsqueda
 
-## 9. Representación Editorial Formal del Lienzo
-El motor base editorial requiere disociación:
-Estado canónico formal (texto plano markdown y custom tags json limpios subyacentes) frente a Proyecciones Elegantes de Interfaz enriquecida de muy alta calidad.
-Fuentes, paddings (`clamp()`), y ritmos y lecturas tipográficas de formato libro deben permear permanentemente las decisiones del bloque de desarrollo front.
+### 6.1 Cobertura de indexación
+Campos iniciales:
+- título,
+- aliases,
+- contenido principal,
+- etiquetas/metadatos relevantes.
 
-## 10. Sistema Media Storage / Binarios Nativos
-Los buffers y referenciación local Blob file asumen la forma de Assets In-App directos; reduciendo las conversiones en línea y previniendo pérdidas al copiar el Proyecto entero USB-File localmente de host a host operativamente fluido.
+### 6.2 Reglas operativas
+- indexación incremental en background,
+- consultas no bloqueantes para UI,
+- invalidación controlada tras cambios de contenido,
+- diseño extensible para incorporación futura de embeddings.
+
+## 7. Sistema de referencias `{{}}`
+
+### 7.1 Flujo funcional
+1. El editor detecta trigger `{{`.
+2. Solicita sugerencias al índice local.
+3. Inserta referencia con etiqueta visible + identificador estable.
+4. En navegación, resuelve por ID y no por texto visible.
+
+### 7.2 Garantías
+- estabilidad ante renombrado de entidades,
+- serialización portable,
+- degradación controlada si el destino no existe.
+
+## 8. Sistema de IA y control de ejecución
+
+### 8.1 Arquitectura por capas
+`Provider Adapter` → `Prompt Assembler` → `Streaming Pipeline` → `UI Renderer`.
+
+### 8.2 Reglas obligatorias
+- salida incremental token a token,
+- cancelación explícita mediante controlador de aborto,
+- timeout y manejo de errores normalizados por proveedor,
+- aprobación humana para aplicar cambios persistentes sugeridos por IA.
+
+## 9. Modelo editorial canónico
+- representación canónica serializable y estable,
+- proyección de UI rica desacoplada del formato persistido,
+- compatibilidad con transformaciones futuras sin romper datos históricos.
+
+## 10. Sistema de assets
+- importación local de binarios por entidad,
+- trazabilidad de ruta/identificador dentro del proyecto,
+- políticas de copia/exportación para mantener portabilidad del workspace.

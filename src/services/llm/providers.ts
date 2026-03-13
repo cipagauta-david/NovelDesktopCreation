@@ -1,45 +1,18 @@
-import { fetchEventSource } from '@microsoft/fetch-event-source'
-
 import type { Provider } from '../../types/workspace'
 import { LlmError, classifyFetchError } from '../llmErrors'
 import { buildUserPrompt, SYSTEM_PROMPT } from './prompt'
+import {
+  AnthropicContentBlockDeltaSchema,
+  GeminiResponseSchema,
+  OllamaResponseSchema,
+  OpenAiStreamChunkSchema,
+  parseWithContract,
+} from './schemas'
+import { consumeSseStream } from './streamParser'
 import { buildTrace } from './trace'
 import type { LlmRequestInput, StreamCallbacks } from './types'
 
-const MAX_ERROR_DETAIL_LENGTH = 240
 const ANTHROPIC_MAX_TOKENS = 700
-
-function extractTextFromPayload(payload: unknown): string {
-  if (!payload || typeof payload !== 'object') return ''
-  const candidate = payload as Record<string, unknown>
-
-  const openAiLike = candidate.choices
-  if (Array.isArray(openAiLike) && openAiLike.length > 0) {
-    const choice = openAiLike[0] as Record<string, unknown>
-    const message = choice.message as Record<string, unknown> | undefined
-    if (message && typeof message.content === 'string') return message.content
-  }
-
-  const anthropicContent = candidate.content
-  if (Array.isArray(anthropicContent) && anthropicContent.length > 0) {
-    const first = anthropicContent[0] as Record<string, unknown>
-    if (typeof first.text === 'string') return first.text
-  }
-
-  const geminiCandidates = candidate.candidates
-  if (Array.isArray(geminiCandidates) && geminiCandidates.length > 0) {
-    const first = geminiCandidates[0] as Record<string, unknown>
-    const content = first.content as Record<string, unknown> | undefined
-    const parts = content?.parts as Array<Record<string, unknown>> | undefined
-    const text = parts?.find((part) => typeof part.text === 'string')?.text
-    if (typeof text === 'string') return text
-  }
-
-  const ollamaResponse = candidate.response
-  if (typeof ollamaResponse === 'string') return ollamaResponse
-
-  return ''
-}
 
 async function safeFetch(url: string, init: RequestInit, provider: Provider): Promise<unknown> {
   const response = await fetch(url, init)
@@ -47,7 +20,7 @@ async function safeFetch(url: string, init: RequestInit, provider: Provider): Pr
     const detail = await response.text().catch(() => '')
     throw new LlmError({
       provider,
-      message: `LLM ${response.status}: ${detail.slice(0, MAX_ERROR_DETAIL_LENGTH)}`,
+      message: `LLM ${response.status}: ${detail.slice(0, 240)}`,
       httpStatus: response.status,
     })
   }
@@ -65,35 +38,61 @@ async function streamOpenAiCompatible(
   input: LlmRequestInput,
 ): Promise<void> {
   let fullText = ''
+  let streamDone = false
 
-  await fetchEventSource(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headers },
-    body: JSON.stringify({ ...body, stream: true }),
-    signal,
-    onmessage(event) {
-      if (event.data === '[DONE]') return
-      try {
-        const parsed = JSON.parse(event.data)
-        const delta = parsed?.choices?.[0]?.delta?.content ?? ''
+  try {
+    await consumeSseStream({
+      url,
+      init: {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({ ...body, stream: true }),
+      },
+      provider,
+      signal,
+      onMessage(event) {
+        if (event.data === '[DONE]') {
+          streamDone = true
+          return true
+        }
+
+        let parsedPayload: unknown
+        try {
+          parsedPayload = JSON.parse(event.data)
+        } catch {
+          throw new LlmError({
+            provider,
+            message: 'Chunk JSON inválido en stream OpenAI-compatible.',
+            category: 'contract',
+            retryable: false,
+          })
+        }
+
+        const parsed = parseWithContract(OpenAiStreamChunkSchema, parsedPayload, {
+          provider,
+          contract: 'openai-stream-chunk',
+          message: 'Chunk SSE inválido para OpenAI/OpenRouter',
+        })
+
+        const delta = parsed.choices[0]?.delta?.content ?? ''
         if (delta) {
           fullText += delta
           callbacks.onToken(delta)
         }
-      } catch {
-        void 0
-      }
-    },
-    onclose() {
-      const duration = Date.now() - startTime
-      callbacks.onDone(fullText)
-      callbacks.onTrace(buildTrace(input, provider, fullText, duration, 'ok'))
-    },
-    onerror(err) {
-      throw classifyFetchError(err, provider)
-    },
-    openWhenHidden: true,
-  })
+        return false
+      },
+    })
+  } catch (error) {
+    throw classifyFetchError(error, provider)
+  }
+
+  if (!streamDone && signal.aborted) {
+    throw classifyFetchError(new DOMException('Request cancelled', 'AbortError'), provider)
+  }
+
+  const duration = Date.now() - startTime
+  callbacks.onDone(fullText)
+  callbacks.onTrace(buildTrace(input, provider, fullText, duration, 'ok'))
 }
 
 async function streamAnthropic(
@@ -104,46 +103,76 @@ async function streamAnthropic(
 ): Promise<void> {
   let fullText = ''
   const provider: Provider = 'Anthropic'
+  let streamDone = false
 
-  await fetchEventSource('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': input.apiKey!,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: input.model,
-      max_tokens: ANTHROPIC_MAX_TOKENS,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: buildUserPrompt(input) }],
-      stream: true,
-    }),
-    signal,
-    onmessage(event) {
-      if (event.event === 'content_block_delta') {
-        try {
-          const parsed = JSON.parse(event.data)
-          const text = parsed?.delta?.text ?? ''
-          if (text) {
-            fullText += text
-            callbacks.onToken(text)
-          }
-        } catch {
-          void 0
+  try {
+    await consumeSseStream({
+      url: 'https://api.anthropic.com/v1/messages',
+      init: {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': input.apiKey!,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: input.model,
+          max_tokens: ANTHROPIC_MAX_TOKENS,
+          system: SYSTEM_PROMPT,
+          messages: [{ role: 'user', content: buildUserPrompt(input) }],
+          stream: true,
+        }),
+      },
+      provider,
+      signal,
+      onMessage(event) {
+        if (event.event === 'message_stop' || event.data === '[DONE]') {
+          streamDone = true
+          return true
         }
-      }
-    },
-    onclose() {
-      const duration = Date.now() - startTime
-      callbacks.onDone(fullText)
-      callbacks.onTrace(buildTrace(input, provider, fullText, duration, 'ok'))
-    },
-    onerror(err) {
-      throw classifyFetchError(err, provider)
-    },
-    openWhenHidden: true,
-  })
+
+        if (event.event !== 'content_block_delta') {
+          return false
+        }
+
+        let parsedPayload: unknown
+        try {
+          parsedPayload = JSON.parse(event.data)
+        } catch {
+          throw new LlmError({
+            provider,
+            message: 'Chunk JSON inválido en stream Anthropic.',
+            category: 'contract',
+            retryable: false,
+          })
+        }
+
+        const parsed = parseWithContract(AnthropicContentBlockDeltaSchema, parsedPayload, {
+          provider,
+          contract: 'anthropic-content-delta',
+          message: 'Chunk SSE inválido para Anthropic',
+        })
+
+        const text = parsed.delta?.text ?? ''
+        if (text) {
+          fullText += text
+          callbacks.onToken(text)
+        }
+
+        return false
+      },
+    })
+  } catch (error) {
+    throw classifyFetchError(error, provider)
+  }
+
+  if (!streamDone && signal.aborted) {
+    throw classifyFetchError(new DOMException('Request cancelled', 'AbortError'), provider)
+  }
+
+  const duration = Date.now() - startTime
+  callbacks.onDone(fullText)
+  callbacks.onTrace(buildTrace(input, provider, fullText, duration, 'ok'))
 }
 
 async function fetchNonStreaming(
@@ -184,7 +213,25 @@ async function fetchNonStreaming(
   }
 
   const payload = await safeFetch(url, init, provider)
-  const text = extractTextFromPayload(payload)
+  let text = ''
+
+  if (provider === 'Local/Ollama') {
+    text = parseWithContract(OllamaResponseSchema, payload, {
+      provider,
+      contract: 'ollama-generate-response',
+      message: 'Payload inválido de Ollama',
+    }).response
+  }
+
+  if (provider === 'Google Gemini') {
+    const parsed = parseWithContract(GeminiResponseSchema, payload, {
+      provider,
+      contract: 'gemini-generate-response',
+      message: 'Payload inválido de Gemini',
+    })
+    text = parsed.candidates?.[0]?.content?.parts?.find((part) => typeof part.text === 'string')?.text ?? ''
+  }
+
   const duration = Date.now() - startTime
   callbacks.onToken(text)
   callbacks.onDone(text)

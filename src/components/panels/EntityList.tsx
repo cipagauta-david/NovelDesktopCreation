@@ -1,4 +1,5 @@
-import { memo, useState, useCallback } from 'react'
+import { memo, useState, useCallback, useRef } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   DndContext,
   closestCenter,
@@ -95,6 +96,7 @@ export const EntityList = memo(function EntityList({
   onReorderEntities,
 }: EntityListProps) {
   const [showComposer, setShowComposer] = useState(false)
+  const parentRef = useRef<HTMLDivElement | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -113,6 +115,13 @@ export const EntityList = memo(function EntityList({
     },
     [entities, onReorderEntities],
   )
+
+  const rowVirtualizer = useVirtualizer({
+    count: entities.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 86,
+    overscan: 8,
+  })
 
   return (
     <aside className="entity-column">
@@ -150,15 +159,34 @@ export const EntityList = memo(function EntityList({
           {entities.length > 0 ? (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={entities.map((e) => e.id)} strategy={verticalListSortingStrategy}>
-                <div className="entity-list entity-list-scrollable">
-                  {entities.map((entity) => (
-                    <SortableEntityCard
-                      key={entity.id}
-                      entity={entity}
-                      isActive={entity.id === activeEntityId}
-                      onSelect={() => onSelectEntity(entity.id, entity.tabId)}
-                    />
-                  ))}
+                <div ref={parentRef} className="entity-list entity-list-scrollable">
+                  <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
+                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                      const entity = entities[virtualRow.index]
+                      if (!entity) {
+                        return null
+                      }
+
+                      return (
+                        <div
+                          key={entity.id}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            transform: `translateY(${virtualRow.start}px)`,
+                          }}
+                        >
+                          <SortableEntityCard
+                            entity={entity}
+                            isActive={entity.id === activeEntityId}
+                            onSelect={() => onSelectEntity(entity.id, entity.tabId)}
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               </SortableContext>
             </DndContext>

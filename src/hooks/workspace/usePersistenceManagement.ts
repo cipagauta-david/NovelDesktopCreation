@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { draftPayload, draftFromEntity, createHistoryEvent, isoNow } from '../../utils/workspace'
 import type { DraftState, EntityRecord, PersistedState, Project } from '../../types/workspace'
 import type { AppWorker } from '../../data/worker'
+import { addBreadcrumb } from '../../services/observability'
+import { withSpan } from '../../services/tracing'
 import * as Comlink from 'comlink'
 
 export function usePersistenceManagement(
@@ -68,7 +70,16 @@ export function usePersistenceManagement(
         }
 
         // Fire & Forget to worker (Off-main-thread write)
-        worker.persistState(nextState).catch(console.error)
+        addBreadcrumb('Autosave persistido en worker', 'workspace.save', {
+          projectId: activeProject.id,
+          entityId: activeEntity.id,
+        })
+        withSpan('worker.persist_state', {
+          projectId: activeProject.id,
+          entityId: activeEntity.id,
+        }, async () => {
+          await worker.persistState(nextState)
+        }).catch(console.error)
 
         return nextState
       })

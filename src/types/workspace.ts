@@ -170,6 +170,7 @@ export type LlmErrorCategory =
   | 'network'
   | 'server'
   | 'timeout'
+  | 'contract'
   | 'cancelled'
   | 'unknown'
 

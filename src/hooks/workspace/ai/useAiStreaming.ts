@@ -1,4 +1,5 @@
 import { useCallback, useRef } from 'react'
+import type { Dispatch, SetStateAction } from 'react'
 
 import type {
   AiProposal,
@@ -11,6 +12,7 @@ import type {
 import { requestLlmStreaming } from '../../../services/llm/request'
 import type { LlmRequestInput } from '../../../services/llm/types'
 import { LlmError } from '../../../services/llmErrors'
+import { addBreadcrumb, captureException } from '../../../services/observability'
 import { buildFallbackProposal } from './proposalFactory'
 
 type UseAiStreamingArgs = {
@@ -21,11 +23,11 @@ type UseAiStreamingArgs = {
   setStreamStatus: (status: LlmStreamStatus) => void
   setStreamingText: (value: string) => void
   setPendingProposal: (proposal: AiProposal | null) => void
-  setLlmTraces: React.Dispatch<React.SetStateAction<LlmTraceEntry[]>>
+  setLlmTraces: Dispatch<SetStateAction<LlmTraceEntry[]>>
   setToast: (msg: string) => void
 }
 
-export function useAiStreaming({
+function useAiStreaming({
   activeTab,
   activeEntity,
   settings,
@@ -54,6 +56,7 @@ export function useAiStreaming({
 
   const stopGeneration = useCallback(() => {
     if (abortControllerRef.current) {
+      addBreadcrumb('Abort de streaming solicitado por usuario', 'llm.abort')
       abortControllerRef.current.abort()
       abortControllerRef.current = null
     }
@@ -101,6 +104,10 @@ export function useAiStreaming({
     }
 
     let accumulatedText = ''
+    addBreadcrumb('Inicio de streaming IA', 'llm.stream.start', {
+      provider: settings.provider,
+      model: settings.model,
+    })
 
     try {
       await requestLlmStreaming(input, controller.signal, {
@@ -132,6 +139,10 @@ export function useAiStreaming({
             summary: `Propuesta generada con ${settings.provider} (streaming). Revisa antes de aplicar.`,
             contentAppend: `\n\n## Sugerencia IA\n${fullText.trim()}`,
           })
+          addBreadcrumb('Streaming IA completado', 'llm.stream.done', {
+            provider: settings.provider,
+            chars: fullText.length,
+          })
           setStreamStatus('done')
           setToast('Propuesta IA generada con streaming. Revisa y confirma.')
         },
@@ -160,6 +171,11 @@ export function useAiStreaming({
           }
 
           const userMsg = error instanceof LlmError ? error.userMessage : 'Error inesperado con IA.'
+          captureException(error, {
+            provider: settings.provider,
+            model: settings.model,
+            phase: 'streaming-onError',
+          })
           setToast(userMsg)
           setStreamStatus('error')
         },
@@ -175,6 +191,11 @@ export function useAiStreaming({
       if (fallback) {
         setPendingProposal(fallback)
       }
+      captureException(new Error('Error inesperado en generateAiProposal'), {
+        provider: settings.provider,
+        model: settings.model,
+        phase: 'streaming-catch',
+      })
       setToast('Error inesperado. Se mantiene propuesta local.')
       setStreamStatus('error')
     }
@@ -185,3 +206,6 @@ export function useAiStreaming({
     stopGeneration,
   }
 }
+
+export { useAiStreaming }
+export default useAiStreaming

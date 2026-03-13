@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { Project, SearchResult } from '../../types/workspace'
 import type { AppWorker } from '../../data/worker'
+import { withSpan } from '../../services/tracing'
 import * as Comlink from 'comlink'
 
 export function useSearchManagement(
@@ -14,7 +15,9 @@ export function useSearchManagement(
   useEffect(() => {
     if (!activeProject || !worker) return
     const activeEntities = activeProject.entities.filter((e) => e.status === 'active')
-    worker.ftsIndex(activeEntities).catch(console.error)
+    withSpan('worker.fts_index', { entities: activeEntities.length }, async () => {
+      await worker.ftsIndex(activeEntities)
+    }).catch(console.error)
   }, [activeProject, activeProject?.entities.length, worker])
 
   // Off-main-thread FTS search (índice invertido BM25)
@@ -25,7 +28,7 @@ export function useSearchManagement(
     }
     
     const timeoutId = setTimeout(() => {
-      worker.ftsSearch(searchQuery)
+      withSpan('worker.fts_search', { queryLength: searchQuery.length }, () => worker.ftsSearch(searchQuery))
         .then((results) => {
            setSearchResults(results.slice(0, 12))
         })

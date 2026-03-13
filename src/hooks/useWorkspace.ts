@@ -82,7 +82,10 @@ export function useWorkspace(
   const suggestionOptions = useMemo(() => {
     if (!referenceSuggestion || !activeProject) return []
     const qs = referenceSuggestion.query.trim().toLowerCase()
-    return activeProject.entities.filter((e) => e.status === 'active').filter((e) => !qs ? true : e.title.toLowerCase().includes(qs) || e.aliases.some((a) => a.toLowerCase().includes(qs))).slice(0, 6)
+    return activeProject.entities
+      .filter((e) => e.status === 'active')
+      .filter((e) => !qs ? true : e.title.toLowerCase().includes(qs) || e.aliases.some((a) => a.toLowerCase().includes(qs)))
+      .slice(0, 80)
   }, [activeProject, referenceSuggestion])
 
   useEffect(() => {

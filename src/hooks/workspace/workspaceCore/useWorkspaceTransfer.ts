@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 
 import type { Dispatch, SetStateAction } from 'react'
 import type { PersistedState, Project } from '../../../types/workspace'
+import { addBreadcrumb } from '../../../services/observability'
 import { downloadProjectAsJson } from '../../../utils/exportImport/exportProject'
 import { promptFileImport } from '../../../utils/exportImport/importProject'
 
@@ -14,6 +15,7 @@ type UseWorkspaceTransferArgs = {
 export function useWorkspaceTransfer({ activeProject, setData, setToast }: UseWorkspaceTransferArgs) {
   const exportActiveProject = useCallback(() => {
     if (!activeProject) return
+    addBreadcrumb('Export de proyecto', 'workspace.export', { projectId: activeProject.id })
     downloadProjectAsJson(activeProject)
     setToast(`Proyecto "${activeProject.name}" exportado.`)
   }, [activeProject, setToast])
@@ -33,6 +35,7 @@ export function useWorkspaceTransfer({ activeProject, setData, setToast }: UseWo
       activeTabId: result.project.tabs[0]?.id ?? '',
       activeEntityId: result.project.entities[0]?.id ?? '',
     }))
+    addBreadcrumb('Import de proyecto', 'workspace.import', { projectId: result.project.id })
     setToast(`Proyecto "${result.project.name}" importado correctamente.`)
   }, [setData, setToast])
 

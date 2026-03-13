@@ -53,6 +53,8 @@ function buildUserMessage(category: LlmErrorCategory, provider: Provider): strin
       return `Error en el servidor de ${provider}. Reintentando…`
     case 'timeout':
       return `La solicitud a ${provider} expiró. Reintentando…`
+    case 'contract':
+      return `Respuesta inválida de ${provider}. Se ignoró por seguridad de contrato.`
     case 'cancelled':
       return 'Solicitud cancelada por el usuario.'
     default:

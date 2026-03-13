@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import type { SearchResult } from '../../types/workspace'
 
 interface CommandPaletteProps {
@@ -11,6 +12,13 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ searchQuery, searchResults, onSearchChange, onSelectResult, onClose }: CommandPaletteProps) {
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const resultsRef = useRef<HTMLDivElement | null>(null)
+  const rowVirtualizer = useVirtualizer({
+    count: searchResults.length,
+    getScrollElement: () => resultsRef.current,
+    estimateSize: () => 92,
+    overscan: 6,
+  })
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => inputRef.current?.focus())
@@ -42,14 +50,35 @@ export function CommandPalette({ searchQuery, searchResults, onSearchChange, onS
         <div className="command-palette-body">
           {searchQuery.trim() ? (
             searchResults.length > 0 ? (
-              <div className="command-palette-results">
-                {searchResults.map((r) => (
-                  <button key={r.entityId} type="button" className="search-result command-result" onClick={() => onSelectResult(r.entityId, r.tabId)}>
-                    <strong>{r.title}</strong>
-                    <span>{r.snippet}</span>
-                    <small>Abrir entidad</small>
-                  </button>
-                ))}
+              <div ref={resultsRef} className="command-palette-results" style={{ overflowY: 'auto', maxHeight: 420 }}>
+                <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
+                  {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const result = searchResults[virtualRow.index]
+                    if (!result) {
+                      return null
+                    }
+
+                    return (
+                      <button
+                        key={result.entityId}
+                        type="button"
+                        className="search-result command-result"
+                        onClick={() => onSelectResult(result.entityId, result.tabId)}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                      >
+                        <strong>{result.title}</strong>
+                        <span>{result.snippet}</span>
+                        <small>Abrir entidad</small>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             ) : <div className="search-results-empty">No encontramos coincidencias.</div>
           ) : (

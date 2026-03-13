@@ -1,5 +1,12 @@
 import * as Comlink from 'comlink'
 import type { EntityRecord, PersistedState } from '../types/workspace'
+import { withSpan } from '../services/tracing'
+import {
+  EntityRecordSchema,
+  FtsSearchResultSchema,
+  PersistedStateSchema,
+  parseWithContract,
+} from '../services/llm/schemas'
 import { SearchIndex } from './search/SearchIndex'
 import type { FtsSearchResult } from './search/types'
 
@@ -54,6 +61,12 @@ function openDatabase(): Promise<IDBDatabase> {
 }
 
 async function saveStateToIndexedDb(state: PersistedState): Promise<void> {
+  parseWithContract(PersistedStateSchema, state, {
+    provider: 'Local/Ollama',
+    contract: 'ipc-worker-persist-state',
+    message: 'PersistedState inválido al persistir',
+  })
+
   const db = await openDatabase()
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STATE_STORE, 'readwrite')
@@ -84,7 +97,14 @@ async function loadStateFromIndexedDb(): Promise<PersistedState | null> {
     }
   })
   db.close()
-  return result
+  if (!result) {
+    return null
+  }
+  return parseWithContract(PersistedStateSchema, result, {
+    provider: 'Local/Ollama',
+    contract: 'ipc-worker-load-state',
+    message: 'PersistedState inválido al cargar',
+  })
 }
 
 const workerObj: AppWorker = {
@@ -112,21 +132,28 @@ const workerObj: AppWorker = {
   },
 
   async persistState(state: PersistedState): Promise<void> {
-    // Actualizar índice FTS con las entidades del estado
-    const allEntities = state.projects.flatMap((p) => p.entities)
-    searchIndex.buildFromEntities(allEntities)
+    await withSpan('worker.persist_state', { projects: state.projects.length }, async () => {
+      const validatedState = parseWithContract(PersistedStateSchema, state, {
+        provider: 'Local/Ollama',
+        contract: 'ipc-worker-persist-state',
+        message: 'PersistedState inválido recibido por worker',
+      })
 
-    if (typeof indexedDB === 'undefined') {
-      fallbackState = state
-      return
-    }
+      const allEntities = validatedState.projects.flatMap((p) => p.entities)
+      searchIndex.buildFromEntities(allEntities)
 
-    try {
-      await saveStateToIndexedDb(state)
-    } catch (error) {
-      console.error('[Worker] Fallo guardando en IndexedDB, persistiendo en memoria', error)
-      fallbackState = state
-    }
+      if (typeof indexedDB === 'undefined') {
+        fallbackState = validatedState
+        return
+      }
+
+      try {
+        await saveStateToIndexedDb(validatedState)
+      } catch (error) {
+        console.error('[Worker] Fallo guardando en IndexedDB, persistiendo en memoria', error)
+        fallbackState = validatedState
+      }
+    })
   },
 
   async loadState(): Promise<PersistedState | null> {
@@ -145,29 +172,56 @@ const workerObj: AppWorker = {
 
   // Mantener compatibilidad con el API original (filtro lineal)
   async searchEntities(query: string, entities: EntityRecord[]): Promise<EntityRecord[]> {
-    const normalized = query.trim().toLowerCase()
-    if (!normalized) return []
+    return withSpan('worker.search_entities', { queryLength: query.length }, async () => {
+      const normalized = query.trim().toLowerCase()
+      if (!normalized) return []
 
-    return entities.filter((e) =>
-      e.title.toLowerCase().includes(normalized) ||
-      e.aliases.some((alias: string) => alias.toLowerCase().includes(normalized)) ||
-      e.content.toLowerCase().includes(normalized)
-    )
+      const validatedEntities = entities.map((entity) => parseWithContract(EntityRecordSchema, entity, {
+        provider: 'Local/Ollama',
+        contract: 'ipc-worker-search-entities',
+        message: 'Entidad inválida en búsqueda worker',
+      }))
+
+      return validatedEntities.filter((e) =>
+        e.title.toLowerCase().includes(normalized) ||
+        e.aliases.some((alias: string) => alias.toLowerCase().includes(normalized)) ||
+        e.content.toLowerCase().includes(normalized)
+      )
+    })
   },
 
   // ── FTS5 Index API ──────────────────────────────────
 
   async ftsIndex(entities: EntityRecord[]): Promise<number> {
-    searchIndex.buildFromEntities(entities)
-    return searchIndex.indexedCount
+    return withSpan('worker.fts_index', { entities: entities.length }, async () => {
+      const validatedEntities = entities.map((entity) => parseWithContract(EntityRecordSchema, entity, {
+        provider: 'Local/Ollama',
+        contract: 'ipc-worker-fts-index',
+        message: 'Entidad inválida para indexación FTS',
+      }))
+      searchIndex.buildFromEntities(validatedEntities)
+      return searchIndex.indexedCount
+    })
   },
 
   async ftsSearch(query: string): Promise<FtsSearchResult[]> {
-    return searchIndex.search(query)
+    return withSpan('worker.fts_search', { queryLength: query.length }, async () => {
+      const results = searchIndex.search(query)
+      return results.map((result) => parseWithContract(FtsSearchResultSchema, result, {
+        provider: 'Local/Ollama',
+        contract: 'ipc-worker-fts-search',
+        message: 'Resultado FTS inválido',
+      }))
+    })
   },
 
   async ftsUpsert(entity: EntityRecord): Promise<void> {
-    searchIndex.upsertEntity(entity)
+    const validatedEntity = parseWithContract(EntityRecordSchema, entity, {
+      provider: 'Local/Ollama',
+      contract: 'ipc-worker-fts-upsert',
+      message: 'Entidad inválida para upsert FTS',
+    })
+    searchIndex.upsertEntity(validatedEntity)
   },
 
   async ftsRemove(entityId: string): Promise<void> {

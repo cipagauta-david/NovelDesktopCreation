@@ -4,6 +4,9 @@ import '@fontsource-variable/inter/index.css'
 import '@fontsource-variable/crimson-pro/index.css'
 import './index.css'
 import App from './App.tsx'
+import { initObservability } from './services/observability'
+
+initObservability()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

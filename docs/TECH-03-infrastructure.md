@@ -1,26 +1,48 @@
-# Arquitectura Técnica Inicial — NovelDesktopCreation (Part 3: Escalado, Desktop y Riesgos)
+# Arquitectura Técnica Inicial — NovelDesktopCreation (Parte 3: Infraestructura, Desktop y Escalado)
 
-## 11. Arquitectura de Mapeo Gráfico (Graph Cluster view)
-Vista generada vía WebGL / Canvas API ligero para esquivar cuellos de botella del DOM. Los nodos (Entities) y Aristas (Relations) son derivados como Query optimizada cada cierto "debounce timer" evitando sobrecálculos exhaustivos cada segundo del Worker. Disposición física gravitacional basada en Collections centralizando el foco narrativo.
+## 11. Infraestructura de visualización de grafo
+- Render del grafo en tecnología apta para volumen (Canvas/WebGL según implementación).
+- Cálculo de layout desacoplado de la UI cuando el volumen lo requiera.
+- Actualización por lotes/debounce para evitar recomputación continua.
+- Nodo y arista derivados de datos canónicos de entidades y relaciones.
 
-## 12. Estándares y Pasarelas de Desktop (Cross-Platform)
-Preparativos técnicos para migrar al Host Nativo desde Cero:
-- FrontEnd Neutral: Componentes y Storage Drivers actúan puros. Su acceso a Sistema Operativo Host es un contrato opaco que, al detectarse Tauri o OS-electron invocará las APIs FileSystem, pero en modo Web caerán hacia OPFS fallback seguro.
+## 12. Estrategia web-first y desktop-ready
 
-## 13. Escalado Local-First a Cloud-Hybrid (Sincronía)
-El registro puro del sistema en un log inmutable base, "ChangeEvent", asegura compatibilidad nativa teórica subyacente hacia Vectores CRDT (Conflict-free Replicated Data Types); evitando perder o mezclar trágicamente la novela de alguien que mergeo un borrador modificado offline de avión y otra sesión anterior simultánea y opuesta del escritorio.
+### 12.1 Contrato de plataforma
+La aplicación usa un adaptador de plataforma para filesystem, almacenamiento y capacidades nativas. El dominio no depende de APIs de un host específico.
 
-## 14. Ecosistema de Protocolos ("Skills" & Plugins)
-Interfaces públicas acotadas de manipulación DOM local y Queries asíncronas para proveer modding comunitario post-Fase 3: Exportaciones formativas Ebook format C, inyectores de Analítica de tono o correctores Ortográficos Especializados y gramática AI por tab a través del framework estándar del plugin subprocesando Hooks encapsulables (capabilities).
+### 12.2 Modo web
+Fallback a almacenamiento web local compatible con operación offline.
 
-## 15. Seguridad: UI First, no Archivos Planos `.env`
-El Workspace reniega delegar al autor tareas abstractas "Developer". Las Claves privadas OpenAI y Keys Provider operacionales del LLM son introducidos y procesados con las apis y tokens protegidas de encripción simétrica nativas en los settings frontales inmaculados. 
+### 12.3 Modo desktop
+Uso de APIs nativas mediante adaptador equivalente (por ejemplo, runtimes desktop) sin alterar la lógica de negocio.
 
-## 16. Pipeline ARIS: El Bootstrap de Arranque Recomendado a Ingeniería Prioridad Cero
-El orden orgánico cronometrado de creación arquitectural:
-1. **La Venas**: Abstracción y puenteo Asíncrono de Hilos y Worker Storage. Ningún avance visual es válido sin esto asegurado en la infraestructura subyacente. Un State manager optimista es el contrato obligatorio.
-2. **La Piel y Arterias (Tokens Visuales)**: CSS variables tipográficas "Zen / Readable Mode", colores, modos noche, y el motor de editor bloque Prosemirror enriquecido fluido operando de la mano.
-3. **El Cerebro Ciego**: Instanciamiento del Engine FTS / SQLite in-memory o persitido sin errores en la capa del Thread de Background.
+## 13. Ruta de escalado a sincronización futura
+- El registro `ChangeEvent` actúa como base para reconciliación de cambios.
+- El MVP conserva operación local; sincronización remota queda en fases posteriores.
+- Se prioriza estabilidad del modelo de eventos antes de introducir CRDT o replicación.
 
-## 17. Depuración Inicial Integral
-Integrar logs unificados a nivel Worker-Console que permita a debuggers visualizar todo Evento emitido asíncrono AI stream, SQLite transaction, Indexations Fallidos sin mezclarlo con ruido Visual DOM warning system.
+## 14. Extensibilidad (skills/plugins)
+- Definir superficie mínima de extensión post-MVP:
+	- hooks de lectura de proyecto,
+	- exportadores,
+	- analizadores de consistencia.
+- Mantener sandbox de capacidades para evitar acceso no controlado al núcleo de datos.
+
+## 15. Seguridad y gestión de credenciales
+- Configuración de claves y proveedores desde UI.
+- Almacenamiento local protegido para secretos.
+- Nunca exponer credenciales en logs, exports o trazas de error.
+
+## 16. Pipeline recomendado de implementación
+1. **Base asíncrona**: worker, IPC tipado y persistencia local.
+2. **Experiencia de edición**: layout, tokens visuales, editor y navegación por tabs.
+3. **Búsqueda y referencias**: índice local + `{{}}` estable por ID.
+4. **IA controlada**: streaming, cancelación y validación humana de cambios persistentes.
+5. **Grafo e historial**: visualización relacional e inspección de `ChangeEvent`.
+
+## 17. Observabilidad y depuración
+- Trazas separadas por dominio: UI, worker, IA, persistencia, indexación.
+- Correlation ID por intent para seguir flujos end-to-end.
+- Registro de errores recuperables con contexto suficiente para soporte.
+- Métricas mínimas: latencia por operación, tasa de error y estado de indexación.
