@@ -26,7 +26,7 @@ export const baseEditorTheme = EditorView.theme(
       backgroundColor: 'transparent',
       color: 'var(--text-primary)',
       fontFamily: 'var(--font-editor)',
-      fontSize: 'var(--editor-font-size, 1.12rem)',
+      fontSize: 'var(--editor-font-size, 1.05rem)',
       transition: 'color var(--motion-base)',
     },
     '&.cm-focused': {
@@ -35,7 +35,7 @@ export const baseEditorTheme = EditorView.theme(
     '.cm-scroller': {
       overflow: 'auto',
       fontFamily: 'var(--font-editor)',
-      lineHeight: '1.8',
+      lineHeight: '1.7',
     },
     '.cm-content, .cm-gutter': {
       minHeight: '420px',
@@ -70,33 +70,33 @@ export const baseEditorTheme = EditorView.theme(
       fontWeight: '700',
     },
     '.cm-source-heading-1, .cm-live-heading-1': {
-      color: 'var(--text-primary)',
+      color: 'var(--text-heading)',
       fontFamily: 'var(--font-editor)',
-      fontSize: 'clamp(2.1rem, 2.8vw, 2.95rem)',
-      lineHeight: '1.08',
+      fontSize: 'clamp(1.75rem, 1.4rem + 1.8vw, 2.5rem)',
+      lineHeight: '1.2',
       fontWeight: '700',
       letterSpacing: '-0.03em',
     },
     '.cm-source-heading-2, .cm-live-heading-2': {
-      color: 'var(--text-primary)',
+      color: 'var(--text-heading)',
       fontFamily: 'var(--font-editor)',
-      fontSize: 'clamp(1.34rem, 1.8vw, 1.72rem)',
-      lineHeight: '1.2',
+      fontSize: 'clamp(1.3rem, 1.15rem + 0.8vw, 1.75rem)',
+      lineHeight: '1.3',
       fontWeight: '700',
       letterSpacing: '-0.02em',
     },
     '.cm-source-heading-3, .cm-live-heading-3': {
-      color: 'var(--text-primary)',
+      color: 'var(--text-heading)',
       fontFamily: 'var(--font-editor)',
-      fontSize: '1.1rem',
-      lineHeight: '1.28',
+      fontSize: 'clamp(1.1rem, 1rem + 0.3vw, 1.28rem)',
+      lineHeight: '1.35',
       fontWeight: '650',
     },
     '.cm-live-list-item': {
       color: 'var(--text-body)',
     },
     '.cm-live-bullet': {
-      color: 'var(--color-primary)',
+      color: 'var(--color-secondary)',
       paddingRight: '0.12rem',
     },
     '.cm-entity-pill': {

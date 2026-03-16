@@ -1,10 +1,13 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 
 import { ENABLE_INCREMENTAL_GRAPH_HUD, GRAPH_RENDERER_KIND } from '../../data/constants'
+import { useTheme } from '../../hooks/useTheme'
 import type { CollectionTab, GraphModel, GraphNode } from '../../types/workspace'
 import { hexToRgba, resolveCollectionColor } from '../../utils/collectionColors'
 import { resolveGraphRendererAdapter } from './graph/adapters'
 import { D3PixiRenderer } from './graph/adapters/D3PixiRenderer'
+import { GraphFloatingToolbar } from './graph/components/GraphFloatingToolbar'
+import { GraphPanelHeader } from './graph/components/GraphPanelHeader'
 import type { GraphViewSettings } from './graph/contracts'
 import { GraphHud } from './graph/GraphHud'
 import { radialRepulsionLayoutEngine } from './graph/layoutEngine'
@@ -39,6 +42,7 @@ export const GraphPanel = memo(function GraphPanel({
   onUpdateCollectionColor,
   onCreateRelation,
 }: GraphPanelProps) {
+  const { resolvedTheme } = useTheme()
   const svgRef = useRef<SVGSVGElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const graphShellRef = useRef<HTMLDivElement | null>(null)
@@ -402,15 +406,7 @@ export const GraphPanel = memo(function GraphPanel({
 
   return (
     <section className="panel surface-panel graph-panel">
-      <div className="panel-header">
-        <div>
-          <h3>Mapa narrativo</h3>
-          <p>Explora conexiones y arrastra nodos para reorganizar el mapa en tiempo real.</p>
-          {!rendererStatus.ready && (
-            <small className="graph-renderer-status">{rendererStatus.reason}</small>
-          )}
-        </div>
-      </div>
+      <GraphPanelHeader rendererReady={rendererStatus.ready} rendererReason={rendererStatus.reason} />
 
       <div
         className="graph-canvas-shell"
@@ -498,6 +494,7 @@ export const GraphPanel = memo(function GraphPanel({
 
         {useD3PixiRenderer ? (
           <D3PixiRenderer
+            themeMode={resolvedTheme}
             width={graphViewport.width}
             height={graphViewport.height}
             padding={VIEW_PADDING}
@@ -697,25 +694,15 @@ export const GraphPanel = memo(function GraphPanel({
           </svg>
         )}
 
-        <div className="graph-floating-toolbar" role="toolbar" aria-label="Acciones del mapa narrativo">
-          <small>{graphViewModel.renderedNodes.length} nodos</small>
-          {useD3PixiRenderer && (
-            <button
-              type="button"
-              className={orbitAroundCenter ? 'ghost-button compact-button active' : 'ghost-button compact-button'}
-              onClick={() => setOrbitAroundCenter((current) => !current)}
-            >
-              {orbitAroundCenter ? '⏸️ Detener órbita' : '🛰️ Iniciar órbita'}
-            </button>
-          )}
-          <button
-            type="button"
-            className={relationSourceId ? 'ghost-button compact-button active' : 'ghost-button compact-button'}
-            onClick={() => setRelationSourceId((current) => (current ? null : activeEntityId ?? null))}
-          >
-            {relationSourceId ? '✕ Cancelar enlace' : '+ Crear enlace'}
-          </button>
-        </div>
+        <GraphFloatingToolbar
+          nodeCount={graphViewModel.renderedNodes.length}
+          useD3PixiRenderer={useD3PixiRenderer}
+          orbitAroundCenter={orbitAroundCenter}
+          relationSourceId={relationSourceId}
+          activeEntityId={activeEntityId}
+          onToggleOrbit={() => setOrbitAroundCenter((current) => !current)}
+          onToggleRelationMode={(nextSourceId) => setRelationSourceId(nextSourceId)}
+        />
       </div>
     </section>
   )

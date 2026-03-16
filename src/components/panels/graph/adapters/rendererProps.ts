@@ -1,6 +1,8 @@
 import type { GraphEdge, GraphNode } from '../../../../types/workspace'
+import type { GraphThemeMode } from '../palette'
 
 type SharedRendererProps = {
+  themeMode: GraphThemeMode
   nodes: GraphNode[]
   edges: GraphEdge[]
   activeEntityId?: string

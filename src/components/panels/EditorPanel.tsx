@@ -14,7 +14,6 @@ import { EditorView, type ViewUpdate } from '@codemirror/view'
 import CodeMirror from '@uiw/react-codemirror'
 
 import type { DraftState, EntityRecord, EntityTemplate, FieldValue, LlmStreamStatus } from '../../types/workspace'
-import { PanelSection } from '../common/PanelSection'
 import {
   type EntityHoverPayload,
   createGhostTextExtensions,
@@ -23,11 +22,10 @@ import {
 } from '../editor/editorExperience'
 import { baseEditorTheme, editorBasicSetup } from '../editor/editorThemes'
 import { EditorAssets } from '../editor/panel/EditorAssets'
+import { EditorDocumentSection } from '../editor/panel/EditorDocumentSection'
 import { EditorHeader } from '../editor/panel/EditorHeader'
 import { EditorMetadata } from '../editor/panel/EditorMetadata'
 import { EditorProperties } from '../editor/panel/EditorProperties'
-import { EditorSuggestions } from '../editor/panel/EditorSuggestions'
-import { EntityHover } from '../editor/panel/EntityHover'
 import '../../styles/panels/EditorPanel.css';
 
 
@@ -301,73 +299,22 @@ export function EditorPanel({
   )
 
   const documentEditor = (
-    <PanelSection
-      title="Documento"
-      meta="Usa {{}} para enlazar entidades relacionadas"
-    >
-      <div
-        ref={writingLaneRef}
-        className={[
-          zenMode ? 'writing-lane zen-writing-lane' : 'writing-lane',
-          isAiStreaming ? 'ai-streaming' : '',
-          assetDragActive ? 'is-file-dragging' : '',
-        ].filter(Boolean).join(' ')}
-        aria-live="polite"
-        aria-busy={isAiStreaming || undefined}
-        onDragEnter={(event) => {
-          if (!hasValidImageDrag(event)) {
-            return
-          }
-          event.preventDefault()
-          setAssetDragActive(true)
-        }}
-        onDragOver={(event) => {
-          if (!hasValidImageDrag(event)) {
-            return
-          }
-          event.preventDefault()
-          event.dataTransfer.dropEffect = 'copy'
-          if (!assetDragActive) {
-            setAssetDragActive(true)
-          }
-        }}
-        onDragLeave={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget as Node)) {
-            setAssetDragActive(false)
-          }
-        }}
-        onDrop={(event) => {
-          if (!hasValidImageDrag(event)) {
-            return
-          }
-          event.preventDefault()
-          setAssetDragActive(false)
-          void onAttachImages(event.dataTransfer.files)
-        }}
-      >
-        <span className="visually-hidden">
-          {isAiStreaming ? 'La inteligencia artificial está generando contenido.' : 'La generación de inteligencia artificial está detenida.'}
-        </span>
-
-        {editorSurface}
-
-        <EditorSuggestions
-          active={referenceSuggestionActive}
-          options={suggestionOptions}
-          style={suggestionsStyle}
-          onInsertReference={onInsertReference}
-        />
-
-        <EntityHover position={hoveredReference} entity={hoveredEntity} />
-
-        {assetDragActive && (
-          <div className="editor-drop-overlay" aria-live="polite">
-            <strong>Suelta imágenes para anexarlas a la entidad activa</strong>
-            <span>Se agregarán al panel de assets de esta entidad.</span>
-          </div>
-        )}
-      </div>
-    </PanelSection>
+    <EditorDocumentSection
+      zenMode={zenMode}
+      isAiStreaming={isAiStreaming}
+      assetDragActive={assetDragActive}
+      writingLaneRef={writingLaneRef}
+      editorSurface={editorSurface}
+      referenceSuggestionActive={referenceSuggestionActive}
+      suggestionOptions={suggestionOptions}
+      suggestionsStyle={suggestionsStyle}
+      onInsertReference={onInsertReference}
+      hoveredReference={hoveredReference}
+      hoveredEntity={hoveredEntity}
+      hasValidImageDrag={hasValidImageDrag}
+      onAttachImages={onAttachImages}
+      setAssetDragActive={setAssetDragActive}
+    />
   )
 
   return (

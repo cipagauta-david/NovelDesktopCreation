@@ -86,7 +86,8 @@
 
 .floating-suggestions-popover {
   position: absolute;
-  z-index: 100;
+  z-index: 30;
+  isolation: isolate;
   will-change: transform, opacity;
   animation: fade-up-in var(--motion-fast);
 }

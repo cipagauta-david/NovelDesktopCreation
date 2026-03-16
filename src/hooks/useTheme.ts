@@ -1,6 +1,7 @@
 import {
   createContext,
   createElement,
+  useLayoutEffect,
   useContext,
   useEffect,
   useMemo,
@@ -40,16 +41,21 @@ function applyThemeToDocument(resolvedTheme: ResolvedTheme) {
   root.setAttribute('data-theme', resolvedTheme)
 }
 
+const bootThemePreference = readStoredTheme()
+const bootSystemTheme = getSystemTheme()
+const bootResolvedTheme = bootThemePreference === 'system' ? bootSystemTheme : bootThemePreference
+applyThemeToDocument(bootResolvedTheme)
+
 export function ThemeProvider({ children }: PropsWithChildren) {
-  const [theme, setTheme] = useState<ThemePreference>(() => readStoredTheme())
-  const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(() => getSystemTheme())
+  const [theme, setTheme] = useState<ThemePreference>(() => bootThemePreference)
+  const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(() => bootSystemTheme)
 
   const resolvedTheme = useMemo(
     () => (theme === 'system' ? systemTheme : theme),
     [theme, systemTheme],
   )
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     applyThemeToDocument(resolvedTheme)
   }, [resolvedTheme])
 

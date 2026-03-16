@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { forceLink, forceManyBody, forceSimulation, forceX, forceY, type SimulationNodeDatum } from 'd3-force'
 
 import { hexToRgba, resolveCollectionColor } from '../../../../utils/collectionColors'
+import { getGraphThemePalette } from '../palette'
 import { createDefaultCamera, fitCameraToPoints, toScreen } from './d3Camera'
 import { useD3CanvasInteractions } from './d3CanvasInteractions'
 import type { D3PixiRendererProps } from './rendererProps'
@@ -32,6 +33,7 @@ function summarizeTopSources(sourceMap: Map<string, number>, top = 3) {
 }
 
 export function D3PixiRenderer({
+  themeMode,
   width,
   height,
   padding,
@@ -551,8 +553,8 @@ export function D3PixiRenderer({
       context.clearRect(0, 0, width, height)
       context.lineCap = 'round'
       context.lineJoin = 'round'
-      const root = document.documentElement
-      const isDarkTheme = root.classList.contains('dark') || root.getAttribute('data-theme') === 'dark'
+      const isDarkTheme = themeMode === 'dark'
+      const palette = getGraphThemePalette(themeMode)
       const camera = cameraRef.current
       const textScale = Math.max(0.75, Math.min(1.45, camera.scale))
       const centerWorldX = gravityCenterX
@@ -560,7 +562,7 @@ export function D3PixiRenderer({
       const centerScreen = toScreen(camera, centerWorldX, centerWorldY)
 
       context.save()
-      context.strokeStyle = 'rgba(255, 196, 64, 0.9)'
+      context.strokeStyle = hexToRgba(palette.centerGuide, 0.9)
       context.lineWidth = 1.6
       context.setLineDash([4, 3])
       context.beginPath()
@@ -573,7 +575,7 @@ export function D3PixiRenderer({
       context.moveTo(centerScreen.x, centerScreen.y - 14)
       context.lineTo(centerScreen.x, centerScreen.y + 14)
       context.stroke()
-      context.fillStyle = 'rgba(255, 196, 64, 0.84)'
+      context.fillStyle = hexToRgba(palette.centerGuide, 0.84)
       context.fillRect(centerScreen.x - 2, centerScreen.y - 2, 4, 4)
       context.restore()
 
@@ -597,7 +599,9 @@ export function D3PixiRenderer({
         const sourceScreen = toScreen(camera, source.x ?? width / 2, source.y ?? height / 2)
         const targetScreen = toScreen(camera, target.x ?? width / 2, target.y ?? height / 2)
         const isRelated = !activeEntityId || edge.source === activeEntityId || edge.target === activeEntityId
-        context.strokeStyle = isRelated ? 'rgba(125,166,255,0.76)' : 'rgba(127,135,160,0.3)'
+        context.strokeStyle = isRelated
+          ? hexToRgba(palette.edgeRelated, 0.76)
+          : hexToRgba(palette.edgeMuted, 0.3)
         context.lineWidth = (isRelated ? 2 : 1) * Math.max(0.7, camera.scale)
         context.beginPath()
         context.moveTo(sourceScreen.x, sourceScreen.y)
@@ -616,11 +620,11 @@ export function D3PixiRenderer({
         const radius = (7 + Math.min(10, Math.sqrt(node.degree) * 1.9) + (isActive ? 3 : 0)) * Math.max(0.65, Math.min(2.3, camera.scale))
 
         context.fillStyle = isHighlighted
-          ? 'rgba(0,212,238,0.95)'
+          ? hexToRgba(palette.nodeHighlight, 0.95)
           : isActive
             ? hexToRgba(collectionColor, 0.98)
             : hexToRgba(collectionColor, isDarkTheme ? 0.84 : 0.9)
-        context.strokeStyle = isHighlighted ? 'rgba(0,212,238,0.95)' : hexToRgba(collectionColor, 1)
+        context.strokeStyle = isHighlighted ? hexToRgba(palette.nodeHighlight, 0.95) : hexToRgba(collectionColor, 1)
         context.lineWidth = isHighlighted || isActive ? 2.2 : 1.2
         context.beginPath()
         context.arc(screen.x, screen.y, radius, 0, Math.PI * 2)
@@ -630,7 +634,7 @@ export function D3PixiRenderer({
         const showLabel = camera.scale >= 0.72 || isActive || isHighlighted
         if (!showLabel) continue
         const label = node.title.length > 20 ? `${node.title.slice(0, 20)}…` : node.title
-        context.fillStyle = 'rgba(226,232,255,0.95)'
+        context.fillStyle = hexToRgba(palette.label, 0.95)
         context.font = `${Math.round(11 * textScale)}px Inter, sans-serif`
         context.textAlign = 'center'
         context.textBaseline = 'top'
@@ -702,6 +706,7 @@ export function D3PixiRenderer({
     simNodes,
     simulationPaused,
     width,
+    themeMode,
   ])
 
   useEffect(() => {

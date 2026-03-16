@@ -80,6 +80,7 @@ export function ActionMenu({ label, icon = '⋯', items }: ActionMenuProps) {
         type="button"
         className="icon-button"
         aria-label={label}
+        style={{ background: 'var(--bg-surface-raised)' }}
         onClick={() => setOpen((current) => !current)}
       >
         {icon}

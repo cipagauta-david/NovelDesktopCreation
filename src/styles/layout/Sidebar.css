@@ -1,32 +1,39 @@
+.sidebar {
+  min-width: 0;
+  width: 100%;
+  display: grid;
+  gap: var(--space-3, 0.75rem);
+}
+
 .sidebar-compact {
-  gap: 0.8rem;
+  gap: var(--space-3, 0.75rem);
 }
 
 .sidebar-identity {
   display: grid;
-  gap: 0.14rem;
-  padding: 0.1rem 0;
+  gap: 0.2rem;
+  padding: 0.1rem 0 var(--space-2, 0.5rem);
 }
 
 .sidebar-identity strong {
-  font-size: 0.96rem;
-  color: var(--text-primary);
+  font-size: var(--font-size-2, 1rem);
+  color: var(--text-heading);
 }
 
 .sidebar-identity small {
-  color: var(--text-secondary);
-  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-0, 0.875rem);
 }
 
 .project-switcher-inline {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.4rem;
-  padding: 0.42rem 0.55rem;
-  border: 1px solid var(--surface-panel-border, var(--border-subtle));
-  border-radius: 10px;
-  background: var(--surface-base);
+  gap: var(--space-2, 0.5rem);
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-raised);
 }
 
 .project-switcher-trigger {
@@ -45,7 +52,7 @@
 
 .project-switcher-inline .action-menu .icon-button:hover {
   border-color: var(--surface-panel-border, var(--border-subtle));
-  background: var(--surface-panel);
+  background: var(--bg-surface);
 }
 
 .project-switcher-stack {
@@ -65,12 +72,12 @@
 
 .project-switcher-summary strong {
   color: var(--text-primary);
-  font-size: 0.92rem;
+  font-size: var(--font-size-1, 0.9375rem);
 }
 
 .project-switcher-summary span {
-  color: var(--text-secondary);
-  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-0, 0.875rem);
 }
 
 .compact-project-form textarea {
@@ -82,7 +89,7 @@
   border-radius: 18px;
   display: grid;
   gap: 0.25rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-surface-raised);
   border: 0;
 }
 
@@ -92,8 +99,8 @@
 
 .template-list-compact .template-card {
   padding: 0.65rem 0.8rem;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-raised);
 }
 
 .template-row {

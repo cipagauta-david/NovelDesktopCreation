@@ -17,7 +17,7 @@ const DialogOverlay = React.forwardRef<
       position: "fixed",
       inset: 0,
       zIndex: 50,
-      backgroundColor: "rgba(0, 0, 0, 0.75)",
+      backgroundColor: "var(--overlay-scrim)",
       backdropFilter: "blur(8px)",
       ...style
     }}
@@ -46,8 +46,8 @@ const DialogContent = React.forwardRef<
         maxWidth: "640px",
         gap: "1.5rem",
         padding: "2rem",
-        boxShadow: "var(--shadow-glass)",
-        backgroundColor: "var(--surface-glass)",
+        boxShadow: "var(--shadow-popover)",
+        backgroundColor: "var(--bg-surface-raised)",
         border: "1px solid var(--border-subtle)",
         borderRadius: "28px",
         ...style
@@ -93,7 +93,8 @@ const DialogTitle = React.forwardRef<
 >(({ className = "", ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={`text-lg font-semibold leading-none tracking-tight text-white ${className}`}
+    className={`text-lg font-semibold leading-none tracking-tight ${className}`}
+    style={{ color: "var(--text-primary)" }}
     {...props}
   />
 ))

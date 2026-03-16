@@ -1,6 +1,8 @@
 .graph-node {
   cursor: pointer;
-  transition: opacity 140ms ease;
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
 }
 
 .graph-panel {
@@ -9,20 +11,14 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 10.4rem);
+  height: 100%;
+  min-height: 0;
 }
 
 :root.dark .graph-panel,
 :root[data-theme="dark"] .graph-panel {
   background: rgba(10, 16, 28, 0.88);
   border: 1px solid rgba(148, 163, 184, 0.14);
-}
-
-.graph-node circle {
-  transition:
-    cx 90ms linear,
-    cy 90ms linear,
-    r 120ms ease;
 }
 
 .graph-node:active {
@@ -69,9 +65,9 @@
 
 .graph-node circle {
   transition:
-    r 120ms ease,
     fill 120ms ease,
-    stroke 120ms ease;
+    stroke 120ms ease,
+    opacity 120ms ease;
 }
 
 .graph-node-halo {

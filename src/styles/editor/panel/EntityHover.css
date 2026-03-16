@@ -1,17 +1,20 @@
 .entity-hover-popover {
+  --entity-pill-accent: var(--accent-primary);
   position: absolute;
-  z-index: 14;
+  z-index: 40;
   width: min(320px, calc(100% - 24px));
   display: grid;
   gap: 0.45rem;
   padding: 0.75rem 0.82rem;
   border-radius: 14px;
-  background: color-mix(in srgb, var(--surface-panel) 92%, transparent);
-  border: 1px solid var(--surface-panel-border, var(--border-subtle));
-  box-shadow:
-    0 18px 36px rgba(2, 6, 23, 0.2),
-    inset 0 0 0 1px color-mix(in srgb, var(--brand-accent) 18%, transparent);
-  animation: entity-hover-slide 160ms ease-out;
+  background: color-mix(in srgb, var(--bg-surface-raised) 94%, transparent);
+  border: 1px solid var(--border-subtle);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--entity-pill-accent) 20%, transparent);
+  transform: translateY(0);
+  opacity: 1;
+  transition:
+    transform var(--motion-fast),
+    opacity var(--motion-fast);
   pointer-events: none;
 }
 
@@ -20,6 +23,14 @@
   color: var(--text-primary);
   font-size: 0.86rem;
   line-height: 1.45;
+}
+
+.entity-hover-popover strong {
+  color: var(--text-primary);
+}
+
+.entity-hover-popover .eyebrow {
+  color: color-mix(in srgb, var(--entity-pill-accent) 50%, var(--text-muted));
 }
 
 .entity-hover-popover small {

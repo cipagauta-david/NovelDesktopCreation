@@ -1,5 +1,6 @@
 import type { EntityRecord } from '../../../types/workspace'
 import { formatTimestamp } from '../../../utils/workspace'
+import { resolveCollectionColor } from '../../../utils/collectionColors'
 import '../../../styles/editor/panel/EntityHover.css';
 
 
@@ -20,7 +21,15 @@ export function EntityHover({ position, entity }: EntityHoverProps) {
   }
 
   return (
-    <aside className="entity-hover-popover" style={{ left: position.left, top: position.top }} aria-live="polite">
+    <aside
+      className="entity-hover-popover"
+      style={{
+        left: position.left,
+        top: position.top,
+        ['--entity-pill-accent' as string]: resolveCollectionColor(entity.id),
+      }}
+      aria-live="polite"
+    >
       <span className="eyebrow">Entidad referenciada</span>
       <strong>{entity.title}</strong>
       <p>

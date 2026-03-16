@@ -1,3 +1,24 @@
 .compact-metadata-grid {
-  gap: 0.75rem 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3, 0.75rem);
+  align-items: start;
+}
+
+.compact-metadata-grid label {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+@container editor-panel (max-width: 62rem) {
+  .compact-metadata-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container editor-panel (max-width: 42rem) {
+  .compact-metadata-grid {
+    grid-template-columns: 1fr;
+  }
 }

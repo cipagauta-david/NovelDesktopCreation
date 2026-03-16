@@ -1,19 +1,19 @@
 :root,
 :root[data-theme="light"] {
-  --inspector-tabs-bg: var(--bg-surface-secondary, #f8fafc);
-  --inspector-tabs-border: rgba(15, 23, 42, 0.1);
-  --inspector-tab-hover-bg: color-mix(in srgb, var(--bg-surface-primary, #ffffff) 88%, var(--bg-surface-secondary, #f8fafc));
-  --inspector-tab-active-bg: var(--bg-surface-primary, #ffffff);
-  --inspector-tab-active-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  --inspector-tabs-bg: var(--bg-surface-raised);
+  --inspector-tabs-border: var(--border-subtle);
+  --inspector-tab-hover-bg: color-mix(in srgb, var(--bg-surface) 88%, var(--bg-surface-raised));
+  --inspector-tab-active-bg: var(--bg-surface);
+  --inspector-tab-active-shadow: var(--shadow-popover);
 }
 
 :root.dark,
 :root[data-theme="dark"] {
-  --inspector-tabs-bg: #1f2937;
-  --inspector-tabs-border: #334155;
-  --inspector-tab-hover-bg: #334155;
-  --inspector-tab-active-bg: #374151;
-  --inspector-tab-active-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+  --inspector-tabs-bg: var(--bg-surface);
+  --inspector-tabs-border: var(--border-subtle);
+  --inspector-tab-hover-bg: var(--bg-surface-raised);
+  --inspector-tab-active-bg: color-mix(in srgb, var(--bg-surface-raised) 90%, var(--accent-primary));
+  --inspector-tab-active-shadow: none;
 }
 
 .inspector-tabs-container {
@@ -31,7 +31,7 @@
   padding: 0.45rem 0.75rem;
   border-radius: 6px;
   background: transparent;
-  color: var(--text-secondary, #cbd5e1);
+  color: var(--text-secondary);
   font-size: 0.84rem;
   text-align: center;
   border: 1px solid transparent;
@@ -41,13 +41,13 @@
 .inspector-tab:hover {
   background: var(--inspector-tab-hover-bg);
   border-color: var(--inspector-tabs-border);
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary);
   transform: none;
 }
 
 .inspector-tab.active {
   background: var(--inspector-tab-active-bg);
-  color: var(--text-primary, #e5e7eb);
+  color: var(--text-primary);
   box-shadow: var(--inspector-tab-active-shadow);
   border: 1px solid var(--inspector-tabs-border);
 }

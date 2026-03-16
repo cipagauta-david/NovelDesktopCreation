@@ -4,7 +4,21 @@
   gap: 0.75rem;
   background: transparent;
   border: 0;
+  border-bottom: 1px solid var(--border-subtle);
   box-shadow: none;
+  min-width: 0;
+}
+
+.section-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.section-card-header > div:first-child {
+  min-width: 0;
 }
 
 .section-card-actions {
@@ -12,6 +26,7 @@
   gap: 0.5rem;
   align-items: center;
   flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 .section-card-header h3 {
@@ -30,7 +45,13 @@
 }
 
 .section-card-body {
+  display: block;
   color: var(--text-primary);
+  min-width: 0;
+}
+
+.section-card-body > * + * {
+  margin-top: var(--space-3, 0.75rem);
 }
 
 .section-toggle {
@@ -39,11 +60,11 @@
   padding: 0;
   border-radius: 999px;
   background: transparent;
-  border-color: transparent;
-  color: #8ea0b9;
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
 }
 
 .section-toggle:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: transparent;
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  border-color: var(--border-subtle);
 }
