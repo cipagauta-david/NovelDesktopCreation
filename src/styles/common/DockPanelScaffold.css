@@ -1,0 +1,82 @@
+.dock-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+  padding: 0.95rem;
+  border-radius: 24px;
+  background: var(--surface-glass);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-glass);
+}
+
+.dock-panel-sticky-head {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  gap: 0.55rem;
+  padding-bottom: 0.25rem;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-glass) 98%, var(--bg-surface-primary, #ffffff)),
+    color-mix(in srgb, var(--surface-glass) 90%, transparent)
+  );
+}
+
+:root.dark .dock-panel,
+:root[data-theme="dark"] .dock-panel {
+  background: rgba(14, 26, 46, 0.72);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: var(--shadow-glass);
+}
+
+:root.dark .dock-panel-sticky-head,
+:root[data-theme="dark"] .dock-panel-sticky-head {
+  background: linear-gradient(
+    180deg,
+    rgba(8, 14, 25, 0.98),
+    rgba(8, 14, 25, 0.9)
+  );
+}
+
+.dock-panel-scroll-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  gap: 1rem;
+  padding-right: 0.15rem;
+}
+
+.panel-dock-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panel-dock-header-right {
+  justify-content: flex-end;
+}
+
+.dock-panel-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 8;
+  margin-top: auto;
+  padding-top: 0.45rem;
+  background: color-mix(in srgb, var(--surface-panel) 72%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid color-mix(in srgb, var(--surface-panel-border, var(--border-subtle)) 76%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dock-panel {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

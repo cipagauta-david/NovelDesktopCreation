@@ -1,4 +1,5 @@
 import type { LlmTraceEntry, Provider } from '../../types/workspace'
+import { EmptyMiniState } from '../common/EmptyMiniState'
 import '../../styles/inspector/InspectorMetricsDashboard.css';
 
 
@@ -66,11 +67,7 @@ export function InspectorMetricsDashboard({ traces }: InspectorMetricsDashboardP
   const providerMetrics = buildProviderMetrics(traces)
 
   if (total === 0) {
-    return (
-      <div className="empty-mini-state">
-        Aún no hay trazas suficientes para calcular métricas operativas.
-      </div>
-    )
+    return <EmptyMiniState>Aún no hay trazas suficientes para calcular métricas operativas.</EmptyMiniState>
   }
 
   return (

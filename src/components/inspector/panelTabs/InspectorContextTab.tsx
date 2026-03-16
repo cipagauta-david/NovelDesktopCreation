@@ -7,6 +7,7 @@ import type {
 } from '../../../types/workspace'
 import { buildSnippet } from '../../../utils/search'
 import { formatTimestamp } from '../../../utils/workspace'
+import { EmptyMiniState } from '../../common/EmptyMiniState'
 import { PanelSection } from '../../common/PanelSection'
 
 type InspectorContextTabProps = {
@@ -127,7 +128,7 @@ export function InspectorContextTab({
             ))}
           </div>
         ) : (
-          <div className="empty-mini-state">Todavia no has enlazado referencias desde el texto actual.</div>
+          <EmptyMiniState>Todavia no has enlazado referencias desde el texto actual.</EmptyMiniState>
         )}
       </PanelSection>
     </>

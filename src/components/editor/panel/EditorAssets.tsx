@@ -1,4 +1,5 @@
 import type { EntityRecord } from '../../../types/workspace'
+import { EmptyMiniState } from '../../common/EmptyMiniState'
 import { PanelSection } from '../../common/PanelSection'
 import '../../../styles/editor/panel/EditorAssets.css';
 
@@ -37,7 +38,7 @@ export function EditorAssets({ assets, onAttachImages }: EditorAssetsProps) {
             <figcaption>{asset.name}</figcaption>
           </figure>
         ))}
-        {assets.length === 0 && <div className="empty-mini-state">Arrastra imágenes sobre el editor para anexarlas.</div>}
+        {assets.length === 0 && <EmptyMiniState>Arrastra imágenes sobre el editor para anexarlas.</EmptyMiniState>}
       </div>
     </PanelSection>
   )

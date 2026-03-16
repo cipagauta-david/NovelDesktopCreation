@@ -48,7 +48,7 @@ export const Sidebar = memo(function Sidebar({
   const activeProject = projects.find((project) => project.id === activeProjectId)
 
   return (
-    <aside className="sidebar sidebar-compact">
+    <section className="sidebar sidebar-compact">
       <div className="sidebar-identity">
         <span className="eyebrow">Espacio narrativo</span>
         <strong>{settings.authorName}</strong>
@@ -152,6 +152,6 @@ export const Sidebar = memo(function Sidebar({
           ))}
         </div>
       </PanelSection>
-    </aside>
+    </section>
   )
 })

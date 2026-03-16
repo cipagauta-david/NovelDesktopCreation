@@ -1,5 +1,6 @@
 import type { DraftState, EntityRecord, EntityTemplate, Project } from '../../../types/workspace'
 import { formatTimestamp } from '../../../utils/workspace'
+import { EmptyMiniState } from '../../common/EmptyMiniState'
 import { PanelSection } from '../../common/PanelSection'
 
 type InspectorMetaTabProps = {
@@ -125,12 +126,12 @@ export function InspectorMetaTab({
                 })}
               </div>
             ) : (
-              <div className="empty-mini-state">No hay relaciones formales para esta entidad.</div>
+              <EmptyMiniState>No hay relaciones formales para esta entidad.</EmptyMiniState>
             )}
           </PanelSection>
         </>
       ) : (
-        <div className="empty-mini-state">Abre una entidad para ver sus metadatos.</div>
+        <EmptyMiniState>Abre una entidad para ver sus metadatos.</EmptyMiniState>
       )}
     </PanelSection>
   )

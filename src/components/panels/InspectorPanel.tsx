@@ -15,17 +15,19 @@ import type {
   SyncRemoteConfig,
 } from '../../types/workspace'
 import { getReferenceTokens } from '../../utils/references'
+import { DockPanelScaffold } from '../common/DockPanelScaffold'
+import { PanelTabs, type PanelTabOption } from '../common/PanelTabs'
 import { InspectorAssistantComposer } from '../inspector/InspectorAssistantComposer'
 import { InspectorContextTab } from '../inspector/panelTabs/InspectorContextTab'
 import { InspectorHistoryTab } from '../inspector/panelTabs/InspectorHistoryTab'
 import { InspectorMetaTab } from '../inspector/panelTabs/InspectorMetaTab'
 import { InspectorMetricsTab } from '../inspector/panelTabs/InspectorMetricsTab'
-import { InspectorTabs } from '../inspector/InspectorTabs'
 import '../../styles/panels/InspectorPanel.css';
 
 
 
 type InspectorPanelProps = {
+  side?: 'left' | 'right'
   activeTab: CollectionTab | null
   activeEntity: EntityRecord | null
   activeDraft: DraftState | null
@@ -56,7 +58,17 @@ type InspectorPanelProps = {
   onCollapse: () => void
 }
 
+type InspectorPanelTab = 'context' | 'meta' | 'history' | 'metrics'
+
+const INSPECTOR_TAB_OPTIONS: readonly PanelTabOption<InspectorPanelTab>[] = [
+  { id: 'context', label: 'Contexto / IA' },
+  { id: 'meta', label: 'Metadatos' },
+  { id: 'history', label: 'Historial' },
+  { id: 'metrics', label: 'Metricas' },
+]
+
 export const InspectorPanel = memo(function InspectorPanel({
+  side = 'right',
   activeTab,
   activeEntity,
   activeDraft,
@@ -86,7 +98,7 @@ export const InspectorPanel = memo(function InspectorPanel({
   onRemoveRelation,
   onCollapse,
 }: InspectorPanelProps) {
-  const [activePanelTab, setActivePanelTab] = useState<'context' | 'meta' | 'history' | 'metrics'>('context')
+  const [activePanelTab, setActivePanelTab] = useState<InspectorPanelTab>('context')
   const [assistantDraft, setAssistantDraft] = useState('')
   const [relationTargetId, setRelationTargetId] = useState('')
   const [relationType, setRelationType] = useState('relates_to')
@@ -121,19 +133,32 @@ export const InspectorPanel = memo(function InspectorPanel({
   }
 
   return (
-    <aside className="inspector-column ghosting-panel">
-      <div className="inspector-sticky-head">
-        <div className="panel-dock-header panel-dock-header-right">
-          <button type="button" className="panel-dock-toggle" aria-label="Ocultar contexto" onClick={onCollapse}>
-            ›
-          </button>
-          <span className="eyebrow">Contexto</span>
-        </div>
-
-        <InspectorTabs activeTab={activePanelTab} onChange={setActivePanelTab} />
-      </div>
-
-      <div className="inspector-scroll-area">
+    <DockPanelScaffold
+      side={side}
+      eyebrow="Contexto"
+      collapseLabel="Ocultar contexto"
+      onCollapse={onCollapse}
+      tabs={
+        <PanelTabs
+          ariaLabel="Secciones del inspector"
+          activeTab={activePanelTab}
+          options={INSPECTOR_TAB_OPTIONS}
+          onChange={setActivePanelTab}
+        />
+      }
+      footer={
+        activePanelTab === 'context' ? (
+          <InspectorAssistantComposer
+            value={assistantDraft}
+            streamStatus={streamStatus}
+            onChange={setAssistantDraft}
+            onSubmit={handleAssistantSubmit}
+            onStopGeneration={onStopGeneration}
+          />
+        ) : undefined
+      }
+      className="inspector-panel-root"
+    >
         {activePanelTab === 'context' && (
           <InspectorContextTab
             activeTab={activeTab}
@@ -188,19 +213,6 @@ export const InspectorPanel = memo(function InspectorPanel({
             onRestoreCheckpoint={onRestoreCheckpoint}
           />
         )}
-      </div>
-
-      {activePanelTab === 'context' && (
-        <div className="inspector-composer-dock">
-          <InspectorAssistantComposer
-            value={assistantDraft}
-            streamStatus={streamStatus}
-            onChange={setAssistantDraft}
-            onSubmit={handleAssistantSubmit}
-            onStopGeneration={onStopGeneration}
-          />
-        </div>
-      )}
-    </aside>
+    </DockPanelScaffold>
   )
 })

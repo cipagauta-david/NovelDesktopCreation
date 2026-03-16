@@ -17,6 +17,7 @@ import {
 } from '@dnd-kit/sortable'
 
 import type { EntityRecord, EntityTemplate } from '../../types/workspace'
+import { EmptyMiniState } from '../common/EmptyMiniState'
 import { PanelSection } from '../common/PanelSection'
 import { EntityComposer } from './entityList/EntityComposer'
 import { SortableEntityCard } from './entityList/SortableEntityCard'
@@ -78,7 +79,7 @@ export const EntityList = memo(function EntityList({
   })
 
   return (
-    <aside className="entity-column">
+    <section className="entity-column">
       <PanelSection
         title={title}
         meta={`${count} entidades`}
@@ -133,12 +134,10 @@ export const EntityList = memo(function EntityList({
               </SortableContext>
             </DndContext>
           ) : (
-            <div className="empty-mini-state">
-              Aún no hay entidades en esta colección. Crea la primera para empezar a escribir.
-            </div>
+            <EmptyMiniState>Aún no hay entidades en esta colección. Crea la primera para empezar a escribir.</EmptyMiniState>
           )}
         </div>
       </PanelSection>
-    </aside>
+    </section>
   )
 })

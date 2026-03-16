@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { EditorPanel } from '../panels/EditorPanel'
-import { EntityList } from '../panels/EntityList'
 import { GraphPanel } from '../panels/GraphPanel'
 import { InspectorPanel } from '../panels/InspectorPanel'
+import { NavigationPanel } from '../panels/NavigationPanel'
 import { OnboardingScreen } from '../onboarding/OnboardingScreen'
-import { Sidebar } from './Sidebar'
-import { TabBar } from './TabBar'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { CommandPalette } from '../overlays/CommandPalette'
 import { ShortcutsOverlay } from '../overlays/ShortcutsOverlay'
@@ -143,16 +141,45 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
         <section className="workspace-grid">
           {!zenMode && (
             <aside className={hasLeftPanel ? 'left-workspace-panel open' : 'left-workspace-panel'}>
-              <div className="left-panel-topbar"><span className="eyebrow">Navegación</span><button type="button" className="panel-dock-toggle" aria-label="Ocultar" onClick={handleToggleNav}>‹</button></div>
-              <div className="left-panel-layout">
-                <div className="left-panel-upper">
-                  {workspace.panels.sidebar && workspace.data.settings && <Sidebar settings={workspace.data.settings} projects={workspace.data.projects} activeProjectId={workspace.data.activeProjectId} activeTemplates={workspace.activeTemplates} newProjectName={workspace.newProjectName} newProjectDescription={workspace.newProjectDescription} onProjectNameChange={workspace.setNewProjectName} onProjectDescriptionChange={workspace.setNewProjectDescription} onCreateProject={workspace.createProject} onSelectProject={workspace.selectProject} onRenameProject={openRenameProjectDialog} onDeleteProject={workspace.deleteActiveProject} onClearWorkspace={() => void workspace.clearWorkspace()} onSaveTemplate={workspace.saveCurrentAsTemplate} onExportProject={workspace.exportActiveProject} onImportProject={workspace.importProject} />}
-                </div>
-                <div className="left-panel-lower">
-                  <TabBar tabs={workspace.activeProject?.tabs ?? []} activeTab={workspace.activeTab} newTabName={workspace.newTabName} onNewTabNameChange={workspace.setNewTabName} onSelectTab={workspace.selectTab} onCreateTab={workspace.createTab} onMoveTab={workspace.moveActiveTab} onRenameTab={openRenameTabDialog} onDeleteTab={workspace.deleteActiveTab} onUpdateActiveTabColor={workspace.updateActiveTabColor} />
-                  {workspace.panels.entities && <EntityList title={workspace.activeTab?.name ?? 'Entidades'} count={workspace.activeTabEntities.length} entities={workspace.activeTabEntities} activeEntityId={workspace.activeEntity?.id} templates={workspace.activeTemplates} selectedTemplateId={workspace.selectedNewEntityTemplateId} onTemplateChange={workspace.setNewEntityTemplateId} onCreateEntity={workspace.createEntity} onSelectEntity={workspace.selectEntity} onReorderEntities={workspace.reorderEntities} />}
-                </div>
-              </div>
+              {workspace.panels.sidebar && workspace.data.settings && (
+                <NavigationPanel
+                  settings={workspace.data.settings}
+                  projects={workspace.data.projects}
+                  activeProjectId={workspace.data.activeProjectId}
+                  activeTemplates={workspace.activeTemplates}
+                  newProjectName={workspace.newProjectName}
+                  newProjectDescription={workspace.newProjectDescription}
+                  onProjectNameChange={workspace.setNewProjectName}
+                  onProjectDescriptionChange={workspace.setNewProjectDescription}
+                  onCreateProject={workspace.createProject}
+                  onSelectProject={workspace.selectProject}
+                  onRenameProject={openRenameProjectDialog}
+                  onDeleteProject={workspace.deleteActiveProject}
+                  onClearWorkspace={() => void workspace.clearWorkspace()}
+                  onSaveTemplate={workspace.saveCurrentAsTemplate}
+                  onExportProject={workspace.exportActiveProject}
+                  onImportProject={workspace.importProject}
+                  tabs={workspace.activeProject?.tabs ?? []}
+                  activeTab={workspace.activeTab}
+                  newTabName={workspace.newTabName}
+                  onNewTabNameChange={workspace.setNewTabName}
+                  onSelectTab={workspace.selectTab}
+                  onCreateTab={workspace.createTab}
+                  onMoveTab={workspace.moveActiveTab}
+                  onRenameTab={openRenameTabDialog}
+                  onDeleteTab={workspace.deleteActiveTab}
+                  onUpdateActiveTabColor={workspace.updateActiveTabColor}
+                  entitiesEnabled={workspace.panels.entities}
+                  entities={workspace.activeTabEntities}
+                  activeEntityId={workspace.activeEntity?.id}
+                  selectedTemplateId={workspace.selectedNewEntityTemplateId}
+                  onTemplateChange={workspace.setNewEntityTemplateId}
+                  onCreateEntity={workspace.createEntity}
+                  onSelectEntity={workspace.selectEntity}
+                  onReorderEntities={workspace.reorderEntities}
+                  onCollapse={handleToggleNav}
+                />
+              )}
             </aside>
           )}
 
@@ -171,7 +198,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
 
           {!zenMode && (
              <aside className={hasInspectorPanel ? 'inspector-panel-shell open' : 'inspector-panel-shell'}>
-                {workspace.panels.inspector && <InspectorPanel activeTab={workspace.activeTab} activeEntity={workspace.activeEntity} activeDraft={workspace.activeDraft} activeProject={workspace.activeProject} activeTemplates={workspace.activeTemplates} pendingProposal={workspace.pendingProposal} streamStatus={workspace.streamStatus} streamingText={workspace.streamingText} llmTraces={workspace.llmTraces} syncStatus={workspace.syncStatus} syncStats={workspace.syncStats} syncRemoteConfig={workspace.syncRemoteConfig} checkpoints={workspace.checkpoints} correlationReports={workspace.correlationReports} onUpdateTabPrompt={workspace.updateTabPrompt} onConfirmProposal={workspace.confirmAiProposal} onDismissProposal={workspace.dismissProposal} onStopGeneration={workspace.stopGeneration} onFlushRemoteSync={workspace.flushRemoteSync} onConfigureRemoteSync={async () => openSyncDialog()} onClearRemoteSyncCredential={workspace.clearRemoteSyncCredential} onRestoreCheckpoint={workspace.restoreCheckpoint} onRotateProviderCredential={async () => openRotateDialog()} onInvalidateProviderCredential={async () => setInvalidateKeyOpen(true)} onRefreshVaultMetadata={workspace.refreshVaultMetadata} onAddRelation={workspace.addRelation} onRemoveRelation={workspace.removeRelation} onCollapse={() => workspace.togglePanel('inspector')} />}
+                 {workspace.panels.inspector && <InspectorPanel side="right" activeTab={workspace.activeTab} activeEntity={workspace.activeEntity} activeDraft={workspace.activeDraft} activeProject={workspace.activeProject} activeTemplates={workspace.activeTemplates} pendingProposal={workspace.pendingProposal} streamStatus={workspace.streamStatus} streamingText={workspace.streamingText} llmTraces={workspace.llmTraces} syncStatus={workspace.syncStatus} syncStats={workspace.syncStats} syncRemoteConfig={workspace.syncRemoteConfig} checkpoints={workspace.checkpoints} correlationReports={workspace.correlationReports} onUpdateTabPrompt={workspace.updateTabPrompt} onConfirmProposal={workspace.confirmAiProposal} onDismissProposal={workspace.dismissProposal} onStopGeneration={workspace.stopGeneration} onFlushRemoteSync={workspace.flushRemoteSync} onConfigureRemoteSync={async () => openSyncDialog()} onClearRemoteSyncCredential={workspace.clearRemoteSyncCredential} onRestoreCheckpoint={workspace.restoreCheckpoint} onRotateProviderCredential={async () => openRotateDialog()} onInvalidateProviderCredential={async () => setInvalidateKeyOpen(true)} onRefreshVaultMetadata={workspace.refreshVaultMetadata} onAddRelation={workspace.addRelation} onRemoveRelation={workspace.removeRelation} onCollapse={() => workspace.togglePanel('inspector')} />}
              </aside>
           )}
         </section>
