@@ -28,6 +28,14 @@ export function CommandPalette({ searchQuery, searchResults, onSearchChange, onS
     return () => window.cancelAnimationFrame(frameId)
   }, [])
 
+  const resolveResultIcon = (title: string, snippet: string) => {
+    const bag = `${title} ${snippet}`.toLowerCase()
+    if (bag.includes('personaje')) return '👤'
+    if (bag.includes('capitulo') || bag.includes('escena')) return '📖'
+    if (bag.includes('lugar') || bag.includes('ciudad')) return '📍'
+    return '✦'
+  }
+
   return (
     <div className="command-palette-backdrop" onClick={onClose}>
       <section className="command-palette" role="dialog" aria-modal="true" aria-label="Buscar dentro del proyecto" onClick={(e) => e.stopPropagation()}>
@@ -75,9 +83,12 @@ export function CommandPalette({ searchQuery, searchResults, onSearchChange, onS
                           transform: `translateY(${virtualRow.start}px)`,
                         }}
                       >
-                        <strong>{result.title}</strong>
-                        <span>{result.snippet}</span>
-                        <small>Abrir entidad</small>
+                        <span className="command-result-icon" aria-hidden="true">{resolveResultIcon(result.title, result.snippet)}</span>
+                        <div className="command-result-copy">
+                          <strong>{result.title}</strong>
+                          <span>{result.snippet}</span>
+                        </div>
+                        <small className="command-result-shortcut">Enter</small>
                       </button>
                     )
                   })}

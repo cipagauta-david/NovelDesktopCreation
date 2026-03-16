@@ -5,6 +5,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4, 1rem);
+  position: relative;
 }
 
 .editor-panel.is-streaming::before {
@@ -12,7 +13,7 @@
 }
 
 .editor-panel-zen {
-  max-width: min(100%, 74rem);
+  max-width: min(100%, 86rem);
   margin: 0 auto;
   position: relative;
 }
@@ -22,17 +23,15 @@
   min-height: 0;
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(17rem, 21rem);
-  grid-template-areas:
-    "meta meta"
-    "doc side";
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "doc";
   align-items: start;
   gap: var(--space-4, 1rem);
   overflow: visible;
 }
 
 .editor-panel .editor-meta-shell {
-  grid-area: meta;
+  grid-area: doc;
   min-width: 0;
 }
 
@@ -42,7 +41,7 @@
 }
 
 .editor-panel .editor-side-shell {
-  grid-area: side;
+  grid-area: doc;
   align-self: stretch;
   display: grid;
   align-content: start;
@@ -72,23 +71,23 @@
 .writing-lane .editor-code-mirror .cm-editor,
 .writing-lane .editor-code-mirror .cm-scroller {
   width: 100%;
-  min-height: max(30rem, 58vh);
+  min-height: max(34rem, 64vh);
 }
 
 .writing-lane .cm-editor {
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-subtle);
-  background: color-mix(in srgb, var(--surface-panel) 95%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
+  background: color-mix(in srgb, var(--surface-panel) 97%, transparent);
 }
 
 .writing-lane .cm-content {
-  max-width: min(70ch, 100% - 2rem);
+  max-width: min(var(--editor-readable-width, 86ch), 100% - 1rem);
   margin: 0 auto;
   line-height: 1.72;
 }
 
 .zen-writing-lane {
-  max-width: 70ch;
+  max-width: var(--editor-zen-width, 80ch);
   margin: 0 auto;
 }
 
@@ -110,6 +109,40 @@
   max-height: none;
   margin: 0;
   overflow: visible;
+}
+
+.editor-details-drawer {
+  position: absolute;
+  top: 5.25rem;
+  right: 0.75rem;
+  width: min(22.5rem, calc(100% - 1.5rem));
+  max-height: calc(100% - 6rem);
+  overflow-y: auto;
+  display: grid;
+  gap: var(--space-3, 0.75rem);
+  padding: 0.9rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
+  background: color-mix(in srgb, var(--surface-glass) 92%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  opacity: 0;
+  transform: translateX(1rem);
+  pointer-events: none;
+  transition:
+    opacity var(--motion-fast),
+    transform var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.editor-details-drawer.open {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.editor-details-drawer .section-card {
+  border-bottom: 0;
+  padding-bottom: 0;
 }
 
 .editor-topbar-shell.is-hidden,
@@ -156,14 +189,7 @@
 @container editor-panel (max-width: 72rem) {
   .editor-panel .editor-grid {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "meta"
-      "doc"
-      "side";
-  }
-
-  .editor-panel .editor-side-shell {
-    order: 3;
+    grid-template-areas: "doc";
   }
 }
 
@@ -171,16 +197,22 @@
 @media (max-width: 1280px) {
   .editor-panel .editor-grid {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "meta"
-      "doc"
-      "side";
+    grid-template-areas: "doc";
+  }
+}
+
+@media (max-width: 960px) {
+  .editor-details-drawer {
+    width: calc(100% - 1rem);
+    right: 0.5rem;
+    top: 4.8rem;
+    max-height: calc(100% - 5.3rem);
   }
 }
 
 @container editor-panel (max-width: 54rem) {
   .writing-lane .cm-content {
-    max-width: min(66ch, 100% - 1.25rem);
+    max-width: min(74ch, 100% - 0.75rem);
   }
 }
 

@@ -1,7 +1,6 @@
 import type { CSSProperties, Dispatch, DragEvent, ReactNode, RefObject, SetStateAction } from 'react'
 
 import type { EntityRecord } from '../../../types/workspace'
-import { PanelSection } from '../../common/PanelSection'
 import { EditorSuggestions } from './EditorSuggestions'
 import { EntityHover } from './EntityHover'
 
@@ -43,7 +42,7 @@ export function EditorDocumentSection({
   setAssetDragActive,
 }: EditorDocumentSectionProps) {
   return (
-    <PanelSection title="Documento" meta="Usa {{}} para enlazar entidades relacionadas" className="editor-doc-shell">
+    <section className="editor-doc-shell" aria-label="Documento">
       <div
         ref={writingLaneRef}
         className={[
@@ -110,6 +109,6 @@ export function EditorDocumentSection({
           </div>
         )}
       </div>
-    </PanelSection>
+    </section>
   )
 }

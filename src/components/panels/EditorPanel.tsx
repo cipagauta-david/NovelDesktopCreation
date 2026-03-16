@@ -92,6 +92,7 @@ export function EditorPanel({
   } | null>(null)
   const [hoverPayload, setHoverPayload] = useState<EntityHoverPayload | null>(null)
   const [assetDragActive, setAssetDragActive] = useState(false)
+  const [detailsPanelOpen, setDetailsPanelOpen] = useState(false)
   const writingLaneRef = useRef<HTMLDivElement | null>(null)
   const entityById = useMemo(() => new Map(allEntities.map((entry) => [entry.id, entry])), [allEntities])
 
@@ -160,6 +161,12 @@ export function EditorPanel({
     })
     return () => window.cancelAnimationFrame(frameId)
   }, [draft.entityId])
+
+  useEffect(() => {
+    if (zenMode) {
+      setDetailsPanelOpen(false)
+    }
+  }, [zenMode])
 
   useLayoutEffect(() => {
     if (!hoverPayload) {
@@ -342,14 +349,17 @@ export function EditorPanel({
         onDelete={onDelete}
         onGenerateAiProposal={onGenerateAiProposal}
         onToggleZenMode={onToggleZenMode}
+        detailsOpen={detailsPanelOpen}
+        onToggleDetails={() => setDetailsPanelOpen((current) => !current)}
       />
 
       <div className="editor-grid">
-        <EditorMetadata draft={draft} templates={templates} zenMode={zenMode} onDraftChange={onDraftChange} />
-
         {documentEditor}
+      </div>
 
-        <div className={zenMode ? 'split-grid editor-side-shell is-hidden' : 'split-grid editor-side-shell'}>
+      {!zenMode && (
+        <aside className={detailsPanelOpen ? 'editor-details-drawer open' : 'editor-details-drawer'} aria-label="Detalles de entidad">
+          <EditorMetadata draft={draft} templates={templates} zenMode={zenMode} onDraftChange={onDraftChange} />
           <EditorProperties
             fields={draft.fields as FieldValue[]}
             assetCount={entity.assets.length}
@@ -357,10 +367,9 @@ export function EditorPanel({
             onUpdateField={onUpdateField}
             onRemoveField={onRemoveField}
           />
-
           <EditorAssets assets={entity.assets} onAttachImages={onAttachImages} />
-        </div>
-      </div>
+        </aside>
+      )}
     </section>
   )
 }

@@ -32,16 +32,15 @@
 
 .section-card-header h3 {
   margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  font-size: 0.82rem;
   color: var(--text-secondary);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .section-meta {
   margin-top: 0.16rem;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: 0.78rem;
 }
 

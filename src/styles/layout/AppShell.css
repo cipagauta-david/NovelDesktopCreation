@@ -62,9 +62,13 @@
   flex-direction: column;
   flex-shrink: 0;
   border-radius: var(--radius-lg);
-  background: var(--surface-panel);
-  border: 1px solid var(--border-subtle);
-  transition: opacity var(--motion-fast);
+  background: color-mix(in srgb, var(--surface-panel) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 68%, transparent);
+  transition:
+    width var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
+    min-width var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
+    max-width var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
+    opacity var(--motion-fast);
 }
 
 .left-workspace-panel.open {
@@ -81,12 +85,30 @@
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-surface);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 58%, transparent);
+  background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
   padding: clamp(0.75rem, 1.2vw, 1.25rem);
   container-type: inline-size;
   container-name: editor-panel;
   contain: layout paint style;
+  --editor-readable-width: 86ch;
+  --editor-zen-width: 80ch;
+}
+
+.main-column.with-both-side-panels {
+  --editor-readable-width: 82ch;
+  --editor-zen-width: 76ch;
+}
+
+.main-column.with-single-side-panel {
+  --editor-readable-width: 90ch;
+  --editor-zen-width: 82ch;
+}
+
+.main-column.with-no-side-panels {
+  --editor-readable-width: 104ch;
+  --editor-zen-width: 92ch;
+  padding-inline: clamp(0.9rem, 1.6vw, 1.8rem);
 }
 
 .main-column.focus-mode {
@@ -103,11 +125,15 @@
   overflow: hidden;
   flex-shrink: 0;
   border-radius: var(--radius-lg);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 68%, transparent);
   container-type: inline-size;
   container-name: inspector-panel;
-  transition: opacity var(--motion-fast);
+  transition:
+    width var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
+    min-width var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
+    max-width var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
+    opacity var(--motion-fast);
 }
 
 .inspector-panel-shell.open {
@@ -116,6 +142,15 @@
   max-width: var(--shell-inspector-max);
   opacity: 1;
   pointer-events: auto;
+}
+
+.app-shell.is-focus-mode .left-workspace-panel,
+.app-shell.is-focus-mode .inspector-panel-shell {
+  width: 0;
+  min-width: 0;
+  max-width: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .inspector-drawer-backdrop {
@@ -130,6 +165,58 @@
   padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
 }
 
+.ai-fab-button {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 76;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 30%, var(--border-subtle));
+  background: color-mix(in srgb, var(--surface-elevated) 82%, var(--accent-primary) 18%);
+  color: var(--text-primary);
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.ai-fab-button.active {
+  background: color-mix(in srgb, var(--accent-primary) 56%, var(--surface-elevated));
+  color: var(--on-accent);
+}
+
+.ai-fab-panel {
+  position: fixed;
+  right: 1rem;
+  bottom: 4.25rem;
+  z-index: 75;
+  width: min(23rem, calc(100vw - 1.25rem));
+  padding: 0.75rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 84%, transparent);
+  background: color-mix(in srgb, var(--surface-glass) 94%, transparent);
+  box-shadow: var(--shadow-popover);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.ai-fab-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.ai-fab-panel .assistant-composer {
+  padding-top: 0;
+}
+
+.ai-fab-panel .assistant-composer textarea {
+  min-height: 100px;
+}
+
 @media (max-width: 1080px) {
   .left-workspace-panel.open {
     width: clamp(var(--shell-sidebar-min), 30vw, var(--shell-sidebar-max));
@@ -139,6 +226,17 @@
 @media (max-width: 720px) {
   .app-shell {
     padding: var(--space-2, 0.5rem);
+  }
+
+  .ai-fab-button {
+    right: 0.6rem;
+    bottom: 0.6rem;
+  }
+
+  .ai-fab-panel {
+    right: 0.6rem;
+    bottom: 3.9rem;
+    width: min(22rem, calc(100vw - 1.2rem));
   }
 
   .workspace-grid {

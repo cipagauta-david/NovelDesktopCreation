@@ -30,6 +30,7 @@ export function EntityHover({ position, entity }: EntityHoverProps) {
       }}
       aria-live="polite"
     >
+      <span className="entity-hover-avatar" aria-hidden="true">◉</span>
       <span className="eyebrow">Entidad referenciada</span>
       <strong>{entity.title}</strong>
       <p>

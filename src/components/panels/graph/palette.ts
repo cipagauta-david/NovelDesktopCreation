@@ -9,21 +9,36 @@ export type GraphThemePalette = {
 }
 
 const LIGHT_GRAPH_PALETTE: GraphThemePalette = {
-  centerGuide: '#9A6A00',
-  edgeRelated: '#486EC8',
-  edgeMuted: '#8894A8',
-  nodeHighlight: '#1C8FB4',
-  label: '#2A3443',
+  centerGuide: '#8d6630',
+  edgeRelated: '#1d7ea0',
+  edgeMuted: '#7d8aa0',
+  nodeHighlight: '#1d7ea0',
+  label: '#2a3443',
 }
 
 const DARK_GRAPH_PALETTE: GraphThemePalette = {
-  centerGuide: '#FFD166',
-  edgeRelated: '#8FB0FF',
-  edgeMuted: '#6F7891',
-  nodeHighlight: '#66CDE9',
-  label: '#E6EEF9',
+  centerGuide: '#d4ba85',
+  edgeRelated: '#4db2d1',
+  edgeMuted: '#6f7891',
+  nodeHighlight: '#4db2d1',
+  label: '#e2e8f2',
+}
+
+function readCssToken(name: string): string | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+  const value = window.getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  return value.length > 0 ? value : null
 }
 
 export function getGraphThemePalette(themeMode: GraphThemeMode): GraphThemePalette {
-  return themeMode === 'dark' ? DARK_GRAPH_PALETTE : LIGHT_GRAPH_PALETTE
+  const fallback = themeMode === 'dark' ? DARK_GRAPH_PALETTE : LIGHT_GRAPH_PALETTE
+  return {
+    centerGuide: readCssToken('--text-muted') ?? fallback.centerGuide,
+    edgeRelated: readCssToken('--accent-primary') ?? fallback.edgeRelated,
+    edgeMuted: readCssToken('--text-muted') ?? fallback.edgeMuted,
+    nodeHighlight: readCssToken('--accent-primary') ?? fallback.nodeHighlight,
+    label: readCssToken('--text-primary') ?? fallback.label,
+  }
 }

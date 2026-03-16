@@ -26,5 +26,5 @@
 
 .history-list .history-item p,
 .history-list .history-item small {
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }

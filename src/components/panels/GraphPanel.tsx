@@ -4,6 +4,7 @@ import { ENABLE_INCREMENTAL_GRAPH_HUD, GRAPH_RENDERER_KIND } from '../../data/co
 import { useTheme } from '../../hooks/useTheme'
 import type { CollectionTab, GraphModel, GraphNode } from '../../types/workspace'
 import { hexToRgba, resolveCollectionColor } from '../../utils/collectionColors'
+import { getGraphThemePalette } from './graph/palette'
 import { resolveGraphRendererAdapter } from './graph/adapters'
 import { D3PixiRenderer } from './graph/adapters/D3PixiRenderer'
 import { GraphFloatingToolbar } from './graph/components/GraphFloatingToolbar'
@@ -310,6 +311,7 @@ export const GraphPanel = memo(function GraphPanel({
 
     const root = document.documentElement
     const isDarkTheme = root.classList.contains('dark') || root.getAttribute('data-theme') === 'dark'
+    const palette = getGraphThemePalette(isDarkTheme ? 'dark' : 'light')
 
     context.clearRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT)
     context.lineCap = 'round'
@@ -323,7 +325,7 @@ export const GraphPanel = memo(function GraphPanel({
       }
 
       const isRelated = !activeEntityId || edge.source === activeEntityId || edge.target === activeEntityId
-      context.strokeStyle = isRelated ? 'rgba(125, 166, 255, 0.8)' : 'rgba(127, 135, 160, 0.28)'
+      context.strokeStyle = isRelated ? hexToRgba(palette.edgeRelated, 1) : hexToRgba(palette.edgeMuted, 0.3)
       context.lineWidth = isRelated ? 2.1 : 1
       context.beginPath()
       context.moveTo(source.x, source.y)
@@ -352,8 +354,8 @@ export const GraphPanel = memo(function GraphPanel({
 
       context.save()
       context.globalAlpha = alpha
-      context.fillStyle = isHighlighted ? 'rgba(0, 212, 238, 0.96)' : hexToRgba(collectionColor, isDarkTheme ? 0.84 : 0.92)
-      context.strokeStyle = isHighlighted ? 'rgba(0, 212, 238, 0.96)' : hexToRgba(collectionColor, isDarkTheme ? 0.98 : 1)
+      context.fillStyle = isHighlighted ? hexToRgba(palette.nodeHighlight, 0.96) : hexToRgba(collectionColor, isDarkTheme ? 0.84 : 0.92)
+      context.strokeStyle = isHighlighted ? hexToRgba(palette.nodeHighlight, 0.96) : hexToRgba(collectionColor, isDarkTheme ? 0.98 : 1)
       context.lineWidth = isActive || isHighlighted ? 2.5 : 1.35
       context.beginPath()
       context.arc(node.x, node.y, radius, 0, Math.PI * 2)

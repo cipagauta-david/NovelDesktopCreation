@@ -600,7 +600,7 @@ export function D3PixiRenderer({
         const targetScreen = toScreen(camera, target.x ?? width / 2, target.y ?? height / 2)
         const isRelated = !activeEntityId || edge.source === activeEntityId || edge.target === activeEntityId
         context.strokeStyle = isRelated
-          ? hexToRgba(palette.edgeRelated, 0.76)
+          ? hexToRgba(palette.edgeRelated, 1)
           : hexToRgba(palette.edgeMuted, 0.3)
         context.lineWidth = (isRelated ? 2 : 1) * Math.max(0.7, camera.scale)
         context.beginPath()

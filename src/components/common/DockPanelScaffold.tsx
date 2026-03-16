@@ -24,7 +24,12 @@ export function DockPanelScaffold({
   children,
 }: DockPanelScaffoldProps) {
   const collapseArrow = side === 'left' ? '‹' : '›'
-  const classes = ['dock-panel', className].filter(Boolean).join(' ')
+  const classes = [
+    'dock-panel',
+    side === 'left' ? 'dock-panel-left' : 'dock-panel-right',
+    footer ? 'dock-panel-has-footer' : '',
+    className,
+  ].filter(Boolean).join(' ')
 
   return (
     <aside className={classes}>

@@ -8,7 +8,7 @@
   width: 100%;
   padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 75%, transparent);
   background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
   box-shadow: var(--shadow-popover);
   backdrop-filter: blur(12px);
@@ -145,7 +145,28 @@
   height: 0.5rem;
   border-radius: 999px;
   background: var(--status-success);
-  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--status-success) 24%, transparent);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--status-success) 20%, transparent);
+}
+
+.ai-status-pill .status-dot.is-streaming {
+  background: var(--accent-primary);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent-primary) 26%, transparent);
+  animation: ai-led-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes ai-led-pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.72;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.72;
+  }
 }
 
 .workspace-status {

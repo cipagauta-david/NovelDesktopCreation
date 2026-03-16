@@ -1,4 +1,4 @@
-import { memo, useMemo, useState, type FormEvent } from 'react'
+import { memo, useMemo, useState } from 'react'
 
 import type {
   AiProposal,
@@ -16,8 +16,6 @@ import type {
 } from '../../types/workspace'
 import { getReferenceTokens } from '../../utils/references'
 import { DockPanelScaffold } from '../common/DockPanelScaffold'
-import { PanelTabs, type PanelTabOption } from '../common/PanelTabs'
-import { InspectorAssistantComposer } from '../inspector/InspectorAssistantComposer'
 import { InspectorContextTab } from '../inspector/panelTabs/InspectorContextTab'
 import { InspectorHistoryTab } from '../inspector/panelTabs/InspectorHistoryTab'
 import { InspectorMetaTab } from '../inspector/panelTabs/InspectorMetaTab'
@@ -60,8 +58,8 @@ type InspectorPanelProps = {
 
 type InspectorPanelTab = 'context' | 'meta' | 'history' | 'metrics'
 
-const INSPECTOR_TAB_OPTIONS: readonly PanelTabOption<InspectorPanelTab>[] = [
-  { id: 'context', label: 'Contexto / IA' },
+const INSPECTOR_TAB_OPTIONS: ReadonlyArray<{ id: InspectorPanelTab; label: string }> = [
+  { id: 'context', label: 'Contexto' },
   { id: 'meta', label: 'Metadatos' },
   { id: 'history', label: 'Historial' },
   { id: 'metrics', label: 'Metricas' },
@@ -99,7 +97,6 @@ export const InspectorPanel = memo(function InspectorPanel({
   onCollapse,
 }: InspectorPanelProps) {
   const [activePanelTab, setActivePanelTab] = useState<InspectorPanelTab>('context')
-  const [assistantDraft, setAssistantDraft] = useState('')
   const [relationTargetId, setRelationTargetId] = useState('')
   const [relationType, setRelationType] = useState('relates_to')
   const [relationLabel, setRelationLabel] = useState('')
@@ -119,19 +116,6 @@ export const InspectorPanel = memo(function InspectorPanel({
       .filter((entity): entity is EntityRecord => Boolean(entity))
   }, [activeDraft, activeProject])
 
-  function handleAssistantSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const nextPrompt = assistantDraft.trim()
-    if (!nextPrompt) {
-      return
-    }
-
-    const basePrompt = activeTab?.prompt?.trim() ?? ''
-    const mergedPrompt = `${basePrompt}${basePrompt ? '\n\n' : ''}Solicitud reciente del autor:\n${nextPrompt}`
-    onUpdateTabPrompt(mergedPrompt)
-    setAssistantDraft('')
-  }
-
   return (
     <DockPanelScaffold
       side={side}
@@ -139,23 +123,19 @@ export const InspectorPanel = memo(function InspectorPanel({
       collapseLabel="Ocultar contexto"
       onCollapse={onCollapse}
       tabs={
-        <PanelTabs
-          ariaLabel="Secciones del inspector"
-          activeTab={activePanelTab}
-          options={INSPECTOR_TAB_OPTIONS}
-          onChange={setActivePanelTab}
-        />
-      }
-      footer={
-        activePanelTab === 'context' ? (
-          <InspectorAssistantComposer
-            value={assistantDraft}
-            streamStatus={streamStatus}
-            onChange={setAssistantDraft}
-            onSubmit={handleAssistantSubmit}
-            onStopGeneration={onStopGeneration}
-          />
-        ) : undefined
+        <label className="dock-panel-tab-select-wrap">
+          <span className="visually-hidden">Secciones del inspector</span>
+          <select
+            className="dock-panel-tab-select"
+            aria-label="Secciones del inspector"
+            value={activePanelTab}
+            onChange={(event) => setActivePanelTab(event.target.value as InspectorPanelTab)}
+          >
+            {INSPECTOR_TAB_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>{option.label}</option>
+            ))}
+          </select>
+        </label>
       }
       className="inspector-panel-root"
     >

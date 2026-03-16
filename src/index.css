@@ -30,17 +30,19 @@
   --font-size-1: clamp(0.95rem, 0.88rem + 0.25vw, 1rem);
   --font-size-2: clamp(1.05rem, 0.95rem + 0.35vw, 1.15rem);
 
-  --control-height-sm: 2rem;
-  --control-height-md: 2.25rem;
-  --control-height-lg: 2.75rem;
+  --font-editor: var(--font-serif);
 
-  --bg-base: #f4f3ef;
-  --bg-surface: #fcfbf8;
-  --bg-surface-raised: #f6f3ee;
+  --control-height-sm: 2.5rem;
+  --control-height-md: 2.75rem;
+  --control-height-lg: 3rem;
+
+  --surface-base: #f4f3ef;
+  --surface-elevated: #fcfbf8;
+  --surface-canvas: #f6f3ee;
 
   --text-primary: #202833;
   --text-secondary: #4e5b6e;
-  --text-muted: #647186;
+  --text-muted: #5a677c;
 
   --border-subtle: rgba(15, 23, 42, 0.1);
   --border-strong: rgba(15, 23, 42, 0.2);
@@ -53,12 +55,15 @@
   --status-danger: #b64040;
 
   --overlay-scrim: rgba(15, 23, 42, 0.42);
-  --shadow-popover: 0 14px 34px rgba(15, 23, 42, 0.14);
+  --shadow-popover: 0 8px 24px rgba(15, 23, 42, 0.08);
 
-  --surface-panel: var(--bg-surface);
-  --surface-raised: var(--bg-surface-raised);
-  --surface-canvas: color-mix(in srgb, var(--bg-base) 82%, var(--bg-surface));
-  --surface-float: var(--bg-surface);
+  --bg-base: var(--surface-base);
+  --bg-surface: var(--surface-elevated);
+  --bg-surface-raised: var(--surface-canvas);
+
+  --surface-panel: var(--surface-elevated);
+  --surface-raised: var(--surface-canvas);
+  --surface-float: var(--surface-elevated);
   --surface-glass: color-mix(in srgb, var(--bg-surface) 94%, transparent);
 
   --text-heading: var(--text-primary);
@@ -80,13 +85,21 @@
   --motion-slow: 320ms ease;
 }
 
+:root[data-focus-mode='true'] {
+  --surface-base: color-mix(in srgb, var(--surface-base) 94%, #101825);
+  --surface-elevated: color-mix(in srgb, var(--surface-elevated) 88%, #111a27);
+  --surface-canvas: color-mix(in srgb, var(--surface-canvas) 84%, #111a27);
+  --text-muted: color-mix(in srgb, var(--text-primary) 52%, transparent);
+  --border-subtle: color-mix(in srgb, var(--border-subtle) 48%, transparent);
+}
+
 :root.dark,
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --bg-base: #0d141d;
-  --bg-surface: #141e29;
-  --bg-surface-raised: #1a2532;
+  --surface-base: #0d141d;
+  --surface-elevated: #141e29;
+  --surface-canvas: #1a2532;
 
   --text-primary: #e2e8f2;
   --text-secondary: #b8c4d7;
@@ -103,12 +116,15 @@
   --status-danger: #ef8b8b;
 
   --overlay-scrim: rgba(6, 10, 16, 0.56);
-  --shadow-popover: none;
+  --shadow-popover: 0 10px 26px rgba(4, 8, 12, 0.18);
 
-  --surface-panel: var(--bg-surface);
-  --surface-raised: var(--bg-surface-raised);
-  --surface-canvas: color-mix(in srgb, var(--bg-base) 66%, var(--bg-surface));
-  --surface-float: var(--bg-surface-raised);
+  --bg-base: var(--surface-base);
+  --bg-surface: var(--surface-elevated);
+  --bg-surface-raised: var(--surface-canvas);
+
+  --surface-panel: var(--surface-elevated);
+  --surface-raised: var(--surface-canvas);
+  --surface-float: var(--surface-canvas);
   --surface-glass: color-mix(in srgb, var(--bg-surface) 92%, transparent);
 
   --text-heading: var(--text-primary);
@@ -217,9 +233,10 @@ textarea:focus-visible,
 a:focus-visible,
 [role="button"]:focus-visible,
 [role="option"]:focus-visible {
-  outline: none;
+  outline: 2px solid color-mix(in srgb, var(--accent-primary) 90%, white 10%);
+  outline-offset: 2px;
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 0.17rem color-mix(in srgb, var(--accent-primary) 22%, transparent);
+  box-shadow: none;
 }
 
 input,
@@ -237,10 +254,9 @@ label {
 
 .eyebrow {
   display: inline-block;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 0.74rem;
-  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
@@ -299,12 +315,24 @@ label {
 }
 
 .icon-button {
-  min-width: 2.625rem;
-  min-height: 2.625rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   display: inline-grid;
   place-items: center;
   padding: 0;
   border-radius: 0.75rem;
+}
+
+@media (pointer: coarse) {
+  button,
+  [role='button'],
+  .icon-button,
+  .panel-tab,
+  .workspace-nav-item,
+  .view-mode-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 
 .icon-button.active {

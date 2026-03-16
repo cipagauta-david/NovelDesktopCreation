@@ -10,15 +10,15 @@
   border-radius: 18px;
   background: linear-gradient(
     180deg,
-    rgba(59, 130, 246, 0.12),
-    rgba(37, 99, 235, 0.05)
+    color-mix(in srgb, var(--accent-primary) 20%, transparent),
+    color-mix(in srgb, var(--accent-primary) 8%, transparent)
   );
-  border: 1px solid rgba(96, 165, 250, 0.26);
-  box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.05);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 26%, var(--border-subtle));
+  box-shadow: none;
 }
 
 .proposal-card-staged .primary-button {
-  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.22);
+  box-shadow: none;
 }
 
 .proposal-card h4 {
@@ -46,13 +46,11 @@
   background: var(--surface-panel);
   transition:
     transform var(--motion-fast),
-    box-shadow var(--motion-fast),
     border-color var(--motion-fast);
 }
 
 .reference-card-mini:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
   border-color: color-mix(in srgb, var(--brand-accent) 24%, var(--surface-panel-border));
 }
 
@@ -77,9 +75,8 @@
   background: var(--surface-base);
   color: var(--text-secondary);
   font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-weight: 600;
 }
 
 .meta-summary-item {
@@ -90,8 +87,7 @@
 .meta-summary-item span {
   font-size: 12px;
   color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
 }
 
 .meta-summary-item strong {
@@ -105,6 +101,37 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.streaming-skeleton {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.streaming-skeleton span {
+  display: block;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-elevated) 60%, var(--text-muted) 18%);
+  position: relative;
+  overflow: hidden;
+}
+
+.streaming-skeleton span::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent, color-mix(in srgb, white 12%, transparent), transparent);
+  transform: translateX(-100%);
+  animation: streaming-shimmer 1.5s linear infinite;
+}
+
+.streaming-skeleton span:nth-child(2) {
+  width: 86%;
+}
+
+.streaming-skeleton span:nth-child(3) {
+  width: 68%;
 }
 
 .streaming-indicator {
@@ -135,8 +162,24 @@
   white-space: pre-wrap;
   padding: 0.5rem;
   background: var(--surface-glass);
-  border-radius: 6px;
+  border-radius: 10px;
   border: 1px solid var(--border-subtle);
+  position: relative;
+  overflow: hidden;
+}
+
+.streaming-preview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    color-mix(in srgb, var(--surface-elevated) 10%, white 8%) 45%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: streaming-shimmer 1.5s linear infinite;
 }
 
 /* INSPECTOR ROOT — visual tuning over shared scaffold */
@@ -146,8 +189,14 @@
 }
 
 :root.dark .inspector-panel-root {
-  background: rgba(14, 26, 46, 0.72);
-  border-color: rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--surface-glass) 88%, transparent);
+  border-color: color-mix(in srgb, var(--border-subtle) 70%, transparent);
+}
+
+@keyframes streaming-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 

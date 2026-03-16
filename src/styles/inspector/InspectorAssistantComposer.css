@@ -1,6 +1,5 @@
 .assistant-composer {
-  position: sticky;
-  bottom: 0;
+  position: relative;
   margin-top: auto;
   flex-shrink: 0;
   display: grid;
@@ -20,9 +19,11 @@
   padding-right: 3.1rem;
   resize: none;
   overflow-y: auto;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--surface-panel-border, var(--border-subtle));
-  background: color-mix(in srgb, var(--surface-panel) 96%, transparent);
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 78%, transparent);
+  background: color-mix(in srgb, var(--surface-glass) 90%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .assistant-composer-actions {
@@ -44,9 +45,9 @@
   width: 34px;
   height: 34px;
   border-radius: var(--radius-md);
-  border: 1px solid color-mix(in srgb, var(--color-success) 55%, #0f172a);
-  background: color-mix(in srgb, var(--color-success) 72%, #0f172a);
-  color: #ecfdf5;
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 48%, var(--border-subtle));
+  background: color-mix(in srgb, var(--accent-primary) 68%, var(--surface-elevated));
+  color: var(--on-accent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -59,16 +60,16 @@
 
 .assistant-send-button:hover:not(:disabled) {
   transform: none;
-  border-color: color-mix(in srgb, var(--color-success) 78%, #020617);
-  background: color-mix(in srgb, var(--color-success) 82%, #020617);
-  color: #ffffff;
+  border-color: color-mix(in srgb, var(--accent-primary) 72%, var(--border-subtle));
+  background: color-mix(in srgb, var(--accent-primary) 80%, var(--surface-elevated));
+  color: var(--on-accent);
 }
 
 .assistant-send-button:disabled {
   opacity: 0.45;
-  color: #d1fae5;
-  border-color: color-mix(in srgb, var(--color-success) 42%, #0f172a);
-  background: color-mix(in srgb, var(--color-success) 52%, #0f172a);
+  color: var(--text-muted);
+  border-color: color-mix(in srgb, var(--border-subtle) 85%, transparent);
+  background: color-mix(in srgb, var(--surface-panel) 88%, transparent);
 }
 
 .assistant-composer-footer small::after {
@@ -79,12 +80,12 @@
 .assistant-stop-button {
   border-color: color-mix(in srgb, var(--color-error) 24%, transparent);
   background: color-mix(in srgb, var(--color-error) 16%, transparent);
-  color: #fca5a5;
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-error) 12%, transparent);
+  color: color-mix(in srgb, var(--color-error) 72%, var(--text-primary));
+  box-shadow: none;
 }
 
 .assistant-stop-button:hover {
   border-color: color-mix(in srgb, var(--color-error) 36%, transparent);
   background: color-mix(in srgb, var(--color-error) 24%, transparent);
-  box-shadow: 0 4px 20px color-mix(in srgb, var(--color-error) 18%, transparent);
+  box-shadow: none;
 }

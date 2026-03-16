@@ -10,7 +10,7 @@
   border: 1px solid var(--border-subtle);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: var(--shadow-glass);
+  box-shadow: var(--shadow-popover);
 }
 
 .dock-panel-sticky-head {
@@ -19,27 +19,38 @@
   z-index: 10;
   display: grid;
   gap: 0.55rem;
-  padding-bottom: 0.25rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 72%, transparent);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--surface-glass) 98%, var(--bg-surface-primary, #ffffff)),
+    color-mix(in srgb, var(--surface-glass) 98%, var(--bg-surface)),
     color-mix(in srgb, var(--surface-glass) 90%, transparent)
   );
 }
 
+.dock-panel-left .dock-panel-sticky-head {
+  position: relative;
+  top: auto;
+  z-index: 1;
+}
+
+.dock-panel-left .dock-panel-scroll-area {
+  padding-top: 0.1rem;
+}
+
 :root.dark .dock-panel,
 :root[data-theme="dark"] .dock-panel {
-  background: rgba(14, 26, 46, 0.72);
-  border-color: rgba(255, 255, 255, 0.06);
-  box-shadow: var(--shadow-glass);
+  background: color-mix(in srgb, var(--surface-glass) 88%, transparent);
+  border-color: color-mix(in srgb, var(--border-subtle) 72%, transparent);
+  box-shadow: var(--shadow-popover);
 }
 
 :root.dark .dock-panel-sticky-head,
 :root[data-theme="dark"] .dock-panel-sticky-head {
   background: linear-gradient(
     180deg,
-    rgba(8, 14, 25, 0.98),
-    rgba(8, 14, 25, 0.9)
+    color-mix(in srgb, var(--bg-surface) 96%, transparent),
+    color-mix(in srgb, var(--bg-surface) 84%, transparent)
   );
 }
 
@@ -52,6 +63,10 @@
   padding-right: 0.15rem;
 }
 
+.dock-panel-has-footer .dock-panel-scroll-area {
+  padding-bottom: 0.35rem;
+}
+
 .panel-dock-header {
   display: flex;
   align-items: center;
@@ -62,13 +77,27 @@
   justify-content: flex-end;
 }
 
+.dock-panel-tab-select-wrap {
+  display: block;
+}
+
+.dock-panel-tab-select {
+  width: 100%;
+  min-height: 2.4rem;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 88%, transparent);
+  background: color-mix(in srgb, var(--surface-elevated) 86%, transparent);
+  color: var(--text-primary);
+  padding: 0.36rem 0.65rem;
+  font-size: 0.9rem;
+}
+
 .dock-panel-footer {
-  position: sticky;
-  bottom: 0;
-  z-index: 8;
+  position: relative;
+  z-index: 1;
   margin-top: auto;
   padding-top: 0.45rem;
-  background: color-mix(in srgb, var(--surface-panel) 72%, transparent);
+  background: color-mix(in srgb, var(--surface-panel) 92%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid color-mix(in srgb, var(--surface-panel-border, var(--border-subtle)) 76%, transparent);

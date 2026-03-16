@@ -1,4 +1,4 @@
-import type { Project, WorkspaceView } from '../../types/workspace'
+import type { LlmStreamStatus, Project, WorkspaceView } from '../../types/workspace'
 import { useTheme } from '../../hooks/useTheme'
 import '../../styles/layout/WorkspaceHeader.css';
 
@@ -9,6 +9,7 @@ type WorkspaceHeaderProps = {
   activeNodeLabel: string
   activeNodeMeta: string
   aiModelLabel: string
+  streamStatus: LlmStreamStatus
   searchResultsCount: number
   workspaceView: WorkspaceView
   leftPanelOpen: boolean
@@ -25,6 +26,7 @@ export function WorkspaceHeader({
   activeNodeLabel,
   activeNodeMeta,
   aiModelLabel,
+  streamStatus,
   searchResultsCount,
   workspaceView,
   leftPanelOpen,
@@ -127,7 +129,10 @@ export function WorkspaceHeader({
           </button>
 
           <div className="ai-status-pill" title={`${project?.name ?? 'Proyecto'} · ${aiModelLabel}`}>
-            <span className="status-dot" aria-hidden="true" />
+            <span
+              className={streamStatus === 'streaming' ? 'status-dot is-streaming' : 'status-dot'}
+              aria-hidden="true"
+            />
             <span>{aiModelLabel}</span>
           </div>
         </div>

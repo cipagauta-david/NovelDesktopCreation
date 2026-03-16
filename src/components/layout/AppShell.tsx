@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
+import { useState, useEffect, useCallback, useRef, type FormEvent, type ReactNode } from 'react'
 import { EditorPanel } from '../panels/EditorPanel'
 import { GraphPanel } from '../panels/GraphPanel'
 import { InspectorPanel } from '../panels/InspectorPanel'
@@ -7,6 +7,7 @@ import { OnboardingScreen } from '../onboarding/OnboardingScreen'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { CommandPalette } from '../overlays/CommandPalette'
 import { ShortcutsOverlay } from '../overlays/ShortcutsOverlay'
+import { InspectorAssistantComposer } from '../inspector/InspectorAssistantComposer'
 import { Field } from '../common/Field'
 import { Button } from '../ui/Button'
 import { FormStack } from '../common/FormStack'
@@ -48,6 +49,8 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   const [syncConfigOpen, setSyncConfigOpen] = useState(false)
   const [rotateKeyOpen, setRotateKeyOpen] = useState(false)
   const [invalidateKeyOpen, setInvalidateKeyOpen] = useState(false)
+  const [assistantFabOpen, setAssistantFabOpen] = useState(false)
+  const [floatingAssistantDraft, setFloatingAssistantDraft] = useState('')
   const [renameProjectValue, setRenameProjectValue] = useState('')
   const [renameTabValue, setRenameTabValue] = useState('')
   const [syncEndpoint, setSyncEndpoint] = useState('')
@@ -150,20 +153,45 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
     setRotateKeyOpen(true)
   }
 
+  const handleFloatingAssistantSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const nextPrompt = floatingAssistantDraft.trim()
+    if (!nextPrompt) {
+      return
+    }
+    const basePrompt = workspace.activeTab?.prompt?.trim() ?? ''
+    const mergedPrompt = `${basePrompt}${basePrompt ? '\n\n' : ''}Solicitud reciente del autor:\n${nextPrompt}`
+    workspace.updateTabPrompt(mergedPrompt)
+    setFloatingAssistantDraft('')
+  }
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-focus-mode', zenMode ? 'true' : 'false')
+    return () => {
+      document.documentElement.setAttribute('data-focus-mode', 'false')
+    }
+  }, [zenMode])
+
   return (
     <main
-      className={['app-shell', godMode ? 'god-mode' : '', spectralMode ? 'is-spectral' : ''].filter(Boolean).join(' ')}
+      className={[
+        'app-shell',
+        zenMode ? 'is-focus-mode' : '',
+        godMode ? 'god-mode' : '',
+        spectralMode ? 'is-spectral' : '',
+        hasLeftPanel ? 'has-left-panel' : 'no-left-panel',
+        hasInspectorPanel ? 'has-right-panel' : 'no-right-panel',
+      ].filter(Boolean).join(' ')}
     >
     <div className={[zenMode ? 'workspace-header-shell is-hidden' : 'workspace-header-shell', spectralMode ? 'is-spectral' : ''].filter(Boolean).join(' ')}>
-        <WorkspaceHeader project={workspace.activeProject} activeNodeLabel={activeNodeLabel} activeNodeMeta={activeNodeMeta} aiModelLabel={aiModelLabel} searchResultsCount={workspace.searchResults.length} workspaceView={workspace.workspaceView} leftPanelOpen={hasLeftPanel} inspectorOpen={hasInspectorPanel} hasActiveSearch={workspace.searchQuery.trim().length > 0} onOpenSearch={() => setSearchPaletteOpen(true)} onViewChange={workspace.setWorkspaceView} onToggleLeftPanel={handleToggleNav} onToggleInspector={() => workspace.togglePanel('inspector')} />
+        <WorkspaceHeader project={workspace.activeProject} activeNodeLabel={activeNodeLabel} activeNodeMeta={activeNodeMeta} aiModelLabel={aiModelLabel} streamStatus={workspace.streamStatus} searchResultsCount={workspace.searchResults.length} workspaceView={workspace.workspaceView} leftPanelOpen={hasLeftPanel} inspectorOpen={hasInspectorPanel} hasActiveSearch={workspace.searchQuery.trim().length > 0} onOpenSearch={() => setSearchPaletteOpen(true)} onViewChange={workspace.setWorkspaceView} onToggleLeftPanel={handleToggleNav} onToggleInspector={() => workspace.togglePanel('inspector')} />
       </div>
 
       <section className={[zenMode ? 'workspace-stage focus-mode' : 'workspace-stage', godMode ? 'god-mode' : ''].filter(Boolean).join(' ')}>
         <section className="workspace-grid">
-          {!zenMode && (
-            <aside className={hasLeftPanel ? 'left-workspace-panel open' : 'left-workspace-panel'}>
-              {workspace.panels.sidebar && workspace.data.settings && (
-                <NavigationPanel
+          <aside className={hasLeftPanel ? 'left-workspace-panel open' : 'left-workspace-panel'}>
+            {!zenMode && workspace.panels.sidebar && workspace.data.settings && (
+              <NavigationPanel
                   settings={workspace.data.settings}
                   projects={workspace.data.projects}
                   activeProjectId={workspace.data.activeProjectId}
@@ -199,12 +227,18 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
                   onSelectEntity={workspace.selectEntity}
                   onReorderEntities={workspace.reorderEntities}
                   onCollapse={handleToggleNav}
-                />
-              )}
-            </aside>
-          )}
+              />
+            )}
+          </aside>
 
-          <div className={[zenMode ? 'main-column focus-mode' : 'main-column', godMode ? 'god-mode' : '', spectralMode ? 'is-spectral' : ''].filter(Boolean).join(' ')} onScroll={handleMainColumnScroll}>
+          <div className={[
+            zenMode ? 'main-column focus-mode' : 'main-column',
+            godMode ? 'god-mode' : '',
+            spectralMode ? 'is-spectral' : '',
+            hasLeftPanel && hasInspectorPanel ? 'with-both-side-panels' : '',
+            hasLeftPanel !== hasInspectorPanel ? 'with-single-side-panel' : '',
+            !hasLeftPanel && !hasInspectorPanel ? 'with-no-side-panels' : '',
+          ].filter(Boolean).join(' ')} onScroll={handleMainColumnScroll}>
             {workspace.workspaceView === 'graph' ? <GraphPanel graphModel={workspace.graphModel} collections={workspace.activeProject?.tabs ?? []} activeEntityId={workspace.activeEntity?.id} onSelectEntity={handleGraphSelectEntity} onNodePositionChange={workspace.updateGraphNodePosition} onUpdateCollectionColor={workspace.updateTabColor} onCreateRelation={(sourceEntityId, targetEntityId) => workspace.addRelation(sourceEntityId, targetEntityId, 'relates_to')} /> : workspace.activeEntity && workspace.activeDraft ? <EditorPanel entity={workspace.activeEntity} draft={workspace.activeDraft} templates={workspace.activeTemplates} allEntities={workspace.activeProject?.entities ?? []} editorViewRef={workspace.editorViewRef} referenceSuggestionActive={Boolean(workspace.referenceSuggestion)} suggestionOptions={workspace.suggestionOptions} saveStatus={workspace.saveStatus} streamStatus={workspace.streamStatus} zenMode={zenMode} onOpenEntity={workspace.selectEntity} onDraftChange={workspace.setDraft} onHandleEditorChange={workspace.handleEditorChange} onInsertReference={workspace.insertReference} onAttachImages={workspace.attachImages} onAddField={workspace.addField} onUpdateField={workspace.updateField} onRemoveField={workspace.removeField} onApplyTemplate={workspace.applyActiveTemplate} onDuplicate={workspace.duplicateActiveEntity} onArchive={workspace.archiveActiveEntity} onDelete={workspace.deleteActiveEntity} onGenerateAiProposal={workspace.generateAiProposal} onToggleZenMode={() => setZenMode(c => !c)} /> : <div className="panel surface-panel empty-state">Vacio</div>}
           </div>
 
@@ -217,16 +251,39 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
             />
           )}
 
-          {!zenMode && (
-             <aside className={hasInspectorPanel ? 'inspector-panel-shell open' : 'inspector-panel-shell'}>
-                 {workspace.panels.inspector && <InspectorPanel side="right" activeTab={workspace.activeTab} activeEntity={workspace.activeEntity} activeDraft={workspace.activeDraft} activeProject={workspace.activeProject} activeTemplates={workspace.activeTemplates} pendingProposal={workspace.pendingProposal} streamStatus={workspace.streamStatus} streamingText={workspace.streamingText} llmTraces={workspace.llmTraces} syncStatus={workspace.syncStatus} syncStats={workspace.syncStats} syncRemoteConfig={workspace.syncRemoteConfig} checkpoints={workspace.checkpoints} correlationReports={workspace.correlationReports} onUpdateTabPrompt={workspace.updateTabPrompt} onConfirmProposal={workspace.confirmAiProposal} onDismissProposal={workspace.dismissProposal} onStopGeneration={workspace.stopGeneration} onFlushRemoteSync={workspace.flushRemoteSync} onConfigureRemoteSync={async () => openSyncDialog()} onClearRemoteSyncCredential={workspace.clearRemoteSyncCredential} onRestoreCheckpoint={workspace.restoreCheckpoint} onRotateProviderCredential={async () => openRotateDialog()} onInvalidateProviderCredential={async () => setInvalidateKeyOpen(true)} onRefreshVaultMetadata={workspace.refreshVaultMetadata} onAddRelation={workspace.addRelation} onRemoveRelation={workspace.removeRelation} onCollapse={() => workspace.togglePanel('inspector')} />}
-             </aside>
-          )}
+          <aside className={hasInspectorPanel ? 'inspector-panel-shell open' : 'inspector-panel-shell'}>
+            {!zenMode && workspace.panels.inspector && <InspectorPanel side="right" activeTab={workspace.activeTab} activeEntity={workspace.activeEntity} activeDraft={workspace.activeDraft} activeProject={workspace.activeProject} activeTemplates={workspace.activeTemplates} pendingProposal={workspace.pendingProposal} streamStatus={workspace.streamStatus} streamingText={workspace.streamingText} llmTraces={workspace.llmTraces} syncStatus={workspace.syncStatus} syncStats={workspace.syncStats} syncRemoteConfig={workspace.syncRemoteConfig} checkpoints={workspace.checkpoints} correlationReports={workspace.correlationReports} onUpdateTabPrompt={workspace.updateTabPrompt} onConfirmProposal={workspace.confirmAiProposal} onDismissProposal={workspace.dismissProposal} onStopGeneration={workspace.stopGeneration} onFlushRemoteSync={workspace.flushRemoteSync} onConfigureRemoteSync={async () => openSyncDialog()} onClearRemoteSyncCredential={workspace.clearRemoteSyncCredential} onRestoreCheckpoint={workspace.restoreCheckpoint} onRotateProviderCredential={async () => openRotateDialog()} onInvalidateProviderCredential={async () => setInvalidateKeyOpen(true)} onRefreshVaultMetadata={workspace.refreshVaultMetadata} onAddRelation={workspace.addRelation} onRemoveRelation={workspace.removeRelation} onCollapse={() => workspace.togglePanel('inspector')} />}
+          </aside>
         </section>
       </section>
 
       {searchPaletteOpen && <CommandPalette searchQuery={workspace.searchQuery} searchResults={workspace.searchResults} onSearchChange={workspace.setSearchQuery} onSelectResult={handleSelectResult} onClose={() => setSearchPaletteOpen(false)} />}
       <ShortcutsOverlay open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      {assistantFabOpen && (
+        <section className="ai-fab-panel" aria-label="Asistente rápido">
+          <header className="ai-fab-panel-head">
+            <strong>Asistente IA</strong>
+            <button type="button" className="icon-button" onClick={() => setAssistantFabOpen(false)} aria-label="Cerrar asistente">
+              ✕
+            </button>
+          </header>
+          <InspectorAssistantComposer
+            value={floatingAssistantDraft}
+            streamStatus={workspace.streamStatus}
+            onChange={setFloatingAssistantDraft}
+            onSubmit={handleFloatingAssistantSubmit}
+            onStopGeneration={workspace.stopGeneration}
+          />
+        </section>
+      )}
+      <button
+        type="button"
+        className={assistantFabOpen ? 'ai-fab-button active' : 'ai-fab-button'}
+        onClick={() => setAssistantFabOpen((current) => !current)}
+        aria-label="Abrir asistente IA"
+      >
+        💬 IA
+      </button>
       {workspace.toast && <div className="toast">{workspace.toast}</div>}
       <StackedDialog open={renameProjectOpen} onOpenChange={setRenameProjectOpen} title="Renombrar proyecto">
         <Field label={<span className="visually-hidden">Nombre del proyecto</span>}>

@@ -2,7 +2,6 @@ import { memo, useState } from 'react'
 
 import type { AppSettings, CollectionTab, EntityRecord, EntityTemplate, Project } from '../../types/workspace'
 import { DockPanelScaffold } from '../common/DockPanelScaffold'
-import { PanelTabs, type PanelTabOption } from '../common/PanelTabs'
 import { Sidebar } from '../layout/Sidebar'
 import { TabBar } from '../layout/TabBar'
 import { EntityList } from './EntityList'
@@ -48,7 +47,7 @@ type NavigationPanelProps = {
 
 type NavigationPanelTab = 'workspace' | 'content'
 
-const NAVIGATION_TAB_OPTIONS: readonly PanelTabOption<NavigationPanelTab>[] = [
+const NAVIGATION_TAB_OPTIONS: ReadonlyArray<{ id: NavigationPanelTab; label: string }> = [
   { id: 'workspace', label: 'Proyecto' },
   { id: 'content', label: 'Colecciones' },
 ]
@@ -101,12 +100,19 @@ export const NavigationPanel = memo(function NavigationPanel({
       collapseLabel="Ocultar navegacion"
       onCollapse={onCollapse}
       tabs={
-        <PanelTabs
-          ariaLabel="Secciones de navegacion"
-          activeTab={activeNavigationTab}
-          options={NAVIGATION_TAB_OPTIONS}
-          onChange={setActiveNavigationTab}
-        />
+        <label className="dock-panel-tab-select-wrap">
+          <span className="visually-hidden">Secciones de navegación</span>
+          <select
+            className="dock-panel-tab-select"
+            aria-label="Secciones de navegación"
+            value={activeNavigationTab}
+            onChange={(event) => setActiveNavigationTab(event.target.value as NavigationPanelTab)}
+          >
+            {NAVIGATION_TAB_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>{option.label}</option>
+            ))}
+          </select>
+        </label>
       }
     >
       <div className="navigation-panel-layout">

@@ -6,8 +6,8 @@
 }
 
 .graph-panel {
-  background: var(--bg-surface-primary, #ffffff);
-  border: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -17,8 +17,8 @@
 
 :root.dark .graph-panel,
 :root[data-theme="dark"] .graph-panel {
-  background: rgba(10, 16, 28, 0.88);
-  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: color-mix(in srgb, var(--surface-elevated) 90%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
 }
 
 .graph-node:active {
@@ -44,23 +44,25 @@
       color-mix(in srgb, var(--color-primary) 10%, transparent),
       transparent 56%
     ),
-    var(--bg-surface-primary, #ffffff);
+    var(--surface-base);
+  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 1) 58%, rgba(0, 0, 0, 0.35) 84%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 1) 58%, rgba(0, 0, 0, 0.35) 84%, transparent 100%);
 }
 
 :root.dark .graph-canvas {
   background:
     radial-gradient(
       circle at 30% 30%,
-      rgba(0, 212, 238, 0.06),
+      color-mix(in srgb, var(--accent-primary) 9%, transparent),
       transparent 50%
     ),
     radial-gradient(
       circle at 70% 70%,
-      rgba(99, 102, 241, 0.04),
+      color-mix(in srgb, var(--text-muted) 16%, transparent),
       transparent 50%
     ),
-    var(--color-obsidian);
-  box-shadow: inset 0 0 80px rgba(0, 212, 238, 0.03);
+    var(--surface-base);
+  box-shadow: none;
 }
 
 .graph-node circle {
@@ -89,7 +91,7 @@
   font-weight: 600;
   pointer-events: none;
   paint-order: stroke fill;
-  stroke: var(--bg-surface-primary, #ffffff);
+  stroke: var(--surface-base);
   stroke-width: 4px;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -116,14 +118,14 @@
 }
 
 .graph-node-label rect {
-  fill: rgba(255, 255, 255, 0.9);
-  stroke: rgba(15, 23, 42, 0.12);
+  fill: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
+  stroke: color-mix(in srgb, var(--border-subtle) 88%, transparent);
   stroke-width: 1;
 }
 
 :root.dark .graph-node-label rect {
-  fill: rgba(8, 17, 31, 0.8);
-  stroke: rgba(148, 163, 184, 0.24);
+  fill: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
+  stroke: color-mix(in srgb, var(--border-subtle) 88%, transparent);
 }
 
 .graph-node-ring {

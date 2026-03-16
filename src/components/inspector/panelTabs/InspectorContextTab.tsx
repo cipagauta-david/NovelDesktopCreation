@@ -85,7 +85,15 @@ export function InspectorContextTab({
               <span className="streaming-dot" />
               <span>Recibiendo tokens...</span>
             </div>
-            {streamingText && <p className="streaming-preview">{streamingText.slice(-400)}</p>}
+            {streamingText ? (
+              <p className="streaming-preview">{streamingText.slice(-400)}</p>
+            ) : (
+              <div className="streaming-skeleton" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
+            )}
             <Button type="button" variant="ghost" className="ghost-button destructive-text" onClick={onStopGeneration}>
               ■ Detener generacion
             </Button>

@@ -19,6 +19,8 @@ type EditorHeaderProps = {
   onDelete: () => void
   onGenerateAiProposal: () => void
   onToggleZenMode: () => void
+  detailsOpen: boolean
+  onToggleDetails: () => void
 }
 
 export function EditorHeader({
@@ -33,6 +35,8 @@ export function EditorHeader({
   onDelete,
   onGenerateAiProposal,
   onToggleZenMode,
+  detailsOpen,
+  onToggleDetails,
 }: EditorHeaderProps) {
   return (
     <div className={zenMode ? 'panel-header editor-topbar-shell is-hidden' : 'panel-header editor-topbar-shell'}>
@@ -73,6 +77,11 @@ export function EditorHeader({
         <Button className="ghost-button mode-switch-pill" variant="ghost" type="button" onClick={onToggleZenMode}>
           {zenMode ? 'Salir de foco' : 'Modo foco'}
         </Button>
+        {!zenMode && (
+          <Button className="ghost-button mode-switch-pill" variant="ghost" type="button" onClick={onToggleDetails}>
+            {detailsOpen ? 'Ocultar detalles' : 'Mostrar detalles'}
+          </Button>
+        )}
         <ActionMenu
           label="Opciones de entidad"
           items={[

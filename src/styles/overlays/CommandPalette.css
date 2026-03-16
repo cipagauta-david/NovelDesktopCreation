@@ -1,46 +1,29 @@
-.toggle-chip {
-  min-height: 42px;
-  padding: 0.55rem 0.9rem;
-  border-radius: 999px;
-  background: rgba(17, 24, 39, 0.72);
-}
-
-.toggle-chip.active {
-  background: rgba(37, 99, 235, 0.2);
-  border-color: rgba(96, 165, 250, 0.35);
-}
-
-.search-results-empty {
-  padding: 0.95rem 1rem;
-  border-radius: 18px;
-  color: #9fb0c9;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px dashed rgba(148, 163, 184, 0.22);
-}
-
 .command-palette-backdrop {
   position: fixed;
   inset: 0;
   z-index: 30;
   display: grid;
-  place-items: start center;
-  padding: 10vh 1rem 1rem;
-  background: rgba(2, 6, 23, 0.58);
-  backdrop-filter: blur(10px);
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--overlay-scrim) 82%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: command-palette-backdrop-enter var(--motion-fast);
 }
 
 .command-palette {
-  width: min(760px, 100%);
-  max-height: min(70vh, 720px);
+  width: min(900px, 100%);
+  max-height: min(78vh, 760px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 0.9rem;
+  gap: 1rem;
   padding: 1rem;
-  border-radius: 24px;
-  background: rgba(8, 14, 25, 0.96);
-  border: 1px solid rgba(125, 211, 252, 0.14);
-  box-shadow: 0 32px 100px rgba(2, 6, 23, 0.52);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--surface-glass) 90%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 20%, var(--border-subtle));
+  box-shadow: var(--shadow-popover);
   will-change: transform, opacity;
+  animation: command-palette-enter var(--motion-slow);
 }
 
 .command-palette-header {
@@ -54,9 +37,12 @@
 }
 
 .command-palette-input-wrap input {
-  min-height: 50px;
-  border-radius: 18px;
-  padding-inline: 1rem;
+  min-height: 64px;
+  border-radius: 16px;
+  padding-inline: 1.2rem;
+  font-size: clamp(1.2rem, 2.2vw, 1.5rem);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 24%, var(--border-subtle));
+  background: color-mix(in srgb, var(--surface-elevated) 90%, transparent);
 }
 
 .command-palette-body {
@@ -66,11 +52,40 @@
 
 .command-palette-results {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.55rem;
 }
 
 .command-result {
   width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.command-result-icon {
+  width: 2rem;
+  height: 2rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
+}
+
+.command-result-copy {
+  display: grid;
+  gap: 0.12rem;
+  text-align: left;
+}
+
+.command-result-shortcut {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 86%, transparent);
+  border-radius: 999px;
+  min-width: 3.5rem;
+  text-align: center;
+  padding: 0.12rem 0.45rem;
 }
 
 .command-palette-empty {
@@ -78,37 +93,45 @@
   gap: 0.35rem;
   padding: 1rem;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.025);
-  color: #9fb0c9;
+  background: color-mix(in srgb, var(--surface-elevated) 70%, transparent);
+  color: var(--text-muted);
 }
 
 .command-palette-empty strong {
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .command-palette-empty p {
   margin: 0;
 }
 
-.command-palette-backdrop {
-  background: color-mix(in srgb, var(--color-obsidian) 58%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  animation: command-palette-backdrop-enter var(--motion-fast);
+.toggle-chip {
+  min-height: 2.5rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-canvas) 70%, transparent);
 }
 
-.command-palette {
-  background: var(--surface-glass-dark, var(--surface-glass));
-  border: 1px solid var(--border-active);
-  box-shadow:
-    var(--shadow-popover),
-    0 0 40px var(--color-primary-glow);
-  animation: command-palette-enter var(--motion-slow);
-  will-change: transform, opacity;
+.search-results-empty {
+  padding: 0.95rem 1rem;
+  border-radius: 14px;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--surface-elevated) 72%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--border-subtle) 84%, transparent);
 }
 
-:root:not(.dark) .command-palette {
-  background: rgba(252, 251, 249, 0.98);
-  border-color: rgba(15, 23, 42, 0.12);
-  box-shadow: 0 32px 100px rgba(15, 23, 42, 0.18);
+@keyframes command-palette-backdrop-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes command-palette-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
