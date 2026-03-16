@@ -2,6 +2,8 @@ import { useState } from 'react'
 
 import { providerModels } from '../../data/constants'
 import type { OnboardingPayload, Provider } from '../../types/workspace'
+import { Field } from '../common/Field'
+import { Button } from '../ui/Button'
 import '../../styles/onboarding/OnboardingScreen.css';
 
 
@@ -58,18 +60,16 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
           <h2>Empieza en menos de un minuto</h2>
         </div>
 
-        <label>
-          Tu nombre o perfil creativo
+        <Field label="Tu nombre o perfil creativo">
           <input
             value={authorName}
             onChange={(event) => setAuthorName(event.target.value)}
             placeholder="Ej. David · space opera política"
           />
-        </label>
+        </Field>
 
         <div className="inline-grid">
-          <label>
-            Proveedor
+          <Field label="Proveedor">
             <select
               value={provider}
               onChange={(event) => {
@@ -84,10 +84,9 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
                 </option>
               ))}
             </select>
-          </label>
+          </Field>
 
-          <label>
-            Modelo
+          <Field label="Modelo">
             <select value={model} onChange={(event) => setModel(event.target.value)}>
               {providerModels[provider].map((modelOption) => (
                 <option key={modelOption} value={modelOption}>
@@ -95,11 +94,13 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
                 </option>
               ))}
             </select>
-          </label>
+          </Field>
         </div>
 
-        <label>
-          API key o token
+        <Field
+          label="API key o token"
+          hint="Déjalo vacío si solo quieres entrar al modo local o demo."
+        >
           <input
             value={apiKey}
             onChange={(event) => setApiKey(event.target.value)}
@@ -107,12 +108,11 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
             type="password"
             autoComplete="current-password"
           />
-          <small className="form-hint">Déjalo vacío si solo quieres entrar al modo local o demo.</small>
-        </label>
+        </Field>
 
-        <button className="primary-button" type="submit">
+        <Button className="primary-button" variant="primary" type="submit">
           Entrar al espacio de trabajo
-        </button>
+        </Button>
       </form>
     </main>
   )

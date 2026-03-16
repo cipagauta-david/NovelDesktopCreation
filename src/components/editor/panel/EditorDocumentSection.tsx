@@ -43,7 +43,7 @@ export function EditorDocumentSection({
   setAssetDragActive,
 }: EditorDocumentSectionProps) {
   return (
-    <PanelSection title="Documento" meta="Usa {{}} para enlazar entidades relacionadas">
+    <PanelSection title="Documento" meta="Usa {{}} para enlazar entidades relacionadas" className="editor-doc-shell">
       <div
         ref={writingLaneRef}
         className={[

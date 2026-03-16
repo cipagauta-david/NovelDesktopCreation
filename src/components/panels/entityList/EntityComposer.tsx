@@ -1,4 +1,7 @@
 import type { EntityTemplate } from '../../../types/workspace'
+import { Field } from '../../common/Field'
+import { FormStack } from '../../common/FormStack'
+import { Button } from '../../ui/Button'
 import '../../../styles/panels/entityList/EntityComposer.css';
 
 
@@ -16,9 +19,8 @@ export function EntityComposer({
   onCreateEntity,
 }: EntityComposerProps) {
   return (
-    <div className="stacked-form entity-composer">
-      <label className="compact-label">
-        Plantilla base
+    <FormStack className="entity-composer">
+      <Field className="compact-label" label="Plantilla base" hintClassName="form-hint">
         <select value={selectedTemplateId} onChange={(event) => onTemplateChange(event.target.value)}>
           {templates.map((template) => (
             <option key={template.id} value={template.id}>
@@ -26,10 +28,10 @@ export function EntityComposer({
             </option>
           ))}
         </select>
-      </label>
-      <button className="ghost-button create-entity-button" type="button" onClick={onCreateEntity}>
+      </Field>
+      <Button className="ghost-button create-entity-button" variant="ghost" type="button" onClick={onCreateEntity}>
         Crear entidad
-      </button>
-    </div>
+      </Button>
+    </FormStack>
   )
 }

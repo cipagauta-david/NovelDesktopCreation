@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
 import { EditorPanel } from '../panels/EditorPanel'
 import { GraphPanel } from '../panels/GraphPanel'
 import { InspectorPanel } from '../panels/InspectorPanel'
@@ -7,12 +7,33 @@ import { OnboardingScreen } from '../onboarding/OnboardingScreen'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { CommandPalette } from '../overlays/CommandPalette'
 import { ShortcutsOverlay } from '../overlays/ShortcutsOverlay'
+import { Field } from '../common/Field'
+import { Button } from '../ui/Button'
+import { FormStack } from '../common/FormStack'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/Dialog'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import type { PersistedState } from '../../types/workspace'
 import * as Comlink from 'comlink'
 import type { AppWorker } from '../../data/worker'
 import '../../styles/layout/AppShell.css';
+
+type StackedDialogProps = {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  title: string
+  children: ReactNode
+}
+
+function StackedDialog({ open, onOpenChange, title, children }: StackedDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>
+        <FormStack>{children}</FormStack>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 
 
@@ -207,73 +228,60 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
       {searchPaletteOpen && <CommandPalette searchQuery={workspace.searchQuery} searchResults={workspace.searchResults} onSearchChange={workspace.setSearchQuery} onSelectResult={handleSelectResult} onClose={() => setSearchPaletteOpen(false)} />}
       <ShortcutsOverlay open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       {workspace.toast && <div className="toast">{workspace.toast}</div>}
-      <Dialog open={renameProjectOpen} onOpenChange={setRenameProjectOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Renombrar proyecto</DialogTitle></DialogHeader>
-          <div className="stacked-form">
-            <input value={renameProjectValue} onChange={(event) => setRenameProjectValue(event.target.value)} placeholder="Nombre del proyecto" />
-            <button type="button" className="primary-button" onClick={() => {
-              workspace.renameActiveProject(renameProjectValue)
-              setRenameProjectOpen(false)
-            }}>Guardar</button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <StackedDialog open={renameProjectOpen} onOpenChange={setRenameProjectOpen} title="Renombrar proyecto">
+        <Field label={<span className="visually-hidden">Nombre del proyecto</span>}>
+          <input value={renameProjectValue} onChange={(event) => setRenameProjectValue(event.target.value)} placeholder="Nombre del proyecto" />
+        </Field>
+        <Button type="button" variant="primary" className="primary-button" onClick={() => {
+          workspace.renameActiveProject(renameProjectValue)
+          setRenameProjectOpen(false)
+        }}>Guardar</Button>
+      </StackedDialog>
 
-      <Dialog open={renameTabOpen} onOpenChange={setRenameTabOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Renombrar colección</DialogTitle></DialogHeader>
-          <div className="stacked-form">
-            <input value={renameTabValue} onChange={(event) => setRenameTabValue(event.target.value)} placeholder="Nombre de la colección" />
-            <button type="button" className="primary-button" onClick={() => {
-              workspace.renameActiveTab(renameTabValue)
-              setRenameTabOpen(false)
-            }}>Guardar</button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <StackedDialog open={renameTabOpen} onOpenChange={setRenameTabOpen} title="Renombrar colección">
+        <Field label={<span className="visually-hidden">Nombre de la colección</span>}>
+          <input value={renameTabValue} onChange={(event) => setRenameTabValue(event.target.value)} placeholder="Nombre de la colección" />
+        </Field>
+        <Button type="button" variant="primary" className="primary-button" onClick={() => {
+          workspace.renameActiveTab(renameTabValue)
+          setRenameTabOpen(false)
+        }}>Guardar</Button>
+      </StackedDialog>
 
-      <Dialog open={syncConfigOpen} onOpenChange={setSyncConfigOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Configurar sync remoto</DialogTitle></DialogHeader>
-          <div className="stacked-form">
-            <input value={syncEndpoint} onChange={(event) => setSyncEndpoint(event.target.value)} placeholder="https://api.example.com" />
-            <input value={syncWorkspaceId} onChange={(event) => setSyncWorkspaceId(event.target.value)} placeholder="workspace-id" />
-            <input value={syncToken} onChange={(event) => setSyncToken(event.target.value)} placeholder="Bearer token (opcional para rotación)" />
-            <button type="button" className="primary-button" onClick={() => {
-              void workspace.configureRemoteSync({ endpoint: syncEndpoint, workspaceId: syncWorkspaceId, token: syncToken })
-              setSyncConfigOpen(false)
-            }}>Guardar configuración</button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <StackedDialog open={syncConfigOpen} onOpenChange={setSyncConfigOpen} title="Configurar sync remoto">
+        <Field label={<span className="visually-hidden">Endpoint remoto</span>}>
+          <input value={syncEndpoint} onChange={(event) => setSyncEndpoint(event.target.value)} placeholder="https://api.example.com" />
+        </Field>
+        <Field label={<span className="visually-hidden">Workspace ID remoto</span>}>
+          <input value={syncWorkspaceId} onChange={(event) => setSyncWorkspaceId(event.target.value)} placeholder="workspace-id" />
+        </Field>
+        <Field label={<span className="visually-hidden">Token bearer remoto</span>}>
+          <input value={syncToken} onChange={(event) => setSyncToken(event.target.value)} placeholder="Bearer token (opcional para rotación)" />
+        </Field>
+        <Button type="button" variant="primary" className="primary-button" onClick={() => {
+          void workspace.configureRemoteSync({ endpoint: syncEndpoint, workspaceId: syncWorkspaceId, token: syncToken })
+          setSyncConfigOpen(false)
+        }}>Guardar configuración</Button>
+      </StackedDialog>
 
-      <Dialog open={rotateKeyOpen} onOpenChange={setRotateKeyOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Rotar API key del proveedor</DialogTitle></DialogHeader>
-          <div className="stacked-form">
-            <input value={nextProviderKey} onChange={(event) => setNextProviderKey(event.target.value)} placeholder="Nueva API key" />
-            <button type="button" className="primary-button" onClick={() => {
-              void workspace.rotateProviderCredential(nextProviderKey)
-              setRotateKeyOpen(false)
-            }}>Rotar key</button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <StackedDialog open={rotateKeyOpen} onOpenChange={setRotateKeyOpen} title="Rotar API key del proveedor">
+        <Field label={<span className="visually-hidden">Nueva API key del proveedor</span>}>
+          <input value={nextProviderKey} onChange={(event) => setNextProviderKey(event.target.value)} placeholder="Nueva API key" />
+        </Field>
+        <Button type="button" variant="primary" className="primary-button" onClick={() => {
+          void workspace.rotateProviderCredential(nextProviderKey)
+          setRotateKeyOpen(false)
+        }}>Rotar key</Button>
+      </StackedDialog>
 
-      <Dialog open={invalidateKeyOpen} onOpenChange={setInvalidateKeyOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Invalidar API key</DialogTitle></DialogHeader>
-          <div className="stacked-form">
-            <p>Esta acción elimina la key del vault del proveedor activo.</p>
-            <button type="button" className="ghost-button" onClick={() => setInvalidateKeyOpen(false)}>Cancelar</button>
-            <button type="button" className="primary-button" onClick={() => {
-              void workspace.invalidateProviderCredential()
-              setInvalidateKeyOpen(false)
-            }}>Confirmar invalidación</button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <StackedDialog open={invalidateKeyOpen} onOpenChange={setInvalidateKeyOpen} title="Invalidar API key">
+        <p>Esta acción elimina la key del vault del proveedor activo.</p>
+        <Button type="button" variant="ghost" className="ghost-button" onClick={() => setInvalidateKeyOpen(false)}>Cancelar</Button>
+        <Button type="button" variant="primary" className="primary-button" onClick={() => {
+          void workspace.invalidateProviderCredential()
+          setInvalidateKeyOpen(false)
+        }}>Confirmar invalidación</Button>
+      </StackedDialog>
     </main>
   )
 }

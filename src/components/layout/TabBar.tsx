@@ -3,6 +3,8 @@ import { memo, useState } from 'react'
 import type { CollectionTab } from '../../types/workspace'
 import { resolveCollectionColor } from '../../utils/collectionColors'
 import { ActionMenu } from '../common/ActionMenu'
+import { Field } from '../common/Field'
+import { Button } from '../ui/Button'
 import '../../styles/layout/TabBar.css';
 
 
@@ -113,34 +115,36 @@ export const TabBar = memo(function TabBar({
 
       <div className="tab-toolbar">
         {activeTab && (
-          <label className="tab-color-field">
-            <span>Color</span>
+          <Field className="tab-color-field" label={<span>Color</span>}>
             <input
               type="color"
               value={resolveCollectionColor(activeTab.id, activeTab.color)}
               onChange={(event) => onUpdateActiveTabColor(event.target.value)}
               aria-label={`Color de ${activeTab.name}`}
             />
-          </label>
+          </Field>
         )}
-        <button
+        <Button
           type="button"
+          variant="secondary"
           className="secondary-button compact-button"
           onClick={() => setShowComposer((current) => !current)}
         >
           {showComposer ? 'Cerrar' : 'Nueva colección'}
-        </button>
+        </Button>
 
         {showComposer && (
           <div className="inline-composer">
-            <input
-              value={newTabName}
-              onChange={(event) => onNewTabNameChange(event.target.value)}
-              placeholder="Nombre de la nueva colección"
-            />
-            <button type="button" className="primary-button" onClick={onCreateTab}>
+            <Field label={<span className="visually-hidden">Nombre de la nueva colección</span>}>
+              <input
+                value={newTabName}
+                onChange={(event) => onNewTabNameChange(event.target.value)}
+                placeholder="Nombre de la nueva colección"
+              />
+            </Field>
+            <Button type="button" variant="primary" className="primary-button" onClick={onCreateTab}>
               Crear
-            </button>
+            </Button>
           </div>
         )}
       </div>

@@ -19,6 +19,7 @@ import {
 import type { EntityRecord, EntityTemplate } from '../../types/workspace'
 import { EmptyMiniState } from '../common/EmptyMiniState'
 import { PanelSection } from '../common/PanelSection'
+import { Button } from '../ui/Button'
 import { EntityComposer } from './entityList/EntityComposer'
 import { SortableEntityCard } from './entityList/SortableEntityCard'
 import '../../styles/panels/EntityList.css';
@@ -84,9 +85,9 @@ export const EntityList = memo(function EntityList({
         title={title}
         meta={`${count} entidades`}
         actions={
-          <button type="button" className="ghost-button compact-button" onClick={() => setShowComposer((current) => !current)}>
+          <Button type="button" variant="ghost" className="ghost-button compact-button" onClick={() => setShowComposer((current) => !current)}>
             {showComposer ? 'Cerrar' : 'Crear entidad'}
-          </button>
+          </Button>
         }
       >
         <div className="entity-list-layout">

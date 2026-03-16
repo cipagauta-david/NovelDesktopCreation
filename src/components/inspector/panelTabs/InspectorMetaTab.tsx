@@ -1,7 +1,12 @@
 import type { DraftState, EntityRecord, EntityTemplate, Project } from '../../../types/workspace'
 import { formatTimestamp } from '../../../utils/workspace'
 import { EmptyMiniState } from '../../common/EmptyMiniState'
+import { Field } from '../../common/Field'
+import { FormStack } from '../../common/FormStack'
+import { HistoryList } from '../../common/HistoryList'
 import { PanelSection } from '../../common/PanelSection'
+import { SummaryGrid } from '../../common/SummaryGrid'
+import { Button } from '../../ui/Button'
 
 type InspectorMetaTabProps = {
   activeEntity: EntityRecord | null
@@ -35,62 +40,52 @@ export function InspectorMetaTab({
   onRemoveRelation,
 }: InspectorMetaTabProps) {
   const relations = activeEntityRelations ?? []
+  const summaryItems = [
+    { label: 'Plantilla', value: activeTemplate?.name ?? 'Sin plantilla' },
+    { label: 'Etiquetas', value: activeDraft?.tagsText || 'Sin etiquetas' },
+    { label: 'Alias', value: activeDraft?.aliasesText || 'Sin alias' },
+    { label: 'Ultima edicion', value: activeEntity ? formatTimestamp(activeEntity.updatedAt) : '-' },
+    { label: 'Propiedades', value: activeDraft?.fields.length ?? 0 },
+    { label: 'Assets visuales', value: activeEntity?.assets.length ?? 0 },
+  ]
 
   return (
     <PanelSection title="Metadatos de la entidad" meta={activeEntity?.title ?? 'Sin entidad activa'}>
       {activeDraft && activeEntity ? (
         <>
-          <div className="meta-summary-list">
-            <div className="meta-summary-item">
-              <span>Plantilla</span>
-              <strong>{activeTemplate?.name ?? 'Sin plantilla'}</strong>
-            </div>
-            <div className="meta-summary-item">
-              <span>Etiquetas</span>
-              <strong>{activeDraft.tagsText || 'Sin etiquetas'}</strong>
-            </div>
-            <div className="meta-summary-item">
-              <span>Alias</span>
-              <strong>{activeDraft.aliasesText || 'Sin alias'}</strong>
-            </div>
-            <div className="meta-summary-item">
-              <span>Ultima edicion</span>
-              <strong>{formatTimestamp(activeEntity.updatedAt)}</strong>
-            </div>
-            <div className="meta-summary-item">
-              <span>Propiedades</span>
-              <strong>{activeDraft.fields.length}</strong>
-            </div>
-            <div className="meta-summary-item">
-              <span>Assets visuales</span>
-              <strong>{activeEntity.assets.length}</strong>
-            </div>
-          </div>
+          <SummaryGrid items={summaryItems} />
 
           <PanelSection title="Relaciones de dominio" meta={`${relations.length} salientes`} defaultOpen={false}>
-            <div className="stacked-form">
-              <select value={relationTargetId} onChange={(event) => onRelationTargetIdChange(event.target.value)}>
-                <option value="">Selecciona entidad destino</option>
-                {(activeProject?.entities ?? [])
-                  .filter((entity) => entity.id !== activeEntity.id && entity.status === 'active')
-                  .map((entity) => (
-                    <option key={entity.id} value={entity.id}>
-                      {entity.title}
-                    </option>
-                  ))}
-              </select>
-              <input
-                value={relationType}
-                onChange={(event) => onRelationTypeChange(event.target.value)}
-                placeholder="Tipo (ej. mentor_de)"
-              />
-              <input
-                value={relationLabel}
-                onChange={(event) => onRelationLabelChange(event.target.value)}
-                placeholder="Etiqueta opcional"
-              />
-              <button
+            <FormStack>
+              <Field label={<span className="visually-hidden">Entidad destino</span>}>
+                <select value={relationTargetId} onChange={(event) => onRelationTargetIdChange(event.target.value)}>
+                  <option value="">Selecciona entidad destino</option>
+                  {(activeProject?.entities ?? [])
+                    .filter((entity) => entity.id !== activeEntity.id && entity.status === 'active')
+                    .map((entity) => (
+                      <option key={entity.id} value={entity.id}>
+                        {entity.title}
+                      </option>
+                    ))}
+                </select>
+              </Field>
+              <Field label={<span className="visually-hidden">Tipo de relación</span>}>
+                <input
+                  value={relationType}
+                  onChange={(event) => onRelationTypeChange(event.target.value)}
+                  placeholder="Tipo (ej. mentor_de)"
+                />
+              </Field>
+              <Field label={<span className="visually-hidden">Etiqueta de relación</span>}>
+                <input
+                  value={relationLabel}
+                  onChange={(event) => onRelationLabelChange(event.target.value)}
+                  placeholder="Etiqueta opcional"
+                />
+              </Field>
+              <Button
                 type="button"
+                variant="primary"
                 className="primary-button"
                 onClick={() => {
                   if (!relationTargetId.trim() || !relationType.trim()) {
@@ -101,30 +96,34 @@ export function InspectorMetaTab({
                 }}
               >
                 Crear relacion
-              </button>
-            </div>
+              </Button>
+            </FormStack>
 
             {relations.length > 0 ? (
-              <div className="history-list">
-                {relations.map((relation) => {
+              <HistoryList
+                items={relations}
+                getKey={(relation) => relation.id}
+                renderItem={(relation) => {
                   const target = activeProject?.entities.find((entity) => entity.id === relation.targetEntityId)
+
                   return (
-                    <article key={relation.id} className="history-item">
+                    <>
                       <strong>
                         {relation.relationType} → {target?.title ?? relation.targetEntityId}
                       </strong>
                       <p>{relation.label ?? 'Sin etiqueta'}</p>
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         className="ghost-button compact-button"
                         onClick={() => onRemoveRelation(relation.id)}
                       >
                         Eliminar
-                      </button>
-                    </article>
+                      </Button>
+                    </>
                   )
-                })}
-              </div>
+                }}
+              />
             ) : (
               <EmptyMiniState>No hay relaciones formales para esta entidad.</EmptyMiniState>
             )}

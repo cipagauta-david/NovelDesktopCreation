@@ -1,5 +1,6 @@
 import type { FieldValue } from '../../../types/workspace'
 import { PanelSection } from '../../common/PanelSection'
+import { Button } from '../../ui/Button'
 import '../../../styles/editor/panel/EditorProperties.css';
 
 
@@ -25,9 +26,9 @@ export function EditorProperties({
       meta={`${fields.length} propiedades · ${assetCount} assets`}
       defaultOpen={false}
       actions={
-        <button type="button" className="ghost-button compact-button" onClick={onAddField}>
+        <Button type="button" variant="ghost" className="ghost-button compact-button" onClick={onAddField}>
           Añadir propiedad
-        </button>
+        </Button>
       }
     >
       <div className="heading-style-preview" aria-label="Estilo de títulos nivel 1">
@@ -47,9 +48,9 @@ export function EditorProperties({
             onChange={(event) => onUpdateField(field.id, 'value', event.target.value)}
             placeholder="Valor"
           />
-          <button type="button" className="icon-button" onClick={() => onRemoveField(field.id)}>
+          <Button type="button" variant="ghost" size="icon" className="icon-button" onClick={() => onRemoveField(field.id)}>
             ✕
-          </button>
+          </Button>
         </div>
       ))}
     </PanelSection>

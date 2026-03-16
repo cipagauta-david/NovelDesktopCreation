@@ -3,6 +3,7 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 
 import type { HistoryEvent } from '../../types/workspace'
 import { formatTimestamp } from '../../utils/workspace'
+import { HistoryList } from '../common/HistoryList'
 import '../../styles/inspector/InspectorHistory.css';
 
 
@@ -27,12 +28,11 @@ export function InspectorHistory({ items }: { items: HistoryEvent[] }) {
 
   if (!shouldVirtualize) {
     return (
-      <div className="history-list">
-        {items.map((event) => (
-          <article
-            key={event.id}
-            className={`history-item history-actor-${event.actorType}`}
-          >
+      <HistoryList
+        items={items}
+        getKey={(event) => event.id}
+        renderItem={(event) => (
+          <>
             <strong>
               <span className="history-actor-icon" aria-hidden="true">
                 {actorIcons[event.actorType] ?? '•'}
@@ -43,9 +43,10 @@ export function InspectorHistory({ items }: { items: HistoryEvent[] }) {
             <small>
               {event.actorType} · {formatTimestamp(event.timestamp)}
             </small>
-          </article>
-        ))}
-      </div>
+          </>
+        )}
+        className="inspector-history-list"
+      />
     )
   }
 

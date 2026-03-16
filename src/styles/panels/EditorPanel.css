@@ -33,9 +33,10 @@
 
 .editor-panel .editor-meta-shell {
   grid-area: meta;
+  min-width: 0;
 }
 
-.editor-panel .editor-grid > .split-grid:not(.editor-side-shell) {
+.editor-panel .editor-doc-shell {
   grid-area: doc;
   min-width: 0;
 }

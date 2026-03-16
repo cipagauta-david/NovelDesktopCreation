@@ -328,10 +328,6 @@ label {
   align-items: center;
 }
 
-.section-meta {
-  color: var(--text-muted);
-}
-
 .search-result,
 .list-card {
   padding: 0.9rem 1rem;

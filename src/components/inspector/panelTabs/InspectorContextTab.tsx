@@ -7,8 +7,11 @@ import type {
 } from '../../../types/workspace'
 import { buildSnippet } from '../../../utils/search'
 import { formatTimestamp } from '../../../utils/workspace'
+import { ActionRow } from '../../common/ActionRow'
 import { EmptyMiniState } from '../../common/EmptyMiniState'
+import { HistoryList } from '../../common/HistoryList'
 import { PanelSection } from '../../common/PanelSection'
+import { Button } from '../../ui/Button'
 
 type InspectorContextTabProps = {
   activeTab: CollectionTab | null
@@ -63,14 +66,14 @@ export function InspectorContextTab({
                   : 'No requiere propiedad extra'}
               </li>
             </ul>
-            <div className="toolbar-group">
-              <button className="primary-button" type="button" onClick={onConfirmProposal}>
+            <ActionRow>
+              <Button className="primary-button" variant="primary" type="button" onClick={onConfirmProposal}>
                 Confirmar
-              </button>
-              <button type="button" className="ghost-button" onClick={onDismissProposal}>
+              </Button>
+              <Button type="button" variant="ghost" className="ghost-button" onClick={onDismissProposal}>
                 Descartar
-              </button>
-            </div>
+              </Button>
+            </ActionRow>
           </div>
         </PanelSection>
       )}
@@ -83,18 +86,20 @@ export function InspectorContextTab({
               <span>Recibiendo tokens...</span>
             </div>
             {streamingText && <p className="streaming-preview">{streamingText.slice(-400)}</p>}
-            <button type="button" className="ghost-button destructive-text" onClick={onStopGeneration}>
+            <Button type="button" variant="ghost" className="ghost-button destructive-text" onClick={onStopGeneration}>
               ■ Detener generacion
-            </button>
+            </Button>
           </div>
         </PanelSection>
       )}
 
       {llmTraces.length > 0 && (
         <PanelSection title="Trazas de IA" meta={`${llmTraces.length} registros`} defaultOpen={false}>
-          <div className="history-list">
-            {llmTraces.slice(0, 10).map((trace) => (
-              <article key={trace.id} className="history-item">
+          <HistoryList
+            items={llmTraces.slice(0, 10)}
+            getKey={(trace) => trace.id}
+            renderItem={(trace) => (
+              <>
                 <strong>
                   {trace.provider} · {trace.model}
                 </strong>
@@ -103,9 +108,9 @@ export function InspectorContextTab({
                   {trace.status} · {trace.durationMs}ms · ~{trace.tokenEstimate} tokens ·{' '}
                   {formatTimestamp(trace.timestamp)}
                 </small>
-              </article>
-            ))}
-          </div>
+              </>
+            )}
+          />
         </PanelSection>
       )}
 

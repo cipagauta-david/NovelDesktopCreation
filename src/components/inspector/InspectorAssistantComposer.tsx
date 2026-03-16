@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, type FormEvent } from 'react'
 import type { LlmStreamStatus } from '../../types/workspace'
+import { Button } from '../ui/Button'
 import '../../styles/inspector/InspectorAssistantComposer.css';
 
 
@@ -43,27 +44,29 @@ export function InspectorAssistantComposer({ value, streamStatus, onChange, onSu
           placeholder="Pide una escena alternativa, continuidad, tono o conflicto…"
           rows={4}
         />
-        <button
+        <Button
           type="submit"
+          variant="primary"
           className="assistant-send-button"
           disabled={!canSubmit}
           aria-label="Enviar a la IA"
           title="Enviar"
         >
           ↗
-        </button>
+        </Button>
       </div>
 
       <div className="assistant-composer-actions assistant-composer-footer">
         <small>Se integra en las instrucciones activas de esta colección.</small>
         {isStreaming && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             className="ghost-button destructive-text assistant-stop-button"
             onClick={onStopGeneration}
           >
             ■ Detener IA
-          </button>
+          </Button>
         )}
       </div>
     </form>

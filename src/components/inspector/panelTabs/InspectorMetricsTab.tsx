@@ -6,7 +6,11 @@ import type {
   SyncRemoteConfig,
 } from '../../../types/workspace'
 import { formatTimestamp } from '../../../utils/workspace'
+import { ActionRow } from '../../common/ActionRow'
+import { HistoryList } from '../../common/HistoryList'
 import { PanelSection } from '../../common/PanelSection'
+import { SummaryGrid } from '../../common/SummaryGrid'
+import { Button } from '../../ui/Button'
 import { InspectorMetricsDashboard } from '../InspectorMetricsDashboard'
 
 type InspectorMetricsTabProps = {
@@ -40,6 +44,16 @@ export function InspectorMetricsTab({
   onRefreshVaultMetadata,
   onRestoreCheckpoint,
 }: InspectorMetricsTabProps) {
+  const remoteSummaryItems = [
+    { label: 'Endpoint', value: syncRemoteConfig?.endpoint ?? 'No configurado' },
+    { label: 'Workspace', value: syncRemoteConfig?.workspaceId ?? '-' },
+    { label: 'Token', value: syncRemoteConfig?.authTokenHint ?? '-' },
+    { label: 'Pendientes', value: syncStats?.pending ?? 0 },
+    { label: 'Retries', value: syncStats?.retries ?? 0 },
+    { label: 'Poison', value: syncStats?.poisoned ?? 0 },
+    { label: 'Conflictos', value: syncStats?.conflictsResolved ?? 0 },
+  ]
+
   return (
     <>
       <PanelSection title="Metricas operativas" meta={`${llmTraces.length} trazas`}>
@@ -47,88 +61,68 @@ export function InspectorMetricsTab({
       </PanelSection>
 
       <PanelSection title="Sync remoto" meta={syncStatus} defaultOpen={false}>
-        <div className="toolbar-group">
-          <button type="button" className="primary-button" onClick={() => void onFlushRemoteSync()}>
+        <ActionRow>
+          <Button type="button" variant="primary" className="primary-button" onClick={() => void onFlushRemoteSync()}>
             Flush remoto
-          </button>
-          <button type="button" className="ghost-button" onClick={() => void onConfigureRemoteSync()}>
+          </Button>
+          <Button type="button" variant="ghost" className="ghost-button" onClick={() => void onConfigureRemoteSync()}>
             Configurar
-          </button>
-          <button type="button" className="ghost-button" onClick={() => void onClearRemoteSyncCredential()}>
+          </Button>
+          <Button type="button" variant="ghost" className="ghost-button" onClick={() => void onClearRemoteSyncCredential()}>
             Borrar token
-          </button>
-        </div>
-        <div className="meta-summary-list">
-          <div className="meta-summary-item">
-            <span>Endpoint</span>
-            <strong>{syncRemoteConfig?.endpoint ?? 'No configurado'}</strong>
-          </div>
-          <div className="meta-summary-item">
-            <span>Workspace</span>
-            <strong>{syncRemoteConfig?.workspaceId ?? '-'}</strong>
-          </div>
-          <div className="meta-summary-item">
-            <span>Token</span>
-            <strong>{syncRemoteConfig?.authTokenHint ?? '-'}</strong>
-          </div>
-          <div className="meta-summary-item">
-            <span>Pendientes</span>
-            <strong>{syncStats?.pending ?? 0}</strong>
-          </div>
-          <div className="meta-summary-item">
-            <span>Retries</span>
-            <strong>{syncStats?.retries ?? 0}</strong>
-          </div>
-          <div className="meta-summary-item">
-            <span>Poison</span>
-            <strong>{syncStats?.poisoned ?? 0}</strong>
-          </div>
-          <div className="meta-summary-item">
-            <span>Conflictos</span>
-            <strong>{syncStats?.conflictsResolved ?? 0}</strong>
-          </div>
-        </div>
+          </Button>
+        </ActionRow>
+        <SummaryGrid items={remoteSummaryItems} />
       </PanelSection>
 
       <PanelSection title="Vault IA" meta="Operaciones" defaultOpen={false}>
-        <div className="toolbar-group">
-          <button type="button" className="ghost-button" onClick={() => void onRotateProviderCredential()}>
+        <ActionRow>
+          <Button type="button" variant="ghost" className="ghost-button" onClick={() => void onRotateProviderCredential()}>
             Rotar key
-          </button>
-          <button type="button" className="ghost-button" onClick={() => void onInvalidateProviderCredential()}>
+          </Button>
+          <Button type="button" variant="ghost" className="ghost-button" onClick={() => void onInvalidateProviderCredential()}>
             Invalidar key
-          </button>
-          <button type="button" className="ghost-button" onClick={() => void onRefreshVaultMetadata()}>
+          </Button>
+          <Button type="button" variant="ghost" className="ghost-button" onClick={() => void onRefreshVaultMetadata()}>
             Ver metadata
-          </button>
-        </div>
+          </Button>
+        </ActionRow>
       </PanelSection>
 
       <PanelSection title="Correlation reports" meta={`${correlationReports.length} registros`} defaultOpen={false}>
-        {correlationReports.slice(0, 10).map((report) => (
-          <article key={report.correlationId} className="history-item">
-            <strong>
-              {report.intent} · {report.status}
-            </strong>
-            <small>{report.correlationId}</small>
-          </article>
-        ))}
+        <HistoryList
+          items={correlationReports.slice(0, 10)}
+          getKey={(report) => report.correlationId}
+          renderItem={(report) => (
+            <>
+              <strong>
+                {report.intent} · {report.status}
+              </strong>
+              <small>{report.correlationId}</small>
+            </>
+          )}
+        />
       </PanelSection>
 
       <PanelSection title="Checkpoints" meta={`${checkpoints.length} disponibles`} defaultOpen={false}>
-        {checkpoints.slice(0, 10).map((checkpoint) => (
-          <article key={checkpoint.id} className="history-item">
-            <strong>{checkpoint.label}</strong>
-            <small>{formatTimestamp(checkpoint.createdAt)}</small>
-            <button
-              type="button"
-              className="ghost-button compact-button"
-              onClick={() => onRestoreCheckpoint(checkpoint.id)}
-            >
-              Restaurar
-            </button>
-          </article>
-        ))}
+        <HistoryList
+          items={checkpoints.slice(0, 10)}
+          getKey={(checkpoint) => checkpoint.id}
+          renderItem={(checkpoint) => (
+            <>
+              <strong>{checkpoint.label}</strong>
+              <small>{formatTimestamp(checkpoint.createdAt)}</small>
+              <Button
+                type="button"
+                variant="ghost"
+                className="ghost-button compact-button"
+                onClick={() => onRestoreCheckpoint(checkpoint.id)}
+              >
+                Restaurar
+              </Button>
+            </>
+          )}
+        />
       </PanelSection>
     </>
   )

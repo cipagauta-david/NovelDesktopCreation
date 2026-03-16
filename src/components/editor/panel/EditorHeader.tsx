@@ -1,6 +1,8 @@
 import type { DraftState, EntityRecord } from '../../../types/workspace'
 import { formatTimestamp } from '../../../utils/workspace'
+import { ActionRow } from '../../common/ActionRow'
 import { ActionMenu } from '../../common/ActionMenu'
+import { Button } from '../../ui/Button'
 import '../../../styles/editor/panel/EditorHeader.css';
 
 
@@ -64,13 +66,13 @@ export function EditorHeader({
           </span>
         </div>
       </div>
-      <div className="toolbar-group">
-        <button className="ai-button" type="button" onClick={onGenerateAiProposal}>
+      <ActionRow>
+        <Button className="ai-button" variant="ai" type="button" onClick={onGenerateAiProposal}>
           Sugerencia IA
-        </button>
-        <button className="ghost-button mode-switch-pill" type="button" onClick={onToggleZenMode}>
+        </Button>
+        <Button className="ghost-button mode-switch-pill" variant="ghost" type="button" onClick={onToggleZenMode}>
           {zenMode ? 'Salir de foco' : 'Modo foco'}
-        </button>
+        </Button>
         <ActionMenu
           label="Opciones de entidad"
           items={[
@@ -80,7 +82,7 @@ export function EditorHeader({
             { label: 'Eliminar entidad', onSelect: onDelete, destructive: true },
           ]}
         />
-      </div>
+      </ActionRow>
     </div>
   )
 }

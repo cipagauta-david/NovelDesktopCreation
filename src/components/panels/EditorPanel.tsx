@@ -347,7 +347,7 @@ export function EditorPanel({
       <div className="editor-grid">
         <EditorMetadata draft={draft} templates={templates} zenMode={zenMode} onDraftChange={onDraftChange} />
 
-        <div className="split-grid">{documentEditor}</div>
+        {documentEditor}
 
         <div className={zenMode ? 'split-grid editor-side-shell is-hidden' : 'split-grid editor-side-shell'}>
           <EditorProperties

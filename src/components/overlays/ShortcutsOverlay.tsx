@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { Button } from '../ui/Button'
 import '../../styles/overlays/ShortcutsOverlay.css';
 
 
@@ -43,9 +44,9 @@ export function ShortcutsOverlay({ open, onClose }: Props) {
       >
         <div className="shortcuts-header">
           <h2>Atajos de teclado</h2>
-          <button type="button" className="ghost-button compact-button" onClick={onClose} aria-label="Cerrar">
+          <Button type="button" variant="ghost" className="ghost-button compact-button" onClick={onClose} aria-label="Cerrar">
             ✕
-          </button>
+          </Button>
         </div>
         <ul className="shortcuts-list">
           {shortcuts.map((s) => (

@@ -1,13 +1,16 @@
-import { useState, type ReactNode } from 'react'
-import '../../styles/common/PanelSection.css';
-
-
+import type { ReactNode } from 'react'
+import { SectionCard } from './SectionCard'
 
 type PanelSectionProps = {
   title: string
   meta?: ReactNode
   actions?: ReactNode
   defaultOpen?: boolean
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  collapsible?: boolean
+  className?: string
+  bodyClassName?: string
   children: ReactNode
 }
 
@@ -16,30 +19,26 @@ export function PanelSection({
   meta,
   actions,
   defaultOpen = true,
+  open,
+  onOpenChange,
+  collapsible = true,
+  className,
+  bodyClassName,
   children,
 }: PanelSectionProps) {
-  const [open, setOpen] = useState(defaultOpen)
-
   return (
-    <section className="section-card">
-      <header className="section-card-header">
-        <div>
-          <h3>{title}</h3>
-          {meta && <div className="section-meta">{meta}</div>}
-        </div>
-        <div className="section-card-actions">
-          {actions}
-          <button
-            type="button"
-            className="section-toggle"
-            aria-label={open ? `Contraer ${title}` : `Expandir ${title}`}
-            onClick={() => setOpen((current) => !current)}
-          >
-            {open ? '⌃' : '⌄'}
-          </button>
-        </div>
-      </header>
-      {open && <div className="section-card-body">{children}</div>}
-    </section>
+    <SectionCard
+      title={title}
+      meta={meta}
+      actions={actions}
+      defaultOpen={defaultOpen}
+      open={open}
+      onOpenChange={onOpenChange}
+      collapsible={collapsible}
+      className={className}
+      bodyClassName={bodyClassName}
+    >
+      {children}
+    </SectionCard>
   )
 }

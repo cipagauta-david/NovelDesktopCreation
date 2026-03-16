@@ -2,7 +2,10 @@ import { memo, useState } from 'react'
 
 import type { AppSettings, EntityTemplate, Project } from '../../types/workspace'
 import { ActionMenu } from '../common/ActionMenu'
+import { Field } from '../common/Field'
+import { FormStack } from '../common/FormStack'
 import { PanelSection } from '../common/PanelSection'
+import { Button } from '../ui/Button'
 import '../../styles/layout/Sidebar.css';
 
 
@@ -60,13 +63,14 @@ export const Sidebar = memo(function Sidebar({
         meta={`${projects.length} proyecto${projects.length === 1 ? '' : 's'}`}
         actions={
           <>
-            <button
+            <Button
               type="button"
+              variant="secondary"
               className="secondary-button compact-button"
               onClick={() => setShowProjectForm((current) => !current)}
             >
               {showProjectForm ? 'Cerrar' : 'Nuevo'}
-            </button>
+            </Button>
             <ActionMenu
               label="Opciones de proyecto"
               items={[
@@ -111,21 +115,25 @@ export const Sidebar = memo(function Sidebar({
         </div>
 
         {showProjectForm && (
-          <div className="stacked-form compact-project-form">
-            <input
-              value={newProjectName}
-              onChange={(event) => onProjectNameChange(event.target.value)}
-              placeholder="Nombre del proyecto"
-            />
-            <textarea
-              value={newProjectDescription}
-              onChange={(event) => onProjectDescriptionChange(event.target.value)}
-              placeholder="Describe el mundo, tono o premisa que quieres construir"
-            />
-            <button className="primary-button" type="button" onClick={onCreateProject}>
+          <FormStack className="compact-project-form">
+            <Field label={<span className="visually-hidden">Nombre del proyecto</span>}>
+              <input
+                value={newProjectName}
+                onChange={(event) => onProjectNameChange(event.target.value)}
+                placeholder="Nombre del proyecto"
+              />
+            </Field>
+            <Field label={<span className="visually-hidden">Descripción del proyecto</span>}>
+              <textarea
+                value={newProjectDescription}
+                onChange={(event) => onProjectDescriptionChange(event.target.value)}
+                placeholder="Describe el mundo, tono o premisa que quieres construir"
+              />
+            </Field>
+            <Button className="primary-button" variant="primary" type="button" onClick={onCreateProject}>
               Crear proyecto
-            </button>
-          </div>
+            </Button>
+          </FormStack>
         )}
       </PanelSection>
 
@@ -134,9 +142,9 @@ export const Sidebar = memo(function Sidebar({
         meta={`${activeTemplates.length} disponibles`}
         defaultOpen={false}
         actions={
-          <button type="button" className="ghost-button compact-button" onClick={onSaveTemplate}>
+          <Button type="button" variant="ghost" className="ghost-button compact-button" onClick={onSaveTemplate}>
             Guardar plantilla actual
-          </button>
+          </Button>
         }
       >
         <div className="template-list template-list-compact">
