@@ -10,6 +10,7 @@ export function buildSeedProject(): Project {
     id: uid('tab'),
     name: tab.name,
     icon: tab.icon,
+    color: tab.color,
     prompt: tab.prompt,
   }))
 

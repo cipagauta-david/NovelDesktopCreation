@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { PersistedState, Project, CollectionTab } from '../../types/workspace'
+import { resolveCollectionColor } from '../../utils/collectionColors'
 import { createHistoryEvent, isoNow, uid } from '../../utils/workspace'
 
 type ChangeDescriptor = {
@@ -34,10 +35,12 @@ export function useTabManagement(
 
   function createTab() {
     if (!activeProject || !newTabName.trim()) return
+    const newTabId = uid('tab')
     const newTab: CollectionTab = {
-      id: uid('tab'),
+      id: newTabId,
       name: newTabName.trim(),
       icon: '✨',
+      color: resolveCollectionColor(newTabId),
       prompt: 'Especializa el comportamiento de IA para esta colección.',
     }
 
@@ -144,6 +147,27 @@ export function useTabManagement(
     })
   }
 
+  function updateTabColor(tabId: string, color: string) {
+    if (!activeProject) return
+    if (!/^#([0-9A-Fa-f]{6})$/.test(color)) return
+    const tab = activeProject.tabs.find((entry) => entry.id === tabId)
+    if (!tab) return
+
+    withProjectUpdate(activeProject.id, (project) => ({
+      ...project,
+      tabs: project.tabs.map((entry) => (entry.id === tabId ? { ...entry, color } : entry)),
+    }), {
+      label: 'Color de colección actualizado',
+      details: `Se actualizó el color de ${tab.name}.`,
+      tabId,
+    })
+  }
+
+  function updateActiveTabColor(color: string) {
+    if (!activeTab) return
+    updateTabColor(activeTab.id, color)
+  }
+
   return {
     newTabName,
     setNewTabName,
@@ -153,5 +177,7 @@ export function useTabManagement(
     renameActiveTab,
     deleteActiveTab,
     updateTabPrompt,
+    updateTabColor,
+    updateActiveTabColor,
   }
 }

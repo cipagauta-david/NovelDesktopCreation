@@ -1,15 +1,13 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 
 import { ENABLE_INCREMENTAL_GRAPH_HUD, GRAPH_RENDERER_KIND } from '../../data/constants'
-import type { GraphModel, GraphNode } from '../../types/workspace'
+import type { CollectionTab, GraphModel, GraphNode } from '../../types/workspace'
+import { hexToRgba, resolveCollectionColor } from '../../utils/collectionColors'
 import { resolveGraphRendererAdapter } from './graph/adapters'
-import { CosmographRenderer } from './graph/adapters/CosmographRenderer'
 import { D3PixiRenderer } from './graph/adapters/D3PixiRenderer'
-import { getNodeCategory } from './graph/category'
-import type { GraphCategory, GraphViewSettings } from './graph/contracts'
+import type { GraphViewSettings } from './graph/contracts'
 import { GraphHud } from './graph/GraphHud'
 import { radialRepulsionLayoutEngine } from './graph/layoutEngine'
-import { getCategoryPalette } from './graph/palette'
 import { useGraphViewModel } from './graph/viewModel'
 import '../../styles/panels/GraphPanel.css';
 
@@ -20,10 +18,11 @@ const CANVAS_NODE_THRESHOLD = 140
 
 type GraphPanelProps = {
   graphModel: GraphModel
+  collections: CollectionTab[]
   activeEntityId?: string
   onSelectEntity: (entityId: string, tabId: string) => void
   onNodePositionChange?: (entityId: string, x: number, y: number) => void
-  onResetLayout?: () => void
+  onUpdateCollectionColor?: (collectionId: string, color: string) => void
   onCreateRelation?: (sourceEntityId: string, targetEntityId: string) => void
 }
 
@@ -33,10 +32,11 @@ function clamp(value: number, min: number, max: number) {
 
 export const GraphPanel = memo(function GraphPanel({
   graphModel,
+  collections,
   activeEntityId,
   onSelectEntity,
   onNodePositionChange,
-  onResetLayout,
+  onUpdateCollectionColor,
   onCreateRelation,
 }: GraphPanelProps) {
   const svgRef = useRef<SVGSVGElement | null>(null)
@@ -47,26 +47,24 @@ export const GraphPanel = memo(function GraphPanel({
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null)
   const [relationSourceId, setRelationSourceId] = useState<string | null>(null)
   const [simulationPaused, setSimulationPaused] = useState(false)
+  const [orbitAroundCenter, setOrbitAroundCenter] = useState(false)
   const [centerViewRequestId, setCenterViewRequestId] = useState(0)
   const [hudPosition, setHudPosition] = useState({ x: 0, y: 0 })
   const [graphViewport, setGraphViewport] = useState({ width: VIEW_WIDTH, height: VIEW_HEIGHT })
   const [viewSettings, setViewSettings] = useState<GraphViewSettings>({
-    repulsionStrength: 26,
+    repulsionStrength: 78,
     gravityStrength: 38,
     linkWeightStrength: 34,
+    linkAttractionStrength: 52,
+    collectionCohesionStrength: 36,
+    collectionBoundaryRepulsionStrength: 128,
     searchTerm: '',
-    categoryVisibility: {
-      chapters: true,
-      characters: true,
-      world: true,
-      other: true,
-    },
+    collectionVisibility: {},
   })
   const rendererAdapter = resolveGraphRendererAdapter(GRAPH_RENDERER_KIND)
   const rendererStatus = rendererAdapter.getStatus()
-  const useCosmographRenderer = rendererAdapter.kind === 'cosmograph' && rendererStatus.ready
   const useD3PixiRenderer = rendererAdapter.kind === 'd3-pixi' && rendererStatus.ready
-  const useSimulationRenderer = useCosmographRenderer || useD3PixiRenderer
+  const useSimulationRenderer = useD3PixiRenderer
 
   const positionedNodes = useMemo(
     () =>
@@ -80,15 +78,46 @@ export const GraphPanel = memo(function GraphPanel({
 
   const graphViewModel = useGraphViewModel({
     graphModel,
+    collections,
     positionedNodes,
     settings: viewSettings,
     layoutEngine: radialRepulsionLayoutEngine,
     viewport: {
-      width: VIEW_WIDTH,
-      height: VIEW_HEIGHT,
+      width: graphViewport.width,
+      height: graphViewport.height,
       padding: VIEW_PADDING,
     },
   })
+
+  useEffect(() => {
+    setViewSettings((current) => {
+      const nextVisibility = { ...current.collectionVisibility }
+      let changed = false
+
+      for (const collection of collections) {
+        if (nextVisibility[collection.id] === undefined) {
+          nextVisibility[collection.id] = true
+          changed = true
+        }
+      }
+
+      for (const id of Object.keys(nextVisibility)) {
+        if (!collections.some((collection) => collection.id === id)) {
+          delete nextVisibility[id]
+          changed = true
+        }
+      }
+
+      if (!changed) {
+        return current
+      }
+
+      return {
+        ...current,
+        collectionVisibility: nextVisibility,
+      }
+    })
+  }, [collections])
 
   const connectedNodeIds = useMemo(
     () =>
@@ -103,6 +132,30 @@ export const GraphPanel = memo(function GraphPanel({
   )
 
   const useCanvasRenderer = !useSimulationRenderer && graphViewModel.renderedNodes.length >= CANVAS_NODE_THRESHOLD
+  const activeRendererKind = useD3PixiRenderer ? 'd3-pixi' : useCanvasRenderer ? 'native-canvas' : 'native-svg'
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) {
+      return
+    }
+
+    console.info('[GraphPanel][renderer-debug]', {
+      requestedRenderer: GRAPH_RENDERER_KIND,
+      adapterKind: rendererAdapter.kind,
+      adapterReady: rendererStatus.ready,
+      adapterReason: rendererStatus.reason,
+      activeRendererKind,
+      nodes: graphViewModel.renderedNodes.length,
+      edges: graphViewModel.filteredEdges.length,
+    })
+  }, [
+    activeRendererKind,
+    graphViewModel.filteredEdges.length,
+    graphViewModel.renderedNodes.length,
+    rendererAdapter.kind,
+    rendererStatus.ready,
+    rendererStatus.reason,
+  ])
 
   const getNodeRadius = useCallback(
     (nodeId: string, isActive: boolean) => {
@@ -141,10 +194,10 @@ export const GraphPanel = memo(function GraphPanel({
       return null
     }
     return {
-      x: ((event.clientX - rect.left) / rect.width) * VIEW_WIDTH,
-      y: ((event.clientY - rect.top) / rect.height) * VIEW_HEIGHT,
+      x: ((event.clientX - rect.left) / rect.width) * graphViewport.width,
+      y: ((event.clientY - rect.top) / rect.height) * graphViewport.height,
     }
-  }, [])
+  }, [graphViewport.height, graphViewport.width])
 
   const getClosestNodeId = useCallback((position: { x: number; y: number }) => {
     let bestId: string | null = null
@@ -189,20 +242,15 @@ export const GraphPanel = memo(function GraphPanel({
   const resetLayout = useCallback(() => {
     setNodeOverrides({})
     setRelationSourceId(null)
-    onResetLayout?.()
-  }, [onResetLayout])
+  }, [])
 
   const centerGraphView = useCallback(() => {
-    if (useCosmographRenderer) {
-      setCenterViewRequestId((current) => current + 1)
-      return
-    }
     if (useD3PixiRenderer) {
       setCenterViewRequestId((current) => current + 1)
       return
     }
     resetLayout()
-  }, [resetLayout, useCosmographRenderer, useD3PixiRenderer])
+  }, [resetLayout, useD3PixiRenderer])
 
   const submitSearchSelection = useCallback(() => {
     if (!graphViewModel.highlightedNodeId) {
@@ -285,14 +333,13 @@ export const GraphPanel = memo(function GraphPanel({
       const isHighlighted = graphViewModel.highlightedNodeId === node.id
       const dimmed = !isActive && !isConnected && Boolean(activeEntityId)
       const alpha = dimmed ? 0.22 : 1
-      const category = getNodeCategory(node.tabName)
-      const palette = getCategoryPalette(category, isDarkTheme)
+      const collectionColor = resolveCollectionColor(node.tabId, node.tabColor)
       const radius = getNodeRadius(node.id, isActive)
 
       if (isActive || isConnected || isHighlighted) {
         context.save()
         context.globalAlpha = alpha * (isActive ? 0.26 : 0.16)
-        context.fillStyle = palette.halo
+        context.fillStyle = hexToRgba(collectionColor, isDarkTheme ? 0.34 : 0.24)
         context.beginPath()
         context.arc(node.x, node.y, radius + (isActive ? 9 : 6), 0, Math.PI * 2)
         context.fill()
@@ -301,8 +348,8 @@ export const GraphPanel = memo(function GraphPanel({
 
       context.save()
       context.globalAlpha = alpha
-      context.fillStyle = palette.fill
-      context.strokeStyle = isHighlighted ? 'rgba(0, 212, 238, 0.96)' : palette.stroke
+      context.fillStyle = isHighlighted ? 'rgba(0, 212, 238, 0.96)' : hexToRgba(collectionColor, isDarkTheme ? 0.84 : 0.92)
+      context.strokeStyle = isHighlighted ? 'rgba(0, 212, 238, 0.96)' : hexToRgba(collectionColor, isDarkTheme ? 0.98 : 1)
       context.lineWidth = isActive || isHighlighted ? 2.5 : 1.35
       context.beginPath()
       context.arc(node.x, node.y, radius, 0, Math.PI * 2)
@@ -365,27 +412,38 @@ export const GraphPanel = memo(function GraphPanel({
         </div>
       </div>
 
-      <div className="graph-canvas-shell" ref={graphShellRef}>
+      <div
+        className="graph-canvas-shell"
+        ref={graphShellRef}
+        data-renderer-kind={activeRendererKind}
+        data-renderer-adapter={rendererAdapter.kind}
+      >
         {ENABLE_INCREMENTAL_GRAPH_HUD && (
           <GraphHud
-            availableCategories={graphViewModel.availableCategories}
-            categoryVisibility={viewSettings.categoryVisibility}
+            availableCollections={graphViewModel.availableCollections}
+            availableCollectionCounts={graphViewModel.availableCollectionCounts}
+            collectionVisibility={viewSettings.collectionVisibility}
             searchTerm={viewSettings.searchTerm}
+            searchMatchCount={graphViewModel.searchMatchCount}
             repulsionStrength={viewSettings.repulsionStrength}
             gravityStrength={viewSettings.gravityStrength}
             linkWeightStrength={viewSettings.linkWeightStrength}
+            linkAttractionStrength={viewSettings.linkAttractionStrength}
+            collectionCohesionStrength={viewSettings.collectionCohesionStrength}
+            collectionBoundaryRepulsionStrength={viewSettings.collectionBoundaryRepulsionStrength}
             simulationPaused={simulationPaused}
             position={hudPosition}
             disableSimulationToggle={!useSimulationRenderer}
-            onToggleCategory={(category: GraphCategory) => {
+            onToggleCollection={(collectionId: string) => {
               setViewSettings((current) => ({
                 ...current,
-                categoryVisibility: {
-                  ...current.categoryVisibility,
-                  [category]: !current.categoryVisibility[category],
+                collectionVisibility: {
+                  ...current.collectionVisibility,
+                  [collectionId]: !current.collectionVisibility[collectionId],
                 },
               }))
             }}
+            onCollectionColorChange={(collectionId, color) => onUpdateCollectionColor?.(collectionId, color)}
             onSearchTermChange={(value) => setViewSettings((current) => ({ ...current, searchTerm: value }))}
             onClearSearch={() => setViewSettings((current) => ({ ...current, searchTerm: '' }))}
             onSubmitSearch={submitSearchSelection}
@@ -407,6 +465,24 @@ export const GraphPanel = memo(function GraphPanel({
                 linkWeightStrength: value,
               }))
             }
+            onLinkAttractionStrengthChange={(value) =>
+              setViewSettings((current) => ({
+                ...current,
+                linkAttractionStrength: value,
+              }))
+            }
+            onCollectionCohesionStrengthChange={(value) =>
+              setViewSettings((current) => ({
+                ...current,
+                collectionCohesionStrength: value,
+              }))
+            }
+            onCollectionBoundaryRepulsionStrengthChange={(value) =>
+              setViewSettings((current) => ({
+                ...current,
+                collectionBoundaryRepulsionStrength: value,
+              }))
+            }
             onCenterView={centerGraphView}
             onToggleSimulation={() => setSimulationPaused((current) => !current)}
             onPositionChange={(nextPosition) => {
@@ -420,23 +496,7 @@ export const GraphPanel = memo(function GraphPanel({
           />
         )}
 
-        {useCosmographRenderer ? (
-          <CosmographRenderer
-            nodes={graphViewModel.renderedNodes}
-            edges={graphViewModel.filteredEdges}
-            activeEntityId={activeEntityId}
-            highlightedNodeId={graphViewModel.highlightedNodeId}
-            repulsionStrength={viewSettings.repulsionStrength}
-            gravityStrength={viewSettings.gravityStrength}
-            linkWeightStrength={viewSettings.linkWeightStrength}
-            simulationPaused={simulationPaused}
-            centerViewRequestId={centerViewRequestId}
-            degreeByNodeId={graphViewModel.degreeByNodeId}
-            onNodeSelect={handleNodeSelection}
-            onNodePositionChange={onNodePositionChange}
-            onAutoPauseAfterCenter={() => setSimulationPaused(true)}
-          />
-        ) : useD3PixiRenderer ? (
+        {useD3PixiRenderer ? (
           <D3PixiRenderer
             width={graphViewport.width}
             height={graphViewport.height}
@@ -448,19 +508,22 @@ export const GraphPanel = memo(function GraphPanel({
             repulsionStrength={viewSettings.repulsionStrength}
             gravityStrength={viewSettings.gravityStrength}
             linkWeightStrength={viewSettings.linkWeightStrength}
+            linkAttractionStrength={viewSettings.linkAttractionStrength}
+            collectionCohesionStrength={viewSettings.collectionCohesionStrength}
+            collectionBoundaryRepulsionStrength={viewSettings.collectionBoundaryRepulsionStrength}
             simulationPaused={simulationPaused}
             centerViewRequestId={centerViewRequestId}
+            orbitAroundCenter={orbitAroundCenter}
             degreeByNodeId={graphViewModel.degreeByNodeId}
             onNodeSelect={handleNodeSelection}
             onNodePositionChange={onNodePositionChange}
-            onAutoPauseAfterCenter={() => setSimulationPaused(true)}
           />
         ) : useCanvasRenderer ? (
           <canvas
             ref={canvasRef}
             className="graph-canvas"
-            width={VIEW_WIDTH}
-            height={VIEW_HEIGHT}
+            width={graphViewport.width}
+            height={graphViewport.height}
             role="img"
             aria-label="Mapa narrativo del proyecto"
             onPointerDown={(event) => {
@@ -485,8 +548,8 @@ export const GraphPanel = memo(function GraphPanel({
               setNodeOverrides((current) => ({
                 ...current,
                 [draggingNodeId]: {
-                  x: clamp(position.x, VIEW_PADDING, VIEW_WIDTH - VIEW_PADDING),
-                  y: clamp(position.y, VIEW_PADDING, VIEW_HEIGHT - VIEW_PADDING),
+                  x: clamp(position.x, VIEW_PADDING, graphViewport.width - VIEW_PADDING),
+                  y: clamp(position.y, VIEW_PADDING, graphViewport.height - VIEW_PADDING),
                 },
               }))
             }}
@@ -518,7 +581,7 @@ export const GraphPanel = memo(function GraphPanel({
           <svg
             className="graph-canvas"
             ref={svgRef}
-            viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
+            viewBox={`0 0 ${graphViewport.width} ${graphViewport.height}`}
             role="img"
             aria-label="Mapa narrativo del proyecto"
             onPointerMove={(event) => {
@@ -532,8 +595,8 @@ export const GraphPanel = memo(function GraphPanel({
               setNodeOverrides((current) => ({
                 ...current,
                 [draggingNodeId]: {
-                  x: clamp(position.x, VIEW_PADDING, VIEW_WIDTH - VIEW_PADDING),
-                  y: clamp(position.y, VIEW_PADDING, VIEW_HEIGHT - VIEW_PADDING),
+                  x: clamp(position.x, VIEW_PADDING, graphViewport.width - VIEW_PADDING),
+                  y: clamp(position.y, VIEW_PADDING, graphViewport.height - VIEW_PADDING),
                 },
               }))
             }}
@@ -574,8 +637,7 @@ export const GraphPanel = memo(function GraphPanel({
               const isActive = node.id === activeEntityId
               const isConnected = connectedNodeIds?.has(node.id) ?? true
               const isHighlighted = graphViewModel.highlightedNodeId === node.id
-              const category = getNodeCategory(node.tabName)
-              const palette = getCategoryPalette(category, true)
+              const collectionColor = resolveCollectionColor(node.tabId, node.tabColor)
               const radius = getNodeRadius(node.id, isActive)
 
               return (
@@ -592,7 +654,7 @@ export const GraphPanel = memo(function GraphPanel({
                       cy={node.y}
                       r={radius + (isActive ? 9 : 6)}
                       fill="none"
-                      stroke={palette.halo}
+                      stroke={hexToRgba(collectionColor, 0.44)}
                       strokeWidth={isActive ? '1.6' : '1.1'}
                       className="graph-node-halo"
                     />
@@ -602,8 +664,8 @@ export const GraphPanel = memo(function GraphPanel({
                     cy={node.y}
                     r={radius}
                     className="graph-node-circle"
-                    fill={palette.fill}
-                    stroke={isHighlighted ? 'var(--brand-accent)' : palette.stroke}
+                    fill={isHighlighted ? 'var(--brand-accent)' : hexToRgba(collectionColor, 0.9)}
+                    stroke={isHighlighted ? 'var(--brand-accent)' : hexToRgba(collectionColor, 1)}
                     strokeWidth={isActive || isHighlighted ? '2.4' : '1.3'}
                   />
                   {(isActive || isHighlighted) && (
@@ -637,15 +699,21 @@ export const GraphPanel = memo(function GraphPanel({
 
         <div className="graph-floating-toolbar" role="toolbar" aria-label="Acciones del mapa narrativo">
           <small>{graphViewModel.renderedNodes.length} nodos</small>
+          {useD3PixiRenderer && (
+            <button
+              type="button"
+              className={orbitAroundCenter ? 'ghost-button compact-button active' : 'ghost-button compact-button'}
+              onClick={() => setOrbitAroundCenter((current) => !current)}
+            >
+              {orbitAroundCenter ? '⏸️ Detener órbita' : '🛰️ Iniciar órbita'}
+            </button>
+          )}
           <button
             type="button"
             className={relationSourceId ? 'ghost-button compact-button active' : 'ghost-button compact-button'}
             onClick={() => setRelationSourceId((current) => (current ? null : activeEntityId ?? null))}
           >
             {relationSourceId ? '✕ Cancelar enlace' : '+ Crear enlace'}
-          </button>
-          <button type="button" className="ghost-button compact-button" onClick={resetLayout}>
-            ↺ Restablecer layout
           </button>
         </div>
       </div>

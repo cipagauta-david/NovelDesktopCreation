@@ -123,6 +123,7 @@ export const PersistedStateSchema = z.object({
       name: z.string(),
       prompt: z.string(),
       icon: z.string(),
+      color: z.string().optional(),
     })),
     entities: z.array(EntityRecordSchema),
     relations: z.array(z.object({

@@ -1,17 +1,26 @@
 import { useMemo } from 'react'
 
-import type { GraphModel, GraphNode } from '../../../types/workspace'
-import { GRAPH_CATEGORY_LABEL, getNodeCategory } from './category'
+import type { CollectionTab, GraphModel, GraphNode } from '../../../types/workspace'
+import { resolveCollectionColor } from '../../../utils/collectionColors'
 import type { GraphLayoutEngine, GraphLayoutViewport, GraphViewModel, GraphViewSettings } from './contracts'
+
+const normalizeText = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
 
 export function useGraphViewModel({
   graphModel,
+  collections,
   positionedNodes,
   settings,
   layoutEngine,
   viewport,
 }: {
   graphModel: GraphModel
+  collections: CollectionTab[]
   positionedNodes: GraphNode[]
   settings: GraphViewSettings
   layoutEngine: GraphLayoutEngine
@@ -29,21 +38,32 @@ export function useGraphViewModel({
     return degrees
   }, [graphModel.edges, graphModel.nodes])
 
-  const availableCategories = useMemo(() => {
-    const entries = new Set<ReturnType<typeof getNodeCategory>>()
+  const availableCollections = useMemo(
+    () =>
+      collections.map((collection) => ({
+        id: collection.id,
+        name: collection.name,
+        color: resolveCollectionColor(collection.id, collection.color),
+      })),
+    [collections],
+  )
+
+  const availableCollectionCounts = useMemo(() => {
+    const counts: Record<string, number> = Object.fromEntries(collections.map((collection) => [collection.id, 0]))
+
     for (const node of positionedNodes) {
-      entries.add(getNodeCategory(node.tabName))
+      counts[node.tabId] = (counts[node.tabId] ?? 0) + 1
     }
-    return Array.from(entries)
-  }, [positionedNodes])
+
+    return counts
+  }, [collections, positionedNodes])
 
   const filteredNodes = useMemo(
     () =>
       positionedNodes.filter((node) => {
-        const category = getNodeCategory(node.tabName)
-        return settings.categoryVisibility[category]
+        return settings.collectionVisibility[node.tabId] ?? true
       }),
-    [positionedNodes, settings.categoryVisibility],
+    [positionedNodes, settings.collectionVisibility],
   )
 
   const renderedNodes = useMemo(
@@ -60,26 +80,54 @@ export function useGraphViewModel({
 
   const nodeById = useMemo(() => new Map(renderedNodes.map((node) => [node.id, node])), [renderedNodes])
 
-  const normalizedSearch = settings.searchTerm.trim().toLowerCase()
-  const highlightedNodeId = useMemo(() => {
+  const normalizedSearch = normalizeText(settings.searchTerm)
+  const searchMatches = useMemo(() => {
     if (!normalizedSearch) {
-      return null
+      return [] as Array<{ id: string; score: number }>
     }
 
-    return (
-      renderedNodes.find((node) => {
-        const titleMatch = node.title.toLowerCase().includes(normalizedSearch)
-        const categoryMatch = GRAPH_CATEGORY_LABEL[getNodeCategory(node.tabName)].toLowerCase().includes(normalizedSearch)
-        return titleMatch || categoryMatch
-      })?.id ?? null
-    )
+    const tokens = normalizedSearch.split(/\s+/).filter(Boolean)
+    if (!tokens.length) {
+      return [] as Array<{ id: string; score: number }>
+    }
+
+    const matches: Array<{ id: string; score: number }> = []
+    for (const node of renderedNodes) {
+      const title = normalizeText(node.title)
+      const tabName = normalizeText(node.tabName)
+      const haystack = `${title} ${tabName}`
+
+      const matchesAllTokens = tokens.every((token) => haystack.includes(token))
+      if (!matchesAllTokens) {
+        continue
+      }
+
+      let score = 0
+      if (title === normalizedSearch) score += 220
+      if (tabName === normalizedSearch) score += 170
+      if (title.startsWith(normalizedSearch)) score += 120
+      if (tabName.startsWith(normalizedSearch)) score += 80
+      if (title.includes(normalizedSearch)) score += 52
+      if (tabName.includes(normalizedSearch)) score += 38
+      score += Math.max(0, 36 - title.length)
+
+      matches.push({ id: node.id, score })
+    }
+
+    matches.sort((a, b) => b.score - a.score)
+    return matches
   }, [normalizedSearch, renderedNodes])
 
+  const highlightedNodeId = searchMatches[0]?.id ?? null
+  const searchMatchCount = searchMatches.length
+
   return {
-    availableCategories,
+    availableCollections,
+    availableCollectionCounts,
     renderedNodes,
     filteredEdges,
     highlightedNodeId,
+    searchMatchCount,
     nodeById,
     degreeByNodeId,
   }

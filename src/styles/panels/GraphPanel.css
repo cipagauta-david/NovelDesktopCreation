@@ -7,6 +7,9 @@
   background: var(--bg-surface-primary, #ffffff);
   border: 1px solid var(--border-subtle);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 10.4rem);
 }
 
 :root.dark .graph-panel,
@@ -35,7 +38,8 @@
 /* GRAPH CANVAS — El Mapa Estelar */
 .graph-canvas {
   width: 100%;
-  min-height: 540px;
+  height: 100%;
+  min-height: 0;
   border-radius: 20px;
   border: 1px solid var(--border-subtle);
   background:
@@ -111,6 +115,8 @@
 .graph-canvas-shell {
   position: relative;
   isolation: isolate;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .graph-node-label rect {
@@ -203,6 +209,9 @@
 }
 
 .graph-hud-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   min-height: 28px;
   padding: 0.22rem 0.55rem;
   border-radius: var(--radius-md);
@@ -211,6 +220,24 @@
   color: var(--text-secondary);
   font-size: 0.74rem;
   font-weight: 600;
+}
+
+.graph-hud-collection-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+  flex: 0 0 auto;
+}
+
+.graph-hud-color-input {
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  margin-left: 0.1rem;
 }
 
 .graph-hud-toggle.active {
@@ -225,6 +252,17 @@
   border-radius: var(--radius-sm);
   border: 1px solid color-mix(in srgb, var(--surface-panel-border, var(--border-subtle)) 92%, transparent);
   background: color-mix(in srgb, var(--surface-base) 94%, transparent);
+}
+
+.graph-hud-search-meta {
+  min-width: 26px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.08rem 0.36rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--surface-panel-border, var(--border-subtle)) 88%, transparent);
 }
 
 .graph-hud-clear {
@@ -266,13 +304,6 @@
   margin-top: 0.2rem;
   color: var(--text-secondary);
   font-size: 0.74rem;
-}
-
-.graph-cosmograph {
-  width: 100%;
-  min-height: 540px;
-  border-radius: 20px;
-  overflow: hidden;
 }
 
 .graph-pixi {

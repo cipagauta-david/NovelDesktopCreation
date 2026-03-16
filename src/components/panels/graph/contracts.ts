@@ -2,11 +2,20 @@ import type { GraphEdge, GraphNode } from '../../../types/workspace'
 
 export type GraphCategory = 'chapters' | 'characters' | 'world' | 'other'
 
+export type GraphCollectionMeta = {
+  id: string
+  name: string
+  color: string
+}
+
 export type GraphViewSettings = {
   repulsionStrength: number
   gravityStrength: number
   linkWeightStrength: number
-  categoryVisibility: Record<GraphCategory, boolean>
+  linkAttractionStrength: number
+  collectionCohesionStrength: number
+  collectionBoundaryRepulsionStrength: number
+  collectionVisibility: Record<string, boolean>
   searchTerm: string
 }
 
@@ -29,10 +38,12 @@ export type GraphLayoutEngine = {
 }
 
 export type GraphViewModel = {
-  availableCategories: GraphCategory[]
+  availableCollections: GraphCollectionMeta[]
+  availableCollectionCounts: Record<string, number>
   renderedNodes: GraphNode[]
   filteredEdges: GraphEdge[]
   highlightedNodeId: string | null
+  searchMatchCount: number
   nodeById: Map<string, GraphNode>
   degreeByNodeId: Map<string, number>
 }

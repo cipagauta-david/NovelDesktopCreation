@@ -29,7 +29,8 @@ export function useGraphManagement({ activeProject, graphLayouts, setGraphLayout
     const nodes = activeProject.entities.filter((e) => e.status === 'active').map((e, index, all) => {
       const savedPos = layout[e.id]
       const angle = (Math.PI * 2 * index) / Math.max(all.length, 1)
-      const tabName = activeProject.tabs.find((tab) => tab.id === e.tabId)?.name ?? 'Sin categoría'
+      const tab = activeProject.tabs.find((entry) => entry.id === e.tabId)
+      const tabName = tab?.name ?? 'Sin categoría'
       return {
         id: e.id,
         title: e.title,
@@ -37,6 +38,7 @@ export function useGraphManagement({ activeProject, graphLayouts, setGraphLayout
         y: savedPos?.y ?? 220 + Math.sin(angle) * 160,
         tabId: e.tabId,
         tabName,
+        tabColor: tab?.color,
       }
     })
     const referencedEdges = activeProject.entities.flatMap((e) =>

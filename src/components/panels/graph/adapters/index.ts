@@ -1,11 +1,9 @@
-import { cosmographRendererAdapter } from './cosmographAdapter'
 import { d3PixiRendererAdapter } from './d3PixiAdapter'
 import { nativeGraphRendererAdapter } from './nativeAdapter'
 import type { GraphRendererAdapter, GraphRendererKind } from './types'
 
 const ADAPTERS: Record<GraphRendererKind, GraphRendererAdapter> = {
   native: nativeGraphRendererAdapter,
-  cosmograph: cosmographRendererAdapter,
   'd3-pixi': d3PixiRendererAdapter,
 }
 

@@ -1,6 +1,7 @@
 import { memo, useState } from 'react'
 
 import type { CollectionTab } from '../../types/workspace'
+import { resolveCollectionColor } from '../../utils/collectionColors'
 import { ActionMenu } from '../common/ActionMenu'
 import '../../styles/layout/TabBar.css';
 
@@ -16,6 +17,7 @@ type TabBarProps = {
   onMoveTab: (direction: -1 | 1) => void
   onRenameTab: () => void
   onDeleteTab: () => void
+  onUpdateActiveTabColor: (color: string) => void
 }
 
 function renderCollectionIcon(name: string) {
@@ -64,6 +66,7 @@ export const TabBar = memo(function TabBar({
   onMoveTab,
   onRenameTab,
   onDeleteTab,
+  onUpdateActiveTabColor,
 }: TabBarProps) {
   const [showComposer, setShowComposer] = useState(false)
 
@@ -99,7 +102,7 @@ export const TabBar = memo(function TabBar({
               role="treeitem"
               aria-selected={tab.id === activeTab?.id}
             >
-              <span className="tab-tree-icon">{renderCollectionIcon(tab.name)}</span>
+              <span className="tab-tree-icon" style={{ color: resolveCollectionColor(tab.id, tab.color) }}>{renderCollectionIcon(tab.name)}</span>
               <span className="tab-tree-copy">
                 <strong>{tab.name}</strong>
               </span>
@@ -109,6 +112,17 @@ export const TabBar = memo(function TabBar({
       </div>
 
       <div className="tab-toolbar">
+        {activeTab && (
+          <label className="tab-color-field">
+            <span>Color</span>
+            <input
+              type="color"
+              value={resolveCollectionColor(activeTab.id, activeTab.color)}
+              onChange={(event) => onUpdateActiveTabColor(event.target.value)}
+              aria-label={`Color de ${activeTab.name}`}
+            />
+          </label>
+        )}
         <button
           type="button"
           className="secondary-button compact-button"

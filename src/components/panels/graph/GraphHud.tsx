@@ -1,45 +1,62 @@
-import { GRAPH_CATEGORY_LABEL } from './category'
-import type { GraphCategory } from './contracts'
+import type { GraphCollectionMeta } from './contracts'
 
 type GraphHudProps = {
-  availableCategories: GraphCategory[]
-  categoryVisibility: Record<GraphCategory, boolean>
+  availableCollections: GraphCollectionMeta[]
+  availableCollectionCounts: Record<string, number>
+  collectionVisibility: Record<string, boolean>
   searchTerm: string
+  searchMatchCount: number
   repulsionStrength: number
   gravityStrength: number
   linkWeightStrength: number
+  linkAttractionStrength: number
+  collectionCohesionStrength: number
+  collectionBoundaryRepulsionStrength: number
   simulationPaused: boolean
   position?: { x: number; y: number }
   disableSimulationToggle?: boolean
-  onToggleCategory: (category: GraphCategory) => void
+  onToggleCollection: (collectionId: string) => void
+  onCollectionColorChange: (collectionId: string, color: string) => void
   onSearchTermChange: (value: string) => void
   onClearSearch: () => void
   onSubmitSearch: () => void
   onRepulsionStrengthChange: (value: number) => void
   onGravityStrengthChange: (value: number) => void
   onLinkWeightStrengthChange: (value: number) => void
+  onLinkAttractionStrengthChange: (value: number) => void
+  onCollectionCohesionStrengthChange: (value: number) => void
+  onCollectionBoundaryRepulsionStrengthChange: (value: number) => void
   onCenterView: () => void
   onToggleSimulation: () => void
   onPositionChange?: (position: { x: number; y: number }) => void
 }
 
 export function GraphHud({
-  availableCategories,
-  categoryVisibility,
+  availableCollections,
+  availableCollectionCounts,
+  collectionVisibility,
   searchTerm,
+  searchMatchCount,
   repulsionStrength,
   gravityStrength,
   linkWeightStrength,
+  linkAttractionStrength,
+  collectionCohesionStrength,
+  collectionBoundaryRepulsionStrength,
   simulationPaused,
   position,
   disableSimulationToggle,
-  onToggleCategory,
+  onToggleCollection,
+  onCollectionColorChange,
   onSearchTermChange,
   onClearSearch,
   onSubmitSearch,
   onRepulsionStrengthChange,
   onGravityStrengthChange,
   onLinkWeightStrengthChange,
+  onLinkAttractionStrengthChange,
+  onCollectionCohesionStrengthChange,
+  onCollectionBoundaryRepulsionStrengthChange,
   onCenterView,
   onToggleSimulation,
   onPositionChange,
@@ -92,14 +109,23 @@ export function GraphHud({
       </div>
 
       <div className="graph-hud-row graph-hud-filters">
-        {availableCategories.map((category) => (
+        {availableCollections.map((collection) => (
           <button
-            key={category}
+            key={collection.id}
             type="button"
-            className={categoryVisibility[category] ? 'graph-hud-toggle active' : 'graph-hud-toggle'}
-            onClick={() => onToggleCategory(category)}
+            className={collectionVisibility[collection.id] ? 'graph-hud-toggle active' : 'graph-hud-toggle'}
+            onClick={() => onToggleCollection(collection.id)}
           >
-            {GRAPH_CATEGORY_LABEL[category]}
+            <span className="graph-hud-collection-dot" style={{ backgroundColor: collection.color }} aria-hidden="true" />
+            {collection.name} ({availableCollectionCounts[collection.id] ?? 0})
+            <input
+              type="color"
+              className="graph-hud-color-input"
+              value={collection.color}
+              aria-label={`Color de ${collection.name}`}
+              onClick={(event) => event.stopPropagation()}
+              onChange={(event) => onCollectionColorChange(collection.id, event.target.value)}
+            />
           </button>
         ))}
       </div>
@@ -109,7 +135,7 @@ export function GraphHud({
           type="search"
           value={searchTerm}
           onChange={(event) => onSearchTermChange(event.target.value)}
-          placeholder="Buscar nodo..."
+          placeholder="Buscar nodo o colección..."
           aria-label="Buscar nodo"
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
@@ -117,6 +143,7 @@ export function GraphHud({
             }
           }}
         />
+        {searchTerm.trim() && <small className="graph-hud-search-meta">{searchMatchCount}</small>}
         {searchTerm && (
           <button type="button" className="graph-hud-clear" onClick={onClearSearch}>
             Limpiar
@@ -143,7 +170,7 @@ export function GraphHud({
         <input
           type="range"
           min={0}
-          max={100}
+          max={200}
           value={repulsionStrength}
           onChange={(event) => onRepulsionStrengthChange(Number(event.target.value))}
           aria-label="Repulsión de nodos"
@@ -175,6 +202,45 @@ export function GraphHud({
           aria-label="Peso de enlaces"
         />
         <small>{linkWeightStrength}%</small>
+      </label>
+
+      <label className="graph-hud-slider">
+        <span>Atracción enlaces</span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={linkAttractionStrength}
+          onChange={(event) => onLinkAttractionStrengthChange(Number(event.target.value))}
+          aria-label="Atracción de enlaces"
+        />
+        <small>{linkAttractionStrength}%</small>
+      </label>
+
+      <label className="graph-hud-slider">
+        <span>Cohesión colección</span>
+        <input
+          type="range"
+          min={0}
+          max={1000}
+          value={collectionCohesionStrength}
+          onChange={(event) => onCollectionCohesionStrengthChange(Number(event.target.value))}
+          aria-label="Cohesión de colección"
+        />
+        <small>{collectionCohesionStrength}%</small>
+      </label>
+
+      <label className="graph-hud-slider">
+        <span>Repulsión borde colección</span>
+        <input
+          type="range"
+          min={0}
+          max={1000}
+          value={collectionBoundaryRepulsionStrength}
+          onChange={(event) => onCollectionBoundaryRepulsionStrengthChange(Number(event.target.value))}
+          aria-label="Repulsión del borde de colección"
+        />
+        <small>{collectionBoundaryRepulsionStrength}%</small>
       </label>
     </div>
   )

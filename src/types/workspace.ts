@@ -82,6 +82,7 @@ export type CollectionTab = {
   name: string
   prompt: string
   icon: string
+  color?: string
 }
 
 export type EntityRecord = {
@@ -241,6 +242,7 @@ export type GraphNode = {
   y: number
   tabId: string
   tabName: string
+  tabColor?: string
 }
 
 export type GraphEdge = {
