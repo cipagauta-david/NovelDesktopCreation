@@ -36,26 +36,28 @@
   --control-height-md: 2.75rem;
   --control-height-lg: 3rem;
 
-  --surface-base: #f4f3ef;
-  --surface-elevated: #fcfbf8;
-  --surface-canvas: #f6f3ee;
+  /* ── Zen Cream Palette ── */
+  --surface-base: #F9F8F6;
+  --surface-elevated: #FDFCFA;
+  --surface-canvas: #F4F1EC;
 
-  --text-primary: #202833;
-  --text-secondary: #4e5b6e;
-  --text-muted: #5a677c;
+  --text-primary: #1E2530;
+  --text-secondary: #4A5568;
+  --text-muted: #6B7A8D;
 
-  --border-subtle: rgba(15, 23, 42, 0.1);
-  --border-strong: rgba(15, 23, 42, 0.2);
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-strong: rgba(15, 23, 42, 0.16);
 
-  --accent-primary: #1d7ea0;
-  --accent-hover: #166783;
-  --on-accent: #eef6f9;
+  --accent-primary: #1A7A9B;
+  --accent-hover: #14627D;
+  --on-accent: #EEF7FA;
 
-  --status-success: #1f8c61;
-  --status-danger: #b64040;
+  --status-success: #1F8C61;
+  --status-danger: #B64040;
 
-  --overlay-scrim: rgba(15, 23, 42, 0.42);
-  --shadow-popover: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --overlay-scrim: rgba(15, 23, 42, 0.38);
+  --shadow-popover: 0 8px 30px rgba(15, 23, 42, 0.06);
+  --shadow-card: 0 1px 4px rgba(15, 23, 42, 0.03);
 
   --bg-base: var(--surface-base);
   --bg-surface: var(--surface-elevated);
@@ -80,6 +82,19 @@
   --brand-accent-hover: var(--accent-hover);
   --border-focus: color-mix(in srgb, var(--accent-primary) 45%, transparent);
 
+  /* ── Reference entity accent (cobalto) ── */
+  --reference-accent: #1565A0;
+  --reference-accent-hover: #0D4F80;
+
+  /* ── Select element tokens ── */
+  --select-bg: var(--surface-elevated);
+  --select-color: var(--text-primary);
+  --select-border: var(--border-subtle);
+
+  /* ── Spectral (immersive writing) tokens ── */
+  --zen-opacity-idle: 0.18;
+  --zen-opacity-active: 1;
+
   --motion-fast: 140ms ease;
   --motion-base: 220ms ease;
   --motion-slow: 320ms ease;
@@ -97,26 +112,28 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --surface-base: #0d141d;
-  --surface-elevated: #141e29;
-  --surface-canvas: #1a2532;
+  /* ── Obsidian Blue Palette ── */
+  --surface-base: #0B1120;
+  --surface-elevated: #111B2B;
+  --surface-canvas: #172133;
 
-  --text-primary: #e2e8f2;
-  --text-secondary: #b8c4d7;
-  --text-muted: #9aa9bf;
+  --text-primary: #E4EAF4;
+  --text-secondary: #B0BFD4;
+  --text-muted: #8899B0;
 
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.14);
 
-  --accent-primary: #4db2d1;
-  --accent-hover: #62c0dc;
-  --on-accent: #0d1a24;
+  --accent-primary: #4DB8D6;
+  --accent-hover: #6AC8E2;
+  --on-accent: #0A1520;
 
-  --status-success: #57c79a;
-  --status-danger: #ef8b8b;
+  --status-success: #57C79A;
+  --status-danger: #EF8B8B;
 
-  --overlay-scrim: rgba(6, 10, 16, 0.56);
-  --shadow-popover: 0 10px 26px rgba(4, 8, 12, 0.18);
+  --overlay-scrim: rgba(4, 8, 16, 0.62);
+  --shadow-popover: 0 10px 30px rgba(2, 4, 8, 0.22);
+  --shadow-card: 0 1px 6px rgba(0, 0, 0, 0.12);
 
   --bg-base: var(--surface-base);
   --bg-surface: var(--surface-elevated);
@@ -125,7 +142,7 @@
   --surface-panel: var(--surface-elevated);
   --surface-raised: var(--surface-canvas);
   --surface-float: var(--surface-canvas);
-  --surface-glass: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+  --surface-glass: color-mix(in srgb, var(--bg-surface) 90%, transparent);
 
   --text-heading: var(--text-primary);
   --text-body: var(--text-primary);
@@ -140,6 +157,19 @@
   --brand-accent: var(--accent-primary);
   --brand-accent-hover: var(--accent-hover);
   --border-focus: color-mix(in srgb, var(--accent-primary) 55%, transparent);
+
+  /* ── Reference entity accent (cyan) ── */
+  --reference-accent: #2AA4BF;
+  --reference-accent-hover: #3CC0DD;
+
+  /* ── Select element tokens ── */
+  --select-bg: var(--surface-canvas);
+  --select-color: var(--text-primary);
+  --select-border: var(--border-subtle);
+
+  /* ── Spectral tokens ── */
+  --zen-opacity-idle: 0.15;
+  --zen-opacity-active: 1;
 }
 
 * {
@@ -209,12 +239,25 @@ textarea {
 
 button,
 input,
-select,
 textarea {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   background: var(--surface-float);
   color: var(--text-primary);
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--select-border);
+  border-radius: var(--radius-md);
+  background-color: var(--select-bg);
+  color: var(--select-color);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7A8D' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 0.75rem;
+  padding-right: 2rem;
 }
 
 button {
@@ -233,10 +276,10 @@ textarea:focus-visible,
 a:focus-visible,
 [role="button"]:focus-visible,
 [role="option"]:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent-primary) 90%, white 10%);
+  outline: 2px solid color-mix(in srgb, var(--accent-primary) 70%, transparent);
   outline-offset: 2px;
   border-color: var(--border-focus);
-  box-shadow: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-primary) 12%, transparent);
 }
 
 input,

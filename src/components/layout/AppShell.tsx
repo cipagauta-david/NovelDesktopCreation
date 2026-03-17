@@ -49,6 +49,10 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   const [syncConfigOpen, setSyncConfigOpen] = useState(false)
   const [rotateKeyOpen, setRotateKeyOpen] = useState(false)
   const [invalidateKeyOpen, setInvalidateKeyOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsTab, setSettingsTab] = useState<'account' | 'llm' | 'editor'>('llm')
+  const [navigationTab, setNavigationTab] = useState<'workspace' | 'content'>('workspace')
+  const [inspectorTab, setInspectorTab] = useState<'context' | 'meta' | 'history' | 'metrics'>('context')
   const [assistantFabOpen, setAssistantFabOpen] = useState(false)
   const [floatingAssistantDraft, setFloatingAssistantDraft] = useState('')
   const [renameProjectValue, setRenameProjectValue] = useState('')
@@ -123,6 +127,21 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
     }, 220)
   }, [])
 
+  // Restore UI when mouse moves anywhere in the shell
+  useEffect(() => {
+    function handleMouseMove() {
+      if (spectralMode) {
+        setSpectralMode(false)
+        if (spectralTimerRef.current != null) {
+          window.clearTimeout(spectralTimerRef.current)
+          spectralTimerRef.current = null
+        }
+      }
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [spectralMode])
+
   useEffect(() => () => {
     if (spectralTimerRef.current != null) {
       window.clearTimeout(spectralTimerRef.current)
@@ -179,16 +198,100 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
         zenMode ? 'is-focus-mode' : '',
         godMode ? 'god-mode' : '',
         spectralMode ? 'is-spectral' : '',
-        hasLeftPanel ? 'has-left-panel' : 'no-left-panel',
-        hasInspectorPanel ? 'has-right-panel' : 'no-right-panel',
       ].filter(Boolean).join(' ')}
     >
     <div className={[zenMode ? 'workspace-header-shell is-hidden' : 'workspace-header-shell', spectralMode ? 'is-spectral' : ''].filter(Boolean).join(' ')}>
         <WorkspaceHeader project={workspace.activeProject} activeNodeLabel={activeNodeLabel} activeNodeMeta={activeNodeMeta} aiModelLabel={aiModelLabel} streamStatus={workspace.streamStatus} searchResultsCount={workspace.searchResults.length} workspaceView={workspace.workspaceView} leftPanelOpen={hasLeftPanel} inspectorOpen={hasInspectorPanel} hasActiveSearch={workspace.searchQuery.trim().length > 0} onOpenSearch={() => setSearchPaletteOpen(true)} onViewChange={workspace.setWorkspaceView} onToggleLeftPanel={handleToggleNav} onToggleInspector={() => workspace.togglePanel('inspector')} />
       </div>
 
+      {/* ─── Left Icon Rail ─── */}
+      <nav className="icon-rail icon-rail-left" aria-label="Paneles izquierda">
+        <button
+          type="button"
+          className={hasLeftPanel && navigationTab === 'workspace' ? 'icon-rail-button active' : 'icon-rail-button'}
+          onClick={() => {
+            setNavigationTab('workspace')
+            if (!workspace.panels.sidebar) workspace.togglePanel('sidebar')
+            if (!workspace.panels.entities) workspace.togglePanel('entities')
+          }}
+          aria-label="Proyecto"
+          title="Proyecto"
+        >⌂</button>
+        <button
+          type="button"
+          className={hasLeftPanel && navigationTab === 'content' ? 'icon-rail-button active' : 'icon-rail-button'}
+          onClick={() => {
+            setNavigationTab('content')
+            if (!workspace.panels.sidebar) workspace.togglePanel('sidebar')
+            if (!workspace.panels.entities) workspace.togglePanel('entities')
+          }}
+          aria-label="Colecciones"
+          title="Colecciones"
+        >☷</button>
+        <span className="icon-rail-spacer" aria-hidden="true" />
+        <button
+          type="button"
+          className={settingsOpen ? 'icon-rail-button active' : 'icon-rail-button'}
+          onClick={() => setSettingsOpen(true)}
+          aria-label="Configuración"
+          title="Configuración"
+        >⚙</button>
+      </nav>
+
+      {/* ─── Right Icon Rail ─── */}
+      <nav className="icon-rail icon-rail-right" aria-label="Paneles derecha">
+        <button
+          type="button"
+          className={workspace.panels.inspector && inspectorTab === 'context' ? 'icon-rail-button active' : 'icon-rail-button'}
+          onClick={() => {
+            setInspectorTab('context')
+            if (!workspace.panels.inspector) workspace.togglePanel('inspector')
+          }}
+          aria-label="Contexto"
+          title="Contexto"
+        >◧</button>
+        <button
+          type="button"
+          className={workspace.panels.inspector && inspectorTab === 'meta' ? 'icon-rail-button active' : 'icon-rail-button'}
+          onClick={() => {
+            setInspectorTab('meta')
+            if (!workspace.panels.inspector) workspace.togglePanel('inspector')
+          }}
+          aria-label="Metadatos"
+          title="Metadatos"
+        >◨</button>
+        <button
+          type="button"
+          className={workspace.panels.inspector && inspectorTab === 'history' ? 'icon-rail-button active' : 'icon-rail-button'}
+          onClick={() => {
+            setInspectorTab('history')
+            if (!workspace.panels.inspector) workspace.togglePanel('inspector')
+          }}
+          aria-label="Historial"
+          title="Historial"
+        >⟲</button>
+        <button
+          type="button"
+          className={workspace.panels.inspector && inspectorTab === 'metrics' ? 'icon-rail-button active' : 'icon-rail-button'}
+          onClick={() => {
+            setInspectorTab('metrics')
+            if (!workspace.panels.inspector) workspace.togglePanel('inspector')
+          }}
+          aria-label="Métricas"
+          title="Métricas"
+        >◫</button>
+      </nav>
+
       <section className={[zenMode ? 'workspace-stage focus-mode' : 'workspace-stage', godMode ? 'god-mode' : ''].filter(Boolean).join(' ')}>
         <section className="workspace-grid">
+          {/* Panel overlay backdrop */}
+          <button
+            type="button"
+            className={(hasLeftPanel || hasInspectorPanel) ? 'panel-overlay-backdrop visible' : 'panel-overlay-backdrop'}
+            aria-label="Cerrar paneles"
+            onClick={() => { if (workspace.panels.sidebar) workspace.togglePanel('sidebar'); if (workspace.panels.entities) workspace.togglePanel('entities'); if (workspace.panels.inspector) workspace.togglePanel('inspector') }}
+          />
+
           <aside className={hasLeftPanel ? 'left-workspace-panel open' : 'left-workspace-panel'}>
             {!zenMode && workspace.panels.sidebar && workspace.data.settings && (
               <NavigationPanel
@@ -226,6 +329,8 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
                   onCreateEntity={workspace.createEntity}
                   onSelectEntity={workspace.selectEntity}
                   onReorderEntities={workspace.reorderEntities}
+                  activeNavigationTab={navigationTab}
+                  onActiveNavigationTabChange={setNavigationTab}
                   onCollapse={handleToggleNav}
               />
             )}
@@ -235,24 +340,12 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
             zenMode ? 'main-column focus-mode' : 'main-column',
             godMode ? 'god-mode' : '',
             spectralMode ? 'is-spectral' : '',
-            hasLeftPanel && hasInspectorPanel ? 'with-both-side-panels' : '',
-            hasLeftPanel !== hasInspectorPanel ? 'with-single-side-panel' : '',
-            !hasLeftPanel && !hasInspectorPanel ? 'with-no-side-panels' : '',
           ].filter(Boolean).join(' ')} onScroll={handleMainColumnScroll}>
             {workspace.workspaceView === 'graph' ? <GraphPanel graphModel={workspace.graphModel} collections={workspace.activeProject?.tabs ?? []} activeEntityId={workspace.activeEntity?.id} onSelectEntity={handleGraphSelectEntity} onNodePositionChange={workspace.updateGraphNodePosition} onUpdateCollectionColor={workspace.updateTabColor} onCreateRelation={(sourceEntityId, targetEntityId) => workspace.addRelation(sourceEntityId, targetEntityId, 'relates_to')} /> : workspace.activeEntity && workspace.activeDraft ? <EditorPanel entity={workspace.activeEntity} draft={workspace.activeDraft} templates={workspace.activeTemplates} allEntities={workspace.activeProject?.entities ?? []} editorViewRef={workspace.editorViewRef} referenceSuggestionActive={Boolean(workspace.referenceSuggestion)} suggestionOptions={workspace.suggestionOptions} saveStatus={workspace.saveStatus} streamStatus={workspace.streamStatus} zenMode={zenMode} onOpenEntity={workspace.selectEntity} onDraftChange={workspace.setDraft} onHandleEditorChange={workspace.handleEditorChange} onInsertReference={workspace.insertReference} onAttachImages={workspace.attachImages} onAddField={workspace.addField} onUpdateField={workspace.updateField} onRemoveField={workspace.removeField} onApplyTemplate={workspace.applyActiveTemplate} onDuplicate={workspace.duplicateActiveEntity} onArchive={workspace.archiveActiveEntity} onDelete={workspace.deleteActiveEntity} onGenerateAiProposal={workspace.generateAiProposal} onToggleZenMode={() => setZenMode(c => !c)} /> : <div className="panel surface-panel empty-state">Vacio</div>}
           </div>
 
-          {!zenMode && hasInspectorPanel && (
-            <button
-              type="button"
-              className="inspector-drawer-backdrop"
-              aria-label="Cerrar inspector"
-              onClick={() => workspace.togglePanel('inspector')}
-            />
-          )}
-
           <aside className={hasInspectorPanel ? 'inspector-panel-shell open' : 'inspector-panel-shell'}>
-            {!zenMode && workspace.panels.inspector && <InspectorPanel side="right" activeTab={workspace.activeTab} activeEntity={workspace.activeEntity} activeDraft={workspace.activeDraft} activeProject={workspace.activeProject} activeTemplates={workspace.activeTemplates} pendingProposal={workspace.pendingProposal} streamStatus={workspace.streamStatus} streamingText={workspace.streamingText} llmTraces={workspace.llmTraces} syncStatus={workspace.syncStatus} syncStats={workspace.syncStats} syncRemoteConfig={workspace.syncRemoteConfig} checkpoints={workspace.checkpoints} correlationReports={workspace.correlationReports} onUpdateTabPrompt={workspace.updateTabPrompt} onConfirmProposal={workspace.confirmAiProposal} onDismissProposal={workspace.dismissProposal} onStopGeneration={workspace.stopGeneration} onFlushRemoteSync={workspace.flushRemoteSync} onConfigureRemoteSync={async () => openSyncDialog()} onClearRemoteSyncCredential={workspace.clearRemoteSyncCredential} onRestoreCheckpoint={workspace.restoreCheckpoint} onRotateProviderCredential={async () => openRotateDialog()} onInvalidateProviderCredential={async () => setInvalidateKeyOpen(true)} onRefreshVaultMetadata={workspace.refreshVaultMetadata} onAddRelation={workspace.addRelation} onRemoveRelation={workspace.removeRelation} onCollapse={() => workspace.togglePanel('inspector')} />}
+            {!zenMode && workspace.panels.inspector && <InspectorPanel side="right" activeTab={workspace.activeTab} activeEntity={workspace.activeEntity} activeDraft={workspace.activeDraft} activeProject={workspace.activeProject} activeTemplates={workspace.activeTemplates} pendingProposal={workspace.pendingProposal} streamStatus={workspace.streamStatus} streamingText={workspace.streamingText} llmTraces={workspace.llmTraces} syncStatus={workspace.syncStatus} syncStats={workspace.syncStats} syncRemoteConfig={workspace.syncRemoteConfig} checkpoints={workspace.checkpoints} correlationReports={workspace.correlationReports} activePanelTab={inspectorTab} onActivePanelTabChange={setInspectorTab} onUpdateTabPrompt={workspace.updateTabPrompt} onConfirmProposal={workspace.confirmAiProposal} onDismissProposal={workspace.dismissProposal} onStopGeneration={workspace.stopGeneration} onFlushRemoteSync={workspace.flushRemoteSync} onConfigureRemoteSync={async () => openSyncDialog()} onClearRemoteSyncCredential={workspace.clearRemoteSyncCredential} onRestoreCheckpoint={workspace.restoreCheckpoint} onRotateProviderCredential={async () => openRotateDialog()} onInvalidateProviderCredential={async () => setInvalidateKeyOpen(true)} onRefreshVaultMetadata={workspace.refreshVaultMetadata} onAddRelation={workspace.addRelation} onRemoveRelation={workspace.removeRelation} onCollapse={() => workspace.togglePanel('inspector')} />}
           </aside>
         </section>
       </section>
@@ -339,6 +432,54 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
           setInvalidateKeyOpen(false)
         }}>Confirmar invalidación</Button>
       </StackedDialog>
+
+      {/* ─── Settings / Command Center Dialog ─── */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Centro de Mando</DialogTitle></DialogHeader>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+            <Button type="button" variant={settingsTab === 'llm' ? 'primary' : 'ghost'} size="sm" onClick={() => setSettingsTab('llm')}>Modelos LLM</Button>
+            <Button type="button" variant={settingsTab === 'account' ? 'primary' : 'ghost'} size="sm" onClick={() => setSettingsTab('account')}>Cuenta</Button>
+            <Button type="button" variant={settingsTab === 'editor' ? 'primary' : 'ghost'} size="sm" onClick={() => setSettingsTab('editor')}>Editor</Button>
+          </div>
+          {settingsTab === 'llm' && (
+            <FormStack>
+              <Field label="Modelo activo">
+                <input value={workspace.data.settings?.model ?? ''} readOnly placeholder="Modelo IA configurado" />
+              </Field>
+              <Field label="API Key del proveedor">
+                <input value={nextProviderKey} onChange={(event) => setNextProviderKey(event.target.value)} placeholder="Introduce tu API key" />
+              </Field>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <Button type="button" variant="primary" className="primary-button" onClick={() => {
+                  void workspace.rotateProviderCredential(nextProviderKey)
+                  setNextProviderKey('')
+                }}>Guardar Key</Button>
+                <Button type="button" variant="ghost" className="ghost-button" onClick={() => {
+                  void workspace.invalidateProviderCredential()
+                }}>Invalidar Key</Button>
+              </div>
+            </FormStack>
+          )}
+          {settingsTab === 'account' && (
+            <FormStack>
+              <Field label="Proyecto activo">
+                <input value={workspace.activeProject?.name ?? ''} readOnly />
+              </Field>
+              <Field label="Sync remoto">
+                <input value={workspace.syncRemoteConfig?.endpoint ?? 'No configurado'} readOnly />
+              </Field>
+              <Button type="button" variant="secondary" onClick={() => { setSettingsOpen(false); openSyncDialog() }}>Configurar Sync</Button>
+            </FormStack>
+          )}
+          {settingsTab === 'editor' && (
+            <FormStack>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-0)' }}>Preferencias de edición. El tema se puede cambiar desde el icono de sol/luna en el header.</p>
+              <Button type="button" variant="secondary" onClick={() => { setZenMode(true); setSettingsOpen(false) }}>Activar Modo Foco</Button>
+            </FormStack>
+          )}
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

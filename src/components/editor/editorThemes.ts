@@ -35,14 +35,16 @@ export const baseEditorTheme = EditorView.theme(
     '.cm-scroller': {
       overflow: 'auto',
       fontFamily: 'var(--font-editor)',
-      lineHeight: '1.7',
+      lineHeight: '1.82',
     },
     '.cm-content, .cm-gutter': {
       minHeight: '420px',
-      padding: 'var(--editor-padding, 1.25rem 1.3rem)',
+      padding: 'var(--editor-padding, 1.5rem 1.5rem)',
     },
     '.cm-content': {
       caretColor: 'var(--color-primary)',
+      maxWidth: 'min(var(--editor-readable-width, 68ch), 100% - 1rem)',
+      margin: '0 auto',
     },
     '.cm-line': {
       padding: '0',

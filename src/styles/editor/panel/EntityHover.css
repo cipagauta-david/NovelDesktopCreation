@@ -1,5 +1,5 @@
 .entity-hover-popover {
-  --entity-pill-accent: var(--accent-primary);
+  --entity-pill-accent: var(--reference-accent);
   position: absolute;
   z-index: 40;
   width: min(340px, calc(100% - 24px));

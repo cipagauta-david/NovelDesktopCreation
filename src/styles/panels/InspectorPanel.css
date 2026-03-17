@@ -6,15 +6,15 @@
 }
 
 .proposal-card-staged {
-  padding: 1rem;
-  border-radius: 18px;
+  padding: 0.85rem;
+  border-radius: var(--radius-lg);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--accent-primary) 20%, transparent),
-    color-mix(in srgb, var(--accent-primary) 8%, transparent)
+    color-mix(in srgb, var(--accent-primary) 14%, transparent),
+    color-mix(in srgb, var(--accent-primary) 5%, transparent)
   );
-  border: 1px solid color-mix(in srgb, var(--accent-primary) 26%, var(--border-subtle));
-  box-shadow: none;
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 20%, var(--border-subtle));
+  box-shadow: var(--shadow-card);
 }
 
 .proposal-card-staged .primary-button {
@@ -33,25 +33,28 @@
 
 .reference-card-mini,
 .meta-summary-item {
-  padding: 0.85rem 0.95rem;
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--surface-panel) 92%, transparent);
-  border: 1px solid color-mix(in srgb, var(--surface-panel-border, var(--border-subtle)) 86%, transparent);
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-elevated) 50%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 40%, transparent);
+  box-shadow: var(--shadow-card, 0 1px 3px rgba(0, 0, 0, 0.03));
 }
 
 .reference-card-mini {
   display: grid;
   gap: 0.35rem;
-  border: 1px solid var(--surface-panel-border, var(--border-subtle));
-  background: var(--surface-panel);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 50%, transparent);
+  background: color-mix(in srgb, var(--surface-elevated) 50%, transparent);
   transition:
     transform var(--motion-fast),
-    border-color var(--motion-fast);
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
 }
 
 .reference-card-mini:hover {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--brand-accent) 24%, var(--surface-panel-border));
+  border-color: color-mix(in srgb, var(--reference-accent) 24%, var(--border-subtle));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--reference-accent) 8%, transparent);
 }
 
 .reference-card-mini p {

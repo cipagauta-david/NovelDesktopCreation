@@ -1,162 +1,254 @@
-
+/* ─── Shell Variables ─── */
 :root,
 :root[data-theme="light"] {
-  --shell-header-height: 4.75rem;
-  --shell-panel-gap: var(--space-3, 0.75rem);
-  --shell-sidebar-min: 16.25rem;
-  --shell-sidebar-max: 20rem;
-  --shell-inspector-min: 18rem;
-  --shell-inspector-max: 22rem;
+  --shell-header-height: 3.25rem;
+  --shell-panel-gap: 0;
+  --shell-rail-width: 3rem;
+  --shell-sidebar-width: clamp(17rem, 22vw, 21rem);
+  --shell-inspector-width: clamp(19rem, 24vw, 23rem);
 }
 
+/* ─── App Shell: Immersive Canvas ─── */
 .app-shell {
   position: relative;
   isolation: isolate;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: var(--shell-rail-width) minmax(0, 1fr) var(--shell-rail-width);
+  grid-template-areas:
+    "header header header"
+    "left-rail stage right-rail";
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  padding: var(--space-3, 0.75rem);
-  gap: var(--shell-panel-gap);
-  background:
-    radial-gradient(circle at 8% 12%, color-mix(in srgb, var(--accent-primary) 9%, transparent), transparent 32%),
-    radial-gradient(circle at 94% 88%, color-mix(in srgb, var(--accent-primary) 7%, transparent), transparent 34%),
-    var(--bg-base);
+  background: var(--bg-base);
 }
 
+/* ─── Header Shell ─── */
 .workspace-header-shell {
+  grid-area: header;
   flex-shrink: 0;
   min-height: var(--shell-header-height);
   z-index: 20;
+  padding: 0 var(--space-3, 0.75rem);
+  opacity: var(--zen-opacity-active);
+  transition: opacity 300ms ease-in-out;
 }
 
 .workspace-header-shell.is-hidden {
   display: none;
 }
 
+.app-shell.is-spectral .workspace-header-shell {
+  opacity: var(--zen-opacity-idle);
+}
+
+/* ─── Icon Rails ─── */
+.icon-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  padding: var(--space-3, 0.75rem) 0;
+  z-index: 30;
+  opacity: var(--zen-opacity-active);
+  transition: opacity 300ms ease-in-out;
+}
+
+.icon-rail-left {
+  grid-area: left-rail;
+}
+
+.icon-rail-right {
+  grid-area: right-rail;
+}
+
+.icon-rail-spacer {
+  flex: 1 1 auto;
+}
+
+.app-shell.is-spectral .icon-rail {
+  opacity: var(--zen-opacity-idle);
+}
+
+.app-shell.is-focus-mode .icon-rail {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.icon-rail-button {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast);
+}
+
+.icon-rail-button:hover {
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
+.icon-rail-button.active {
+  background: color-mix(in srgb, var(--accent-primary) 16%, transparent);
+  color: var(--accent-primary);
+  border-color: color-mix(in srgb, var(--accent-primary) 24%, var(--border-subtle));
+}
+
+/* ─── Workspace Stage ─── */
 .workspace-stage {
+  grid-area: stage;
+  position: relative;
   min-height: 0;
   overflow: hidden;
 }
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+  grid-template-columns: minmax(0, 1fr);
   align-items: stretch;
   width: 100%;
   height: 100%;
   min-height: 0;
-  gap: var(--shell-panel-gap);
   overflow: hidden;
 }
 
+/* ─── Overlay Panels (slide-in from sides) ─── */
 .left-workspace-panel {
-  width: 0;
-  min-width: 0;
-  max-width: 0;
-  opacity: 0;
-  pointer-events: none;
-  overflow: hidden;
+  position: fixed;
+  top: var(--shell-header-height);
+  left: var(--shell-rail-width);
+  bottom: 0;
+  width: var(--shell-sidebar-width);
+  z-index: 40;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--surface-panel) 88%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 68%, transparent);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  background: color-mix(in srgb, var(--surface-panel) 96%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 60%, transparent);
+  border-left: 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-popover);
+  transform: translateX(-110%);
+  opacity: 0;
+  pointer-events: none;
   transition:
-    width var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
-    min-width var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
-    max-width var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
+    transform var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
     opacity var(--motion-fast);
 }
 
 .left-workspace-panel.open {
-  width: clamp(var(--shell-sidebar-min), 21vw, var(--shell-sidebar-max));
-  min-width: var(--shell-sidebar-min);
-  max-width: var(--shell-sidebar-max);
+  transform: translateX(0);
   opacity: 1;
   pointer-events: auto;
 }
 
-.main-column {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  border-radius: var(--radius-lg);
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 58%, transparent);
-  background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
-  padding: clamp(0.75rem, 1.2vw, 1.25rem);
-  container-type: inline-size;
-  container-name: editor-panel;
-  contain: layout paint style;
-  --editor-readable-width: 86ch;
-  --editor-zen-width: 80ch;
-}
-
-.main-column.with-both-side-panels {
-  --editor-readable-width: 82ch;
-  --editor-zen-width: 76ch;
-}
-
-.main-column.with-single-side-panel {
-  --editor-readable-width: 90ch;
-  --editor-zen-width: 82ch;
-}
-
-.main-column.with-no-side-panels {
-  --editor-readable-width: 104ch;
-  --editor-zen-width: 92ch;
-  padding-inline: clamp(0.9rem, 1.6vw, 1.8rem);
-}
-
-.main-column.focus-mode {
-  display: block;
-  padding-inline: clamp(1rem, 3.2vw, 3rem);
-}
-
 .inspector-panel-shell {
-  width: 0;
-  min-width: 0;
-  max-width: 0;
-  opacity: 0;
-  pointer-events: none;
+  position: fixed;
+  top: var(--shell-header-height);
+  right: var(--shell-rail-width);
+  bottom: 0;
+  width: var(--shell-inspector-width);
+  z-index: 40;
   overflow: hidden;
-  flex-shrink: 0;
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 68%, transparent);
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  background: color-mix(in srgb, var(--surface-panel) 96%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 60%, transparent);
+  border-right: 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-popover);
   container-type: inline-size;
   container-name: inspector-panel;
+  transform: translateX(110%);
+  opacity: 0;
+  pointer-events: none;
   transition:
-    width var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
-    min-width var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
-    max-width var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
+    transform var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
     opacity var(--motion-fast);
 }
 
 .inspector-panel-shell.open {
-  width: clamp(var(--shell-inspector-min), 24vw, var(--shell-inspector-max));
-  min-width: var(--shell-inspector-min);
-  max-width: var(--shell-inspector-max);
+  transform: translateX(0);
   opacity: 1;
   pointer-events: auto;
 }
 
 .app-shell.is-focus-mode .left-workspace-panel,
 .app-shell.is-focus-mode .inspector-panel-shell {
-  width: 0;
-  min-width: 0;
-  max-width: 0;
+  transform: translateX(-110%);
   opacity: 0;
   pointer-events: none;
+}
+
+.app-shell.is-focus-mode .inspector-panel-shell {
+  transform: translateX(110%);
+}
+
+/* ─── Panel Overlay Backdrop ─── */
+.panel-overlay-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: color-mix(in srgb, var(--overlay-scrim) 40%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.panel-overlay-backdrop.visible {
+  display: block;
 }
 
 .inspector-drawer-backdrop {
   display: none;
 }
 
+/* ─── Main Column: The Zen Canvas ─── */
+.main-column {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  padding: clamp(1rem, 2vw, 2rem);
+  container-type: inline-size;
+  container-name: editor-panel;
+  contain: layout paint style;
+  --editor-readable-width: 68ch;
+  --editor-zen-width: 64ch;
+}
+
+.main-column.with-both-side-panels,
+.main-column.with-single-side-panel,
+.main-column.with-no-side-panels {
+  --editor-readable-width: 68ch;
+  --editor-zen-width: 64ch;
+}
+
+.main-column.focus-mode {
+  display: block;
+  padding-inline: clamp(1.5rem, 4vw, 4rem);
+}
+
+/* ─── Toast ─── */
 .toast {
   position: fixed;
   right: var(--space-4, 1rem);
@@ -165,20 +257,26 @@
   padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
 }
 
+/* ─── Floating AI FAB ─── */
 .ai-fab-button {
   position: fixed;
-  right: 1rem;
+  right: calc(var(--shell-rail-width) + 0.5rem);
   bottom: 1rem;
   z-index: 76;
-  min-height: 2.75rem;
-  padding: 0 1rem;
+  min-height: 2.5rem;
+  padding: 0 0.85rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent-primary) 30%, var(--border-subtle));
-  background: color-mix(in srgb, var(--surface-elevated) 82%, var(--accent-primary) 18%);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 24%, var(--border-subtle));
+  background: color-mix(in srgb, var(--surface-elevated) 85%, var(--accent-primary) 15%);
   color: var(--text-primary);
   font-weight: 600;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  font-size: var(--font-size-0);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    background-color var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast);
 }
 
 .ai-fab-button.active {
@@ -188,17 +286,17 @@
 
 .ai-fab-panel {
   position: fixed;
-  right: 1rem;
-  bottom: 4.25rem;
+  right: calc(var(--shell-rail-width) + 0.5rem);
+  bottom: 4rem;
   z-index: 75;
-  width: min(23rem, calc(100vw - 1.25rem));
+  width: min(23rem, calc(100vw - 5rem));
   padding: 0.75rem;
   border-radius: var(--radius-lg);
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 84%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
   background: color-mix(in srgb, var(--surface-glass) 94%, transparent);
   box-shadow: var(--shadow-popover);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .ai-fab-panel-head {
@@ -217,15 +315,17 @@
   min-height: 100px;
 }
 
-@media (max-width: 1080px) {
-  .left-workspace-panel.open {
-    width: clamp(var(--shell-sidebar-min), 30vw, var(--shell-sidebar-max));
-  }
-}
-
+/* ─── Responsiveness ─── */
 @media (max-width: 720px) {
   .app-shell {
-    padding: var(--space-2, 0.5rem);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "header"
+      "stage";
+  }
+
+  .icon-rail {
+    display: none;
   }
 
   .ai-fab-button {
@@ -239,41 +339,14 @@
     width: min(22rem, calc(100vw - 1.2rem));
   }
 
-  .workspace-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .left-workspace-panel,
-  .left-workspace-panel.open {
-    width: 0;
-    min-width: 0;
-    max-width: 0;
-    opacity: 0;
-    pointer-events: none;
+  .left-workspace-panel {
+    left: 0;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
   }
 
   .inspector-panel-shell {
-    position: fixed;
-    top: calc(var(--shell-header-height) + var(--space-2, 0.5rem));
-    right: var(--space-2, 0.5rem);
-    bottom: var(--space-2, 0.5rem);
-    width: min(24rem, calc(100vw - 1rem));
-    max-width: min(24rem, calc(100vw - 1rem));
-    min-width: min(18rem, calc(100vw - 1rem));
-    transform: translateX(110%);
-    opacity: 0;
-    pointer-events: none;
-    z-index: 65;
-    box-shadow: var(--shadow-popover);
-    transition:
-      transform var(--motion-base),
-      opacity var(--motion-fast);
-  }
-
-  .inspector-panel-shell.open {
-    transform: translateX(0);
-    opacity: 1;
-    pointer-events: auto;
+    right: 0;
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
   }
 
   .inspector-drawer-backdrop {
@@ -283,7 +356,7 @@
     border: 0;
     margin: 0;
     padding: 0;
-    z-index: 60;
+    z-index: 35;
     background: var(--overlay-scrim);
   }
 }

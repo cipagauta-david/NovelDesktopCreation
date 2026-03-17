@@ -1,4 +1,4 @@
-import { memo, useState } from 'react'
+import { memo } from 'react'
 
 import type { AppSettings, CollectionTab, EntityRecord, EntityTemplate, Project } from '../../types/workspace'
 import { DockPanelScaffold } from '../common/DockPanelScaffold'
@@ -42,15 +42,10 @@ type NavigationPanelProps = {
   onCreateEntity: () => void
   onSelectEntity: (entityId: string, tabId: string) => void
   onReorderEntities?: (entityIds: string[]) => void
+  activeNavigationTab: 'workspace' | 'content'
+  onActiveNavigationTabChange: (tab: 'workspace' | 'content') => void
   onCollapse: () => void
 }
-
-type NavigationPanelTab = 'workspace' | 'content'
-
-const NAVIGATION_TAB_OPTIONS: ReadonlyArray<{ id: NavigationPanelTab; label: string }> = [
-  { id: 'workspace', label: 'Proyecto' },
-  { id: 'content', label: 'Colecciones' },
-]
 
 export const NavigationPanel = memo(function NavigationPanel({
   settings,
@@ -87,9 +82,10 @@ export const NavigationPanel = memo(function NavigationPanel({
   onCreateEntity,
   onSelectEntity,
   onReorderEntities,
+  activeNavigationTab,
+  onActiveNavigationTabChange,
   onCollapse,
 }: NavigationPanelProps) {
-  const [activeNavigationTab, setActiveNavigationTab] = useState<NavigationPanelTab>('workspace')
   const showWorkspace = activeNavigationTab === 'workspace'
   const showContent = activeNavigationTab === 'content'
 
@@ -100,19 +96,28 @@ export const NavigationPanel = memo(function NavigationPanel({
       collapseLabel="Ocultar navegacion"
       onCollapse={onCollapse}
       tabs={
-        <label className="dock-panel-tab-select-wrap">
-          <span className="visually-hidden">Secciones de navegación</span>
-          <select
-            className="dock-panel-tab-select"
-            aria-label="Secciones de navegación"
-            value={activeNavigationTab}
-            onChange={(event) => setActiveNavigationTab(event.target.value as NavigationPanelTab)}
+        <div className="dock-panel-icon-tabs" role="tablist" aria-label="Secciones de navegación">
+          <button
+            type="button"
+            className={activeNavigationTab === 'workspace' ? 'dock-panel-icon-tab active' : 'dock-panel-icon-tab'}
+            role="tab"
+            aria-selected={activeNavigationTab === 'workspace'}
+            title="Proyecto"
+            onClick={() => onActiveNavigationTabChange('workspace')}
           >
-            {NAVIGATION_TAB_OPTIONS.map((option) => (
-              <option key={option.id} value={option.id}>{option.label}</option>
-            ))}
-          </select>
-        </label>
+            ⌂
+          </button>
+          <button
+            type="button"
+            className={activeNavigationTab === 'content' ? 'dock-panel-icon-tab active' : 'dock-panel-icon-tab'}
+            role="tab"
+            aria-selected={activeNavigationTab === 'content'}
+            title="Colecciones"
+            onClick={() => onActiveNavigationTabChange('content')}
+          >
+            ☷
+          </button>
+        </div>
       }
     >
       <div className="navigation-panel-layout">

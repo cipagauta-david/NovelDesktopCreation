@@ -29,13 +29,9 @@ export function WorkspaceHeader({
   streamStatus,
   searchResultsCount,
   workspaceView,
-  leftPanelOpen,
-  inspectorOpen,
   hasActiveSearch,
   onOpenSearch,
   onViewChange,
-  onToggleLeftPanel,
-  onToggleInspector,
 }: WorkspaceHeaderProps) {
   const { resolvedTheme, setTheme } = useTheme()
 
@@ -43,45 +39,26 @@ export function WorkspaceHeader({
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
   }
 
-  const utilityItems: Array<{
-    key: string
-    label: string
-    active: boolean
-    onClick: () => void
-  }> = [
-    {
-      key: 'navigation',
-      label: 'Paneles',
-      active: leftPanelOpen,
-      onClick: onToggleLeftPanel,
-    },
-    {
-      key: 'context',
-      label: 'Inspector',
-      active: inspectorOpen,
-      onClick: onToggleInspector,
-    },
-  ]
-
   return (
     <header className="workspace-header">
-      <div className="workspace-header-context">
-        <div className="workspace-project-meta">
-          <span className="eyebrow">Nodo activo</span>
-          <strong title={activeNodeLabel}>{activeNodeLabel}</strong>
-          <small title={activeNodeMeta}>{activeNodeMeta}</small>
-        </div>
+      {/* ─── Breadcrumb ─── */}
+      <div className="workspace-header-breadcrumb">
+        <span className="breadcrumb-project" title={project?.name}>{project?.name ?? 'Proyecto'}</span>
+        <span className="breadcrumb-separator" aria-hidden="true">›</span>
+        <span className="breadcrumb-node" title={activeNodeLabel}>{activeNodeLabel}</span>
+        <small className="breadcrumb-meta">{activeNodeMeta}</small>
       </div>
 
-      <div className="workspace-header-command-center">
-        <div className="view-mode-toggle command-segmented" role="tablist" aria-label="Modo de vista">
+      {/* ─── Center: Minimal View Toggle ─── */}
+      <div className="workspace-header-center">
+        <div className="view-mode-toggle" role="tablist" aria-label="Modo de vista">
           <button
             type="button"
             className={workspaceView === 'editor' ? 'view-mode-button active' : 'view-mode-button'}
             aria-selected={workspaceView === 'editor'}
             onClick={() => onViewChange('editor')}
           >
-            Escritura
+            ✎ <span>Escribir</span>
           </button>
           <button
             type="button"
@@ -89,61 +66,48 @@ export function WorkspaceHeader({
             aria-selected={workspaceView === 'graph'}
             onClick={() => onViewChange('graph')}
           >
-            Mapa
+            ◎ <span>Mapa</span>
           </button>
-          {utilityItems.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              className={item.active ? 'workspace-nav-item active' : 'workspace-nav-item'}
-              onClick={item.onClick}
-            >
-              {item.label}
-            </button>
-          ))}
         </div>
       </div>
 
+      {/* ─── Right utilities ─── */}
       <div className="workspace-header-actions">
-        <div className="workspace-header-primary-actions minimal-header-actions">
-          <button
-            type="button"
-            className={hasActiveSearch ? 'header-search-trigger active' : 'header-search-trigger'}
-            onClick={onOpenSearch}
-            aria-label="Abrir búsqueda global"
-          >
-            <span>Buscar…</span>
-            <small>Ctrl+K</small>
-          </button>
+        <button
+          type="button"
+          className={hasActiveSearch ? 'header-search-trigger active' : 'header-search-trigger'}
+          onClick={onOpenSearch}
+          aria-label="Buscar"
+        >
+          <span>Buscar…</span>
+          <small>⌘K</small>
+        </button>
 
-          <button
-            type="button"
-            className="header-utility-button"
-            onClick={handleToggleTheme}
-            aria-label={resolvedTheme === 'dark' ? 'Cambiar a modo día' : 'Cambiar a modo noche'}
-            title={resolvedTheme === 'dark' ? 'Modo Parchment (Día)' : 'Modo Obsidian Ink (Noche)'}
-          >
-            <span className="theme-switcher-icon minimal-theme-icon" aria-hidden="true">
-              {resolvedTheme === 'dark' ? '☀' : '☽'}
-            </span>
-          </button>
+        <button
+          type="button"
+          className="header-utility-button"
+          onClick={handleToggleTheme}
+          aria-label={resolvedTheme === 'dark' ? 'Modo día' : 'Modo noche'}
+          title={resolvedTheme === 'dark' ? 'Zen Cream' : 'Obsidian Blue'}
+        >
+          <span aria-hidden="true">
+            {resolvedTheme === 'dark' ? '☀' : '☽'}
+          </span>
+        </button>
 
-          <div className="ai-status-pill" title={`${project?.name ?? 'Proyecto'} · ${aiModelLabel}`}>
-            <span
-              className={streamStatus === 'streaming' ? 'status-dot is-streaming' : 'status-dot'}
-              aria-hidden="true"
-            />
-            <span>{aiModelLabel}</span>
-          </div>
+        <div className="ai-status-pill" title={`${project?.name ?? 'Proyecto'} · ${aiModelLabel}`}>
+          <span
+            className={streamStatus === 'streaming' ? 'status-dot is-streaming' : 'status-dot'}
+            aria-hidden="true"
+          />
+          <span>{aiModelLabel}</span>
         </div>
 
-        <div className="workspace-status">
-          {hasActiveSearch
-            ? `${searchResultsCount} coincidencia${searchResultsCount === 1 ? '' : 's'}`
-            : project?.updatedAt
-              ? 'Todo en contexto'
-              : 'Listo para escribir'}
-        </div>
+        {hasActiveSearch && (
+          <small className="workspace-status">
+            {searchResultsCount} coincidencia{searchResultsCount === 1 ? '' : 's'}
+          </small>
+        )}
       </div>
     </header>
   )

@@ -1,5 +1,6 @@
 
 
 .section-meta {
-  color: var(--text-muted);
+  color: var(--text-ghost);
+  font-size: 0.74rem;
 }

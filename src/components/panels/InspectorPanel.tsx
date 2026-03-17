@@ -40,6 +40,8 @@ type InspectorPanelProps = {
   syncRemoteConfig?: SyncRemoteConfig
   checkpoints: StateCheckpoint[]
   correlationReports: CorrelationReport[]
+  activePanelTab: 'context' | 'meta' | 'history' | 'metrics'
+  onActivePanelTabChange: (tab: 'context' | 'meta' | 'history' | 'metrics') => void
   onUpdateTabPrompt: (prompt: string) => void
   onConfirmProposal: () => void
   onDismissProposal: () => void
@@ -81,6 +83,8 @@ export const InspectorPanel = memo(function InspectorPanel({
   syncRemoteConfig,
   checkpoints,
   correlationReports,
+  activePanelTab,
+  onActivePanelTabChange,
   onUpdateTabPrompt,
   onConfirmProposal,
   onDismissProposal,
@@ -96,7 +100,6 @@ export const InspectorPanel = memo(function InspectorPanel({
   onRemoveRelation,
   onCollapse,
 }: InspectorPanelProps) {
-  const [activePanelTab, setActivePanelTab] = useState<InspectorPanelTab>('context')
   const [relationTargetId, setRelationTargetId] = useState('')
   const [relationType, setRelationType] = useState('relates_to')
   const [relationLabel, setRelationLabel] = useState('')
@@ -123,19 +126,21 @@ export const InspectorPanel = memo(function InspectorPanel({
       collapseLabel="Ocultar contexto"
       onCollapse={onCollapse}
       tabs={
-        <label className="dock-panel-tab-select-wrap">
-          <span className="visually-hidden">Secciones del inspector</span>
-          <select
-            className="dock-panel-tab-select"
-            aria-label="Secciones del inspector"
-            value={activePanelTab}
-            onChange={(event) => setActivePanelTab(event.target.value as InspectorPanelTab)}
-          >
-            {INSPECTOR_TAB_OPTIONS.map((option) => (
-              <option key={option.id} value={option.id}>{option.label}</option>
-            ))}
-          </select>
-        </label>
+        <div className="dock-panel-icon-tabs" role="tablist" aria-label="Secciones del inspector">
+          {INSPECTOR_TAB_OPTIONS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              className={activePanelTab === option.id ? 'dock-panel-icon-tab active' : 'dock-panel-icon-tab'}
+              role="tab"
+              aria-selected={activePanelTab === option.id}
+              title={option.label}
+              onClick={() => onActivePanelTabChange(option.id)}
+            >
+              {option.id === 'context' ? '◧' : option.id === 'meta' ? '◨' : option.id === 'history' ? '⟲' : '◫'}
+            </button>
+          ))}
+        </div>
       }
       className="inspector-panel-root"
     >

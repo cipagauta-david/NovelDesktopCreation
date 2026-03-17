@@ -81,13 +81,13 @@
 }
 
 .writing-lane .cm-content {
-  max-width: min(var(--editor-readable-width, 86ch), 100% - 1rem);
+  max-width: min(var(--editor-readable-width, 68ch), 100% - 1rem);
   margin: 0 auto;
-  line-height: 1.72;
+  line-height: 1.82;
 }
 
 .zen-writing-lane {
-  max-width: var(--editor-zen-width, 80ch);
+  max-width: var(--editor-zen-width, 64ch);
   margin: 0 auto;
 }
 
@@ -212,7 +212,7 @@
 
 @container editor-panel (max-width: 54rem) {
   .writing-lane .cm-content {
-    max-width: min(74ch, 100% - 0.75rem);
+    max-width: min(60ch, 100% - 0.75rem);
   }
 }
 
