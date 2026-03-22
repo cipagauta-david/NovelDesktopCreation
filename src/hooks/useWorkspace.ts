@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback, useEffect } from 'react'
 
 import { providerModels } from '../data/constants'
 import type { AppSettings, DraftState, OnboardingPayload, PanelKey, PanelVisibility, PersistedGraphLayouts, PersistedState, WorkspaceView } from '../types/workspace'
+import { usePanelWidths } from './workspace/usePanelWidths'
 import { draftStateFromEntity } from '../utils/workspace'
 
 import { useProjectManagement } from './workspace/useProjectManagement'
@@ -28,7 +29,7 @@ import { createPluginManager } from '../services/plugins/manager'
 import { getDefaultPersistedState } from '../data/seed/project'
 import { clearSyncStoragePersistence } from '../platform/syncStorageAdapter'
 
-const defaultPanels: PanelVisibility = { sidebar: true, entities: true, inspector: false }
+const defaultPanels: PanelVisibility = { sidebar: false, entities: false, inspector: false }
 
 export function useWorkspace(
   initialData: PersistedState, 
@@ -40,7 +41,15 @@ export function useWorkspace(
   const [toast, setToast] = useState('')
   const [draft, setDraft] = useState<DraftState | null>(null)
   const [referenceSuggestion, setReferenceSuggestion] = useState<{ start: number, end: number, query: string } | null>(null)
-  const [panels, setPanels] = useState<PanelVisibility>(defaultPanels)
+  // Ensure panels ALWAYS start closed on mount to prevent flash of open panels
+  const [panels, setPanels] = useState<PanelVisibility>(() => ({
+    sidebar: false,
+    entities: false,
+    inspector: false,
+  }))
+
+  // Panel widths with resize and persistence
+  const { widths: panelWidths, setSidebarWidth, adjustSidebarWidth, setInspectorWidth, adjustInspectorWidth, resetWidths } = usePanelWidths(initialData.panelWidths)
   const [graphLayouts, setGraphLayouts] = useState<PersistedGraphLayouts>(initialData.graphLayouts ?? {})
   const pluginManager = useMemo(() => createPluginManager(), [])
 
@@ -270,6 +279,8 @@ export function useWorkspace(
     applyActiveTemplate: entityManagement.applyActiveTemplate, setDraft, addField: entityManagement.addField, updateField: entityManagement.updateField, removeField: entityManagement.removeField, attachImages: entityManagement.attachImages,
     insertReference: entityManagement.insertReference, handleEditorChange: entityManagement.handleEditorChange, navigateFromReference: entityManagement.navigateFromReference, saveCurrentAsTemplate: entityManagement.saveCurrentAsTemplate,
     generateAiProposal: aiManagement.generateAiProposal, confirmAiProposal: aiManagement.confirmAiProposal, dismissProposal: aiManagement.dismissProposal, togglePanel, worker,
+    // Panel resize
+    panelWidths, setSidebarWidth, adjustSidebarWidth, setInspectorWidth, adjustInspectorWidth, resetPanelWidths: resetWidths,
     // New features
     exportActiveProject: transfer.exportActiveProject, importProject: transfer.importProject, reorderEntities: ordering.reorderEntities, reorderTabs: ordering.reorderTabs,
     updateGraphNodePosition: graphManagement.updateGraphNodePosition, resetGraphLayout: graphManagement.resetGraphLayout,

@@ -28,12 +28,20 @@ export interface AppWorker {
   ftsSearch(query: string, meta?: WorkerRequestMeta): Promise<FtsSearchResult[]>
   ftsUpsert(entity: EntityRecord, meta?: WorkerRequestMeta): Promise<void>
   ftsRemove(entityId: string, meta?: WorkerRequestMeta): Promise<void>
+  // ── Desktop detection ────────────────────────────────
+  isDesktopRuntime(): boolean
 }
 
 let fallbackState: PersistedState | null = null
 const stateStorage = getStateStorageAdapter()
 
-// Instancia singleton del índice FTS
+// Detectar si estamos en runtime desktop
+function isDesktopRuntime(): boolean {
+  const bridge = (globalThis as { __NOVEL_DESKTOP__?: { platform?: string } }).__NOVEL_DESKTOP__
+  return bridge?.platform === 'desktop'
+}
+
+// Instancia singleton del índice FTS (solo para web)
 const searchIndex = new SearchIndex()
 
 async function saveStateToIndexedDb(state: PersistedState): Promise<void> {
@@ -62,7 +70,8 @@ async function loadStateFromIndexedDb(): Promise<PersistedState | null> {
 
 const workerObj: AppWorker = {
   async init(): Promise<void> {
-    console.log('[Worker] Initializing FTS Index Engine + State Storage Adapter...')
+    const runtime = isDesktopRuntime() ? 'desktop (SQLite)' : 'web (IndexedDB)'
+    console.log(`[Worker] Initializing... Runtime: ${runtime}`)
 
     try {
       await stateStorage.init()
@@ -70,12 +79,18 @@ const workerObj: AppWorker = {
       // Intentar cargar estado y construir el índice FTS de inmediato
       const savedState = await loadStateFromIndexedDb()
       if (savedState) {
-        const allEntities = savedState.projects.flatMap((p) => p.entities)
-        searchIndex.buildFromEntities(allEntities)
-        console.log(`[Worker] FTS Index built: ${searchIndex.indexedCount} entities indexed`)
+        // Solo construir índice FTS en memoria para web
+        // Desktop usa SQLite FTS que se mantiene en main.cjs
+        if (!isDesktopRuntime()) {
+          const allEntities = savedState.projects.flatMap((p) => p.entities)
+          searchIndex.buildFromEntities(allEntities)
+          console.log(`[Worker] Web FTS Index built: ${searchIndex.indexedCount} entities`)
+        } else {
+          console.log('[Worker] Desktop runtime: Using SQLite FTS, skipping in-memory index')
+        }
       }
     } catch (error) {
-      console.warn('[Worker] Fallo inicializando IndexedDB/FTS, usando fallback en memoria', error)
+      console.warn('[Worker] Fallo inicializando storage/FTS, usando fallback en memoria', error)
     }
   },
 
@@ -84,6 +99,7 @@ const workerObj: AppWorker = {
       projects: state.projects.length,
       correlationId: meta?.correlationId,
       origin: meta?.origin,
+      runtime: isDesktopRuntime() ? 'desktop' : 'web',
     }, async () => {
       const validatedState = migratePersistedState(parseWithContract(PersistedStateSchema, state, {
         provider: 'Local/Ollama',
@@ -91,11 +107,18 @@ const workerObj: AppWorker = {
         message: 'PersistedState inválido recibido por worker',
       }) as PersistedState)
 
-      const allEntities = validatedState.projects.flatMap((p) => p.entities)
-      searchIndex.buildFromEntities(allEntities)
+      // Solo construir índice FTS en memoria para web
+      // Desktop delega FTS a SQLite via stateStorage adapter
+      if (!isDesktopRuntime()) {
+        const allEntities = validatedState.projects.flatMap((p) => p.entities)
+        searchIndex.buildFromEntities(allEntities)
+      }
 
       try {
         await saveStateToIndexedDb(validatedState)
+        if (isDesktopRuntime()) {
+          console.log('[Worker] State persisted to SQLite via IPC')
+        }
       } catch (error) {
         console.error('[Worker] Fallo guardando estado en adapter, persistiendo en memoria', error)
         fallbackState = validatedState
@@ -106,6 +129,11 @@ const workerObj: AppWorker = {
   async loadState(): Promise<PersistedState | null> {
     try {
       const saved = await loadStateFromIndexedDb()
+      if (saved && !isDesktopRuntime()) {
+        // Reconstruir índice FTS en memoria después de cargar para web
+        const allEntities = saved.projects.flatMap((p) => p.entities)
+        searchIndex.buildFromEntities(allEntities)
+      }
       return saved ? migratePersistedState(saved) : fallbackState
     } catch (error) {
       console.error('[Worker] Fallo leyendo estado desde adapter, usando fallback en memoria', error)
@@ -120,7 +148,9 @@ const workerObj: AppWorker = {
       console.warn('[Worker] Fallo limpiando adapter de estado', error)
     }
     fallbackState = null
-    searchIndex.buildFromEntities([])
+    if (!isDesktopRuntime()) {
+      searchIndex.buildFromEntities([])
+    }
   },
 
   // Mantener compatibilidad con el API original (filtro lineal)
@@ -149,7 +179,16 @@ const workerObj: AppWorker = {
 
   // ── FTS5 Index API ──────────────────────────────────
 
+  // ── FTS5 Index API ──────────────────────────────────
+  // Desktop usa SQLite FTS directamente, worker solo mantiene índice en memoria para web
+
   async ftsIndex(entities: EntityRecord[], meta?: WorkerRequestMeta): Promise<number> {
+    // Skip FTS indexing on desktop - SQLite FTS se mantiene en main.cjs
+    if (isDesktopRuntime()) {
+      console.log('[Worker] Desktop runtime: Skipping in-memory FTS, using SQLite')
+      return 0
+    }
+
     return withSpan('worker.fts_index', {
       entities: entities.length,
       correlationId: meta?.correlationId,
@@ -166,6 +205,12 @@ const workerObj: AppWorker = {
   },
 
   async ftsSearch(query: string, meta?: WorkerRequestMeta): Promise<FtsSearchResult[]> {
+    // Skip FTS search on desktop - se usa desktopSearchAdapter que va directo a SQLite
+    if (isDesktopRuntime()) {
+      console.log('[Worker] Desktop runtime: FTS search delegated to desktopSearchAdapter')
+      return []
+    }
+
     return withSpan('worker.fts_search', {
       queryLength: query.length,
       correlationId: meta?.correlationId,
@@ -181,6 +226,10 @@ const workerObj: AppWorker = {
   },
 
   async ftsUpsert(entity: EntityRecord): Promise<void> {
+    // Skip FTS upsert on desktop
+    if (isDesktopRuntime()) {
+      return
+    }
     const validatedEntity = parseWithContract(EntityRecordSchema, entity, {
       provider: 'Local/Ollama',
       contract: 'ipc-worker-fts-upsert',
@@ -190,7 +239,15 @@ const workerObj: AppWorker = {
   },
 
   async ftsRemove(entityId: string): Promise<void> {
+    // Skip FTS remove on desktop
+    if (isDesktopRuntime()) {
+      return
+    }
     searchIndex.removeEntity(entityId)
+  },
+
+  isDesktopRuntime(): boolean {
+    return isDesktopRuntime()
   },
 }
 

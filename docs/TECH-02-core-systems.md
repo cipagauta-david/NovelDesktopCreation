@@ -66,13 +66,14 @@ Campos iniciales:
 - trazabilidad de ruta/identificador dentro del proyecto,
 - políticas de copia/exportación para mantener portabilidad del workspace.
 
-## 11. Estado de implementación (2026-03-12)
+## 11. Estado de implementación (2026-03-22)
 
 Checks completados en este hito:
 
 1. **Sync offline-first + merge strategy + base CRDT**
 	- Se implementó un motor de sincronización local con cola offline y merge LWW por entidad/proyecto.
 	- Base CRDT aplicada mediante unión por ID + resolución de conflicto por `updatedAt`.
+	- Cola de sync persistente con retry exponencial y poison queue.
 
 2. **Vault cifrado para credenciales IA**
 	- `apiKey` ya no forma parte del estado persistido.
@@ -80,7 +81,8 @@ Checks completados en este hito:
 
 3. **Platform Adapter formal (web/desktop)**
 	- Se desacopló acceso a filesystem (import/export) y storage de estado (worker) mediante adapters.
-	- Runtime web usa APIs del navegador; runtime desktop queda preparado para bridge nativo.
+	- Runtime web usa IndexedDB; runtime desktop usa SQLite con fallback JSON.
+	- Bridge IPC documentado en TECH-03-infrastructure.md.
 
 4. **Contrato de integridad import/export**
 	- Export incluye `version`, `checksumAlgorithm` y `checksum` SHA-256 del proyecto.
@@ -89,3 +91,35 @@ Checks completados en este hito:
 5. **Sistema base de plugins/skills con capabilities**
 	- Se incorporó `PluginManager` con registro/ejecución.
 	- Sandbox por permisos: `workspace:read` y `workspace:write` con contexto congelado para lectura.
+
+## 12. Detalles del Motor de Sincronización
+
+### Operaciones Derivadas (deriveSyncOperations)
+```typescript
+// Para cada ChangeEvent, deriva operaciones de sync basadas en diff
+1. Comparar previous vs current state
+2. Generar operaciones entity.upsert/delete
+3. Generar operaciones project.upsert/delete
+4. Generar operaciones relation.upsert/delete
+5. Generar workspace.settings y workspace.pointer si cambiaron
+```
+
+### Merge de Estados (mergePersistedStates)
+```typescript
+// CRDT + LWW merge strategy
+1. mergeById(projects) → mergeProject() por cada proyecto
+2. mergeEntity() para cada par de entidades:
+   - Si contenido diferente → CRDT text merge
+   - LWW por updatedAt para metadata
+3. mergeById(changeLog) → mantener todos, ordernar por timestamp
+4. GraphLayouts y LLMTraces → shallow merge por keys
+```
+
+### Retry Strategy
+```typescript
+const BASE_BACKOFF_MS = 1_250
+const DEFAULT_MAX_RETRIES = 5
+
+nextBackoffDelayMs(retries) = BASE_BACKOFF_MS * 2^(retries-1) * jitter(0.75-1.25)
+// Jitter aleatorio para evitar thundering herd
+```

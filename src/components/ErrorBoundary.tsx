@@ -20,7 +20,6 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: unknown) {
-    // eslint-disable-next-line no-console
     console.error('[ErrorBoundary] Caught error', error, info)
   }
 
@@ -28,7 +27,9 @@ export class ErrorBoundary extends React.Component<Props, State> {
     try {
       localStorage.removeItem('ndc-mvp-state-v3')
       localStorage.removeItem('ndc-mvp-state-v2')
-    } catch {}
+    } catch {
+      // Ignore storage errors during reset
+    }
     window.location.reload()
   }
 

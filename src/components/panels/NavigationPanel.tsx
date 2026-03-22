@@ -95,6 +95,7 @@ export const NavigationPanel = memo(function NavigationPanel({
       eyebrow="Navegacion"
       collapseLabel="Ocultar navegacion"
       onCollapse={onCollapse}
+      showHeader={false}
       tabs={
         <div className="dock-panel-icon-tabs" role="tablist" aria-label="Secciones de navegación">
           <button

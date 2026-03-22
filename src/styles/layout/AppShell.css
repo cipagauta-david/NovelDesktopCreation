@@ -4,8 +4,6 @@
   --shell-header-height: 3.25rem;
   --shell-panel-gap: 0;
   --shell-rail-width: 3rem;
-  --shell-sidebar-width: clamp(17rem, 22vw, 21rem);
-  --shell-inspector-width: clamp(19rem, 24vw, 23rem);
 }
 
 /* ─── App Shell: Immersive Canvas ─── */
@@ -130,7 +128,7 @@
   top: var(--shell-header-height);
   left: var(--shell-rail-width);
   bottom: 0;
-  width: var(--shell-sidebar-width);
+  /* width controlled by JS inline style via panelWidths */
   z-index: 40;
   display: flex;
   flex-direction: column;
@@ -160,7 +158,7 @@
   top: var(--shell-header-height);
   right: var(--shell-rail-width);
   bottom: 0;
-  width: var(--shell-inspector-width);
+  /* width controlled by JS inline style via panelWidths */
   z-index: 40;
   overflow: hidden;
   border-radius: var(--radius-lg) 0 0 var(--radius-lg);
@@ -359,4 +357,38 @@
     z-index: 35;
     background: var(--overlay-scrim);
   }
+}
+
+/* --- Panel Resize Handle --- */
+.panel-resize-handle {
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.panel-resize-handle:hover,
+.panel-resize-handle:active {
+  background: color-mix(in srgb, var(--accent-primary) 40%, transparent);
+}
+
+.panel-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 2rem;
+  border-radius: 1px;
+  background: var(--border-subtle);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.panel-resize-handle:hover::after {
+  opacity: 1;
+}
+
+.panel-resize-handle:active::after {
+  opacity: 1;
+  background: var(--accent-primary);
 }

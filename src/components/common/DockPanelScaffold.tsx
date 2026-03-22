@@ -7,6 +7,7 @@ type DockPanelScaffoldProps = {
   eyebrow: string
   collapseLabel: string
   onCollapse: () => void
+  showHeader?: boolean
   tabs?: ReactNode
   footer?: ReactNode
   className?: string
@@ -18,6 +19,7 @@ export function DockPanelScaffold({
   eyebrow,
   collapseLabel,
   onCollapse,
+  showHeader = true,
   tabs,
   footer,
   className,
@@ -34,23 +36,25 @@ export function DockPanelScaffold({
   return (
     <aside className={classes}>
       <div className="dock-panel-sticky-head">
-        <div className={['panel-dock-header', side === 'right' ? 'panel-dock-header-right' : ''].filter(Boolean).join(' ')}>
-          {side === 'left' ? (
-            <>
-              <span className="eyebrow">{eyebrow}</span>
-              <button type="button" className="panel-dock-toggle" aria-label={collapseLabel} onClick={onCollapse}>
-                {collapseArrow}
-              </button>
-            </>
-          ) : (
-            <>
-              <button type="button" className="panel-dock-toggle" aria-label={collapseLabel} onClick={onCollapse}>
-                {collapseArrow}
-              </button>
-              <span className="eyebrow">{eyebrow}</span>
-            </>
-          )}
-        </div>
+        {showHeader ? (
+          <div className={['panel-dock-header', side === 'right' ? 'panel-dock-header-right' : ''].filter(Boolean).join(' ')}>
+            {side === 'left' ? (
+              <>
+                <span className="eyebrow">{eyebrow}</span>
+                <button type="button" className="panel-dock-toggle" aria-label={collapseLabel} onClick={onCollapse}>
+                  {collapseArrow}
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" className="panel-dock-toggle" aria-label={collapseLabel} onClick={onCollapse}>
+                  {collapseArrow}
+                </button>
+                <span className="eyebrow">{eyebrow}</span>
+              </>
+            )}
+          </div>
+        ) : null}
 
         {tabs}
       </div>

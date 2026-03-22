@@ -6,6 +6,7 @@ let DatabaseSync
 try {
   ;({ DatabaseSync } = require('node:sqlite'))
 } catch {
+  console.log('[Desktop] node:sqlite not available, SQLite disabled')
   DatabaseSync = null
 }
 
@@ -14,10 +15,14 @@ const APP_STATE_DB_PATH = path.join(app.getPath('userData'), 'workspace-state.db
 const APP_STATE_KEY = 'latest'
 const DB_SCHEMA_VERSION = 1
 
+console.log('[Desktop] UserData path:', app.getPath('userData'))
+console.log('[Desktop] SQLite DB path:', APP_STATE_DB_PATH)
+
 let stateDb = null
 
 async function ensureUserDataDir() {
   const userDataPath = app.getPath('userData')
+  console.log('[Desktop] Ensuring userData dir:', userDataPath)
   await fs.mkdir(userDataPath, { recursive: true })
 }
 
@@ -517,6 +522,7 @@ function syncEntityFtsIndex(db, previousState, nextState) {
 }
 
 function persistStateToDb(db, state) {
+  console.log('[Desktop] persistStateToDb - projects:', state?.projects?.length)
   const nowMs = Date.now()
   const stateJson = JSON.stringify(state)
   const previousState = loadStateFromDb(db)
@@ -529,29 +535,37 @@ function persistStateToDb(db, state) {
     replaceDerivedTablesFromState(db, state, nowMs)
     syncEntityFtsIndex(db, previousState, state)
   })
+  console.log('[Desktop] persistStateToDb complete - stateJson size:', stateJson.length)
 }
 
 function loadStateFromDb(db) {
+  console.log('[Desktop] loadStateFromDb - checking workspace_snapshots')
   const snapshotStmt = db.prepare('SELECT state_json FROM workspace_snapshots WHERE snapshot_key = ? LIMIT 1')
   const snapshotRow = snapshotStmt.get(APP_STATE_KEY)
   if (snapshotRow && typeof snapshotRow.state_json === 'string') {
+    console.log('[Desktop] Found state in workspace_snapshots, size:', snapshotRow.state_json.length)
     try {
       return JSON.parse(snapshotRow.state_json)
     } catch {
+      console.log('[Desktop] Failed to parse snapshot JSON')
       return null
     }
   }
 
+  console.log('[Desktop] No snapshot, checking app_state')
   const appStateStmt = db.prepare('SELECT value FROM app_state WHERE key = ? LIMIT 1')
   const appStateRow = appStateStmt.get(APP_STATE_KEY)
   if (appStateRow && typeof appStateRow.value === 'string') {
+    console.log('[Desktop] Found state in app_state, size:', appStateRow.value.length)
     try {
       return JSON.parse(appStateRow.value)
     } catch {
+      console.log('[Desktop] Failed to parse app_state JSON')
       return null
     }
   }
 
+  console.log('[Desktop] No state found in database')
   return null
 }
 
@@ -708,15 +722,25 @@ function clearSyncPersistenceInDb(db) {
 
 function getStateDb() {
   if (!DatabaseSync) {
+    console.log('[Desktop] DatabaseSync not available, returning null')
     return null
   }
   if (stateDb) {
+    console.log('[Desktop] Returning cached database instance')
     return stateDb
   }
-  const db = new DatabaseSync(APP_STATE_DB_PATH)
-  bootstrapStateSchema(db)
-  stateDb = db
-  return stateDb
+  console.log('[Desktop] Creating new SQLite database at:', APP_STATE_DB_PATH)
+  try {
+    const db = new DatabaseSync(APP_STATE_DB_PATH)
+    console.log('[Desktop] Database created, bootstrapping schema...')
+    bootstrapStateSchema(db)
+    stateDb = db
+    console.log('[Desktop] Database ready')
+    return db
+  } catch (error) {
+    console.error('[Desktop] Failed to create database:', error)
+    return null
+  }
 }
 
 async function migrateLegacyJsonStateToDb() {
@@ -809,29 +833,50 @@ ipcMain.handle('novel:fs:pick-text-file', async (_event, payload) => {
 })
 
 ipcMain.handle('novel:state:init', async () => {
+  console.log('[Desktop IPC] novel:state:init')
   await ensureUserDataDir()
-  getStateDb()
+  const db = getStateDb()
+  if (db) {
+    console.log('[Desktop IPC] SQLite database initialized')
+  } else {
+    console.log('[Desktop IPC] SQLite not available, will use JSON fallback')
+  }
   await migrateLegacyJsonStateToDb()
   return true
 })
 ipcMain.handle('novel:state:save', async (_event, state) => {
+  console.log('[Desktop IPC] novel:state:save - projects:', state?.projects?.length)
   await ensureUserDataDir()
   const db = getStateDb()
   if (db) {
-    persistStateToDb(db, state)
-    return true
+    try {
+      persistStateToDb(db, state)
+      console.log('[Desktop IPC] State persisted to SQLite')
+      return true
+    } catch (error) {
+      console.error('[Desktop IPC] SQLite persist failed:', error)
+    }
   }
 
+  console.log('[Desktop IPC] Falling back to JSON file')
   await saveStateFallbackJson(state)
   return true
 })
 ipcMain.handle('novel:state:load', async () => {
+  console.log('[Desktop IPC] novel:state:load')
   await ensureUserDataDir()
   const db = getStateDb()
   if (db) {
-    return loadStateFromDb(db)
+    try {
+      const state = loadStateFromDb(db)
+      console.log('[Desktop IPC] State loaded from SQLite, projects:', state?.projects?.length)
+      return state
+    } catch (error) {
+      console.error('[Desktop IPC] SQLite load failed:', error)
+    }
   }
 
+  console.log('[Desktop IPC] Falling back to JSON file')
   return loadStateFallbackJson()
 })
 ipcMain.handle('novel:state:clear', async () => {

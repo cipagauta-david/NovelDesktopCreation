@@ -1,19 +1,26 @@
 .entity-list-layout {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 0.8rem;
   min-height: 0;
   height: 100%;
+  overflow: hidden;
 }
 
 .entity-composer {
   padding-bottom: 0.2rem;
+  flex-shrink: 0;
 }
 
 .entity-list-scrollable {
   min-height: 0;
+  flex: 1 1 auto;
   overflow-y: auto;
   padding-right: 0.15rem;
+}
+
+.entity-list-inner {
+  contain: layout;
 }
 
 .create-entity-button {
@@ -26,7 +33,7 @@
   touch-action: none;
 }
 
-.entity-list .list-card {
+.entity-list-scrollable .list-card {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
@@ -37,7 +44,7 @@
   background: transparent;
 }
 
-.entity-list .list-card .drag-handle {
+.entity-list-scrollable .list-card .drag-handle {
   cursor: grab;
   opacity: 0.35;
   font-size: 1rem;
@@ -48,11 +55,11 @@
   transition: opacity 0.15s;
 }
 
-.entity-list .list-card .drag-handle:hover {
+.entity-list-scrollable .list-card .drag-handle:hover {
   opacity: 0.85;
 }
 
-.entity-list .list-card .drag-handle:active {
+.entity-list-scrollable .list-card .drag-handle:active {
   cursor: grabbing;
 }
 
@@ -63,24 +70,24 @@
   flex: 1;
 }
 
-.entity-list .list-card.dragging {
+.entity-list-scrollable .list-card.dragging {
   opacity: 0.5;
   outline: 2px dashed var(--brand-accent);
 }
 
-.entity-list .list-card.drop-target {
+.entity-list-scrollable .list-card.drop-target {
   border-top: 2px solid var(--brand-accent);
 }
 
-.entity-list .list-card:hover {
+.entity-list-scrollable .list-card:hover {
   background: color-mix(in srgb, var(--surface-panel) 76%, transparent);
 }
 
-.entity-list .list-card.active {
+.entity-list-scrollable .list-card.active {
   background: color-mix(in srgb, var(--surface-panel) 92%, transparent);
   border-left-color: var(--brand-accent);
 }
 
-.entity-list .list-card-content {
+.list-card-content {
   padding-left: 0.25rem;
 }

@@ -32,6 +32,16 @@ function getDesktopBridge(): DesktopWorkerBridge | undefined {
   return (globalThis as { __NOVEL_DESKTOP__?: DesktopWorkerBridge }).__NOVEL_DESKTOP__
 }
 
+// Verificar si estamos en contexto de Web Worker (no tiene acceso a window)
+function isInWebWorker(): boolean {
+  try {
+    // Web Workers no tienen acceso a window
+    return typeof window === 'undefined'
+  } catch {
+    return true
+  }
+}
+
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION)
@@ -106,31 +116,55 @@ function createWebIndexedDbAdapter(): StateStorageAdapter {
 }
 
 function createDesktopAdapter(bridge: DesktopWorkerBridge): StateStorageAdapter {
+  // Desktop usa IPC channels para SQLite en main process
+  const ipcBridge = bridge as DesktopWorkerBridge & {
+    stateStorage?: {
+      init?: () => Promise<void>
+      saveState?: (state: PersistedState) => Promise<void>
+      loadState?: () => Promise<PersistedState | null>
+      clearState?: () => Promise<void>
+    }
+  }
+
+  // En Web Worker, IPC no está disponible, usar IndexedDB fallback
+  if (isInWebWorker()) {
+    console.log('[StateStorage] Desktop: Running in Web Worker, using IndexedDB fallback')
+    return createWebIndexedDbAdapter()
+  }
+
   return {
     runtime: 'desktop',
     async init() {
-      if (bridge.stateStorage?.init) {
-        await bridge.stateStorage.init()
+      if (ipcBridge.stateStorage?.init) {
+        await ipcBridge.stateStorage.init()
+        console.log('[StateStorage] Desktop: Initialized SQLite via IPC')
       }
     },
     async saveState(state: PersistedState) {
-      if (bridge.stateStorage?.saveState) {
-        await bridge.stateStorage.saveState(state)
+      if (ipcBridge.stateStorage?.saveState) {
+        await ipcBridge.stateStorage.saveState(state)
+        console.log('[StateStorage] Desktop: State saved to SQLite via IPC')
         return
       }
+      console.warn('[StateStorage] Desktop: No IPC bridge for saveState, using IndexedDB fallback')
       await createWebIndexedDbAdapter().saveState(state)
     },
     async loadState() {
-      if (bridge.stateStorage?.loadState) {
-        return bridge.stateStorage.loadState()
+      if (ipcBridge.stateStorage?.loadState) {
+        const state = await ipcBridge.stateStorage.loadState()
+        console.log('[StateStorage] Desktop: State loaded from SQLite via IPC')
+        return state
       }
+      console.warn('[StateStorage] Desktop: No IPC bridge for loadState, using IndexedDB fallback')
       return createWebIndexedDbAdapter().loadState()
     },
     async clearState() {
-      if (bridge.stateStorage?.clearState) {
-        await bridge.stateStorage.clearState()
+      if (ipcBridge.stateStorage?.clearState) {
+        await ipcBridge.stateStorage.clearState()
+        console.log('[StateStorage] Desktop: State cleared from SQLite via IPC')
         return
       }
+      console.warn('[StateStorage] Desktop: No IPC bridge for clearState, using IndexedDB fallback')
       await createWebIndexedDbAdapter().clearState()
     },
   }
@@ -139,6 +173,16 @@ function createDesktopAdapter(bridge: DesktopWorkerBridge): StateStorageAdapter 
 export function getStateStorageAdapter(): StateStorageAdapter {
   const bridge = getDesktopBridge()
   if (bridge?.platform === 'desktop') {
+    return createDesktopAdapter(bridge)
+  }
+  return createWebIndexedDbAdapter()
+}
+
+// Exportar versión directa para uso en renderer (no worker)
+// Esta versión siempre usa IPC para desktop
+export function getStateStorageAdapterDirect(): StateStorageAdapter {
+  const bridge = getDesktopBridge()
+  if (bridge?.platform === 'desktop' && !isInWebWorker()) {
     return createDesktopAdapter(bridge)
   }
   return createWebIndexedDbAdapter()

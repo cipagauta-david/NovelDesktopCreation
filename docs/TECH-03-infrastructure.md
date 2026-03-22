@@ -1,5 +1,57 @@
 # Arquitectura Técnica Inicial — NovelDesktopCreation (Parte 3: Infraestructura, Desktop y Escalado)
 
+## 10b. IPC Channels (Electron Desktop)
+
+### Preload → Main Bridge (`__NOVEL_DESKTOP__`)
+
+El preload script expone el bridge `__NOVEL_DESKTOP__` para comunicación IPC tipada.
+
+#### Canales disponibles:
+
+| Canal | Dirección | Descripción |
+|-------|-----------|-------------|
+| `novel:fs:save-file` | Renderer → Main | Guardar archivo via dialog |
+| `novel:fs:pick-text-file` | Renderer → Main | Seleccionar archivo para importar |
+| `novel:state:init` | Renderer → Main | Inicializar base de datos de estado |
+| `novel:state:save` | Renderer → Main | Persistir estado completo del workspace |
+| `novel:state:load` | Renderer → Main | Cargar estado del workspace |
+| `novel:state:clear` | Renderer → Main | Limpiar todo el estado |
+| `novel:sync:init` | Renderer → Main | Inicializar storage de sync |
+| `novel:sync:read-queue` | Renderer → Main | Leer cola de sync |
+| `novel:sync:write-queue` | Renderer → Main | Escribir cola de sync |
+| `novel:sync:read-last-state` | Renderer → Main | Leer último estado de sync |
+| `novel:sync:write-last-state` | Renderer → Main | Escribir último estado de sync |
+| `novel:sync:clear` | Renderer → Main | Limpiar persistencia de sync |
+| `novel:search:fts` | Renderer → Main | Ejecutar búsqueda FTS |
+
+### Storage Strategy (Desktop vs Web)
+
+#### Desktop (Electron)
+- **Primary**: SQLite via `node:sqlite` (DatabaseSync)
+- **Fallback**: JSONfile en `userData/workspace-state.json`
+- **Migración**: Automática de JSON legacy a SQLite en primer inicio
+- **Rutas**:
+  - DB: `userData/workspace-state.db`
+  - Fallback: `userData/workspace-state.json`
+
+#### Web (Browser)
+- **Primary**: IndexedDB (`novel-desktop-worker-db`)
+- **Fallback**: localStorage para sync queue y last state
+- **Keys**:
+  - `novel.sync.queue.v2`
+  - `novel.sync.last-state.v2`
+
+### Legacy JSON to SQLite Migration
+
+```typescript
+// En migrateLegacyJsonStateToDb()
+1. Verificar si workspace_snapshots tiene 'latest'
+2. Si no existe, cargar workspace-state.json
+3. Si existe JSON, persistir a SQLite
+4. Reemplazar tablas derivadas del snapshot
+5. Sincronizar índice FTS
+```
+
 ## 11. Infraestructura de visualización de grafo
 - Render del grafo en tecnología apta para volumen (Canvas/WebGL según implementación).
 - Cálculo de layout desacoplado de la UI cuando el volumen lo requiera.

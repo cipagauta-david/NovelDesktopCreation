@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useRef } from 'react'
+import { memo, useState, useCallback, useRef, useEffect } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   DndContext,
@@ -8,6 +8,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -52,6 +53,8 @@ export const EntityList = memo(function EntityList({
   onReorderEntities,
 }: EntityListProps) {
   const [showComposer, setShowComposer] = useState(false)
+  const [isSectionOpen, setIsSectionOpen] = useState(true)
+  const [activeId, setActiveId] = useState<string | null>(null)
   const parentRef = useRef<HTMLDivElement | null>(null)
 
   const sensors = useSensors(
@@ -59,9 +62,14 @@ export const EntityList = memo(function EntityList({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(String(event.active.id))
+  }, [])
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event
+      setActiveId(null)
       if (!over || active.id === over.id || !onReorderEntities) return
       const oldIndex = entities.findIndex((e) => e.id === active.id)
       const newIndex = entities.findIndex((e) => e.id === over.id)
@@ -72,18 +80,38 @@ export const EntityList = memo(function EntityList({
     [entities, onReorderEntities],
   )
 
+  // Medir el tamaño real de cada item después de renderizar
+  const measureElement = useCallback((element: Element | null) => {
+    if (!element) return 0
+    return (element as HTMLElement).getBoundingClientRect().height
+  }, [])
+
   const rowVirtualizer = useVirtualizer({
     count: entities.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 86,
-    overscan: 8,
+    overscan: 3,
+    measureElement,
   })
+
+  useEffect(() => {
+    if (!isSectionOpen) {
+      return
+    }
+    // Recalcula las medidas al reabrir para evitar lista virtual vacia.
+    const rafId = window.requestAnimationFrame(() => {
+      rowVirtualizer.measure()
+    })
+    return () => window.cancelAnimationFrame(rafId)
+  }, [isSectionOpen, entities.length, rowVirtualizer])
 
   return (
     <section className="entity-column">
       <PanelSection
         title={title}
         meta={`${count} entidades`}
+        open={isSectionOpen}
+        onOpenChange={setIsSectionOpen}
         actions={
           <Button type="button" variant="ghost" className="ghost-button compact-button" onClick={() => setShowComposer((current) => !current)}>
             {showComposer ? 'Cerrar' : 'Crear entidad'}
@@ -101,25 +129,39 @@ export const EntityList = memo(function EntityList({
           )}
 
           {entities.length > 0 ? (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
               <SortableContext items={entities.map((e) => e.id)} strategy={verticalListSortingStrategy}>
-                <div ref={parentRef} className="entity-list entity-list-scrollable">
-                  <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
+                <div ref={parentRef} className="entity-list-scrollable">
+                  <div
+                    style={{
+                      height: `${rowVirtualizer.getTotalSize()}px`,
+                      width: '100%',
+                      position: 'relative',
+                    }}
+                  >
                     {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                       const entity = entities[virtualRow.index]
-                      if (!entity) {
-                        return null
-                      }
+                      if (!entity) return null
+                      const isDragging = activeId === entity.id
 
                       return (
                         <div
                           key={entity.id}
+                          data-index={virtualRow.index}
+                          ref={rowVirtualizer.measureElement}
                           style={{
                             position: 'absolute',
                             top: 0,
                             left: 0,
-                            width: '100%',
+                            right: 0,
                             transform: `translateY(${virtualRow.start}px)`,
+                            zIndex: isDragging ? 999 : 'auto',
+                            opacity: isDragging ? 0.5 : 1,
                           }}
                         >
                           <SortableEntityCard

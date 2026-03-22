@@ -125,6 +125,7 @@ export const InspectorPanel = memo(function InspectorPanel({
       eyebrow="Contexto"
       collapseLabel="Ocultar contexto"
       onCollapse={onCollapse}
+      showHeader={false}
       tabs={
         <div className="dock-panel-icon-tabs" role="tablist" aria-label="Secciones del inspector">
           {INSPECTOR_TAB_OPTIONS.map((option) => (
