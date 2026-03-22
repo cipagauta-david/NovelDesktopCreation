@@ -1,6 +1,7 @@
 import type { CollectionTab, Provider } from '../types/workspace'
 
-export const STORAGE_KEY = 'ndc-mvp-state-v2'
+// Bump the storage key to force a fresh seed for development when structure changes.
+export const STORAGE_KEY = 'ndc-mvp-state-v3'
 
 export const ENABLE_INCREMENTAL_GRAPH_HUD =
   (import.meta.env.VITE_ENABLE_INCREMENTAL_GRAPH_HUD ?? '1') !== '0'

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AppShell } from './components/layout/AppShell'
+import ErrorBoundary from './components/ErrorBoundary'
+import { OnboardingScreen } from './components/onboarding/OnboardingScreen'
 import { useAppWorker } from './hooks/useAppWorker'
 import { ThemeProvider, useTheme } from './hooks/useTheme'
 import { getDefaultPersistedState } from './data/seed/project'
@@ -52,9 +54,31 @@ function AppContent() {
     )
   }
 
+  if (!initialData.settings) {
+    return (
+      <div data-resolved-theme={resolvedTheme}>
+        <OnboardingScreen
+          onSubmit={(payload) => {
+            setInitialData((current) => ({
+              ...(current as PersistedState),
+              settings: {
+                authorName: payload.authorName || 'Autor(a)',
+                provider: payload.provider,
+                model: payload.model,
+                apiKeyHint: payload.apiKey ? `••••${payload.apiKey.slice(-4)}` : 'Modo local',
+              },
+            }))
+          }}
+        />
+      </div>
+    )
+  }
+
   return (
     <div data-resolved-theme={resolvedTheme}>
-      <AppShell initialData={initialData} worker={worker} />
+      <ErrorBoundary>
+        <AppShell key={`${initialData.id}-${worker ? 'r' : 'n'}`} initialData={initialData} worker={worker} />
+      </ErrorBoundary>
     </div>
   )
 }

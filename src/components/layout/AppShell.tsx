@@ -40,6 +40,25 @@ function StackedDialog({ open, onOpenChange, title, children }: StackedDialogPro
 
 export function AppShell({ initialData, worker }: { initialData: PersistedState, worker: Comlink.Remote<AppWorker> }) {
   const workspace = useWorkspace(initialData, worker)
+  // Instrumentation: render counter & quick state dump to debug hook-order issues
+  const renderCountRef = useRef(0)
+  renderCountRef.current += 1
+  // Avoid noisy logs in production by gating on hostname or env if needed
+  try {
+    // eslint-disable-next-line no-console
+    console.log('[AppShell] render', renderCountRef.current, {
+      onboardingReady: workspace.onboardingReady,
+      activeProjectId: workspace.data.activeProjectId,
+      activeTabId: workspace.data.activeTabId,
+      activeEntityId: workspace.data.activeEntityId,
+      panels: workspace.panels,
+      workspaceView: workspace.workspaceView,
+      streamStatus: workspace.streamStatus,
+      searchQueryLen: workspace.searchQuery?.length ?? 0,
+    })
+  } catch (e) {
+    // noop
+  }
   const [zenMode, setZenMode] = useState(false)
   const [searchPaletteOpen, setSearchPaletteOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
