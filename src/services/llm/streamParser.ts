@@ -70,7 +70,7 @@ export async function consumeSseStream({
       if (parserError) {
         throw new LlmError({
           provider,
-          message: 'SSE inválido recibido desde provider.',
+          message: 'Error en la conexión con la IA. Por favor, intenta de nuevo.',
           category: 'contract',
           retryable: false,
         })

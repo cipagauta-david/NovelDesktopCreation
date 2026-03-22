@@ -36,6 +36,7 @@ type NavigationPanelProps = {
   onUpdateActiveTabColor: (color: string) => void
   entitiesEnabled: boolean
   entities: EntityRecord[]
+  archivedEntities: EntityRecord[]
   activeEntityId?: string
   selectedTemplateId: string
   onTemplateChange: (value: string) => void
@@ -76,6 +77,7 @@ export const NavigationPanel = memo(function NavigationPanel({
   onUpdateActiveTabColor,
   entitiesEnabled,
   entities,
+  archivedEntities,
   activeEntityId,
   selectedTemplateId,
   onTemplateChange,
@@ -164,6 +166,7 @@ export const NavigationPanel = memo(function NavigationPanel({
                 title={activeTab?.name ?? 'Entidades'}
                 count={entities.length}
                 entities={entities}
+                archivedEntities={archivedEntities}
                 activeEntityId={activeEntityId}
                 templates={activeTemplates}
                 selectedTemplateId={selectedTemplateId}

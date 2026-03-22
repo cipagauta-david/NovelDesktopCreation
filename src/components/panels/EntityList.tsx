@@ -31,6 +31,7 @@ type EntityListProps = {
   title: string
   count: number
   entities: EntityRecord[]
+  archivedEntities: EntityRecord[]
   activeEntityId?: string
   templates: EntityTemplate[]
   selectedTemplateId: string
@@ -44,6 +45,7 @@ export const EntityList = memo(function EntityList({
   title,
   count,
   entities,
+  archivedEntities,
   activeEntityId,
   templates,
   selectedTemplateId,
@@ -177,7 +179,31 @@ export const EntityList = memo(function EntityList({
               </SortableContext>
             </DndContext>
           ) : (
-            <EmptyMiniState>Aún no hay entidades en esta colección. Crea la primera para empezar a escribir.</EmptyMiniState>
+            <EmptyMiniState>Aún no hay entidades activas en esta colección.</EmptyMiniState>
+          )}
+        </div>
+      </PanelSection>
+
+      {/* Panel de Entidades Archivadas */}
+      <PanelSection
+        title="Bandeja de Archivo"
+        meta={`${archivedEntities.length} entidades`}
+        open={false}
+        defaultOpen={false}
+      >
+        <div style={{ padding: '0.5rem 0' }}>
+          {archivedEntities.length > 0 ? (
+             archivedEntities.map((entity) => (
+               <div key={entity.id} style={{ opacity: 0.7, marginBottom: '0.5rem' }}>
+                 <SortableEntityCard
+                   entity={entity}
+                   isActive={entity.id === activeEntityId}
+                   onSelect={() => onSelectEntity(entity.id, entity.tabId)}
+                 />
+               </div>
+             ))
+          ) : (
+             <EmptyMiniState>No hay entidades archivadas.</EmptyMiniState>
           )}
         </div>
       </PanelSection>

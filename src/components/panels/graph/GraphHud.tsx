@@ -164,84 +164,88 @@ export function GraphHud({
           {simulationPaused ? 'Reanudar' : 'Congelar'}
         </button>
       </div>
+      <details className="graph-hud-advanced">
+        <summary>Ajustes Avanzados</summary>
+        <div className="graph-hud-advanced-content">
+          <label className="graph-hud-slider">
+            <span>Separación entre elementos</span>
+            <input
+              type="range"
+              min={0}
+              max={200}
+              value={repulsionStrength}
+              onChange={(event) => onRepulsionStrengthChange(Number(event.target.value))}
+              aria-label="Separación entre elementos"
+            />
+            <small>{repulsionStrength}%</small>
+          </label>
 
-      <label className="graph-hud-slider">
-        <span>Repulsión</span>
-        <input
-          type="range"
-          min={0}
-          max={200}
-          value={repulsionStrength}
-          onChange={(event) => onRepulsionStrengthChange(Number(event.target.value))}
-          aria-label="Repulsión de nodos"
-        />
-        <small>{repulsionStrength}%</small>
-      </label>
+          <label className="graph-hud-slider">
+            <span>Atracción al centro</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={gravityStrength}
+              onChange={(event) => onGravityStrengthChange(Number(event.target.value))}
+              aria-label="Atracción al centro"
+            />
+            <small>{gravityStrength}%</small>
+          </label>
 
-      <label className="graph-hud-slider">
-        <span>Gravedad</span>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={gravityStrength}
-          onChange={(event) => onGravityStrengthChange(Number(event.target.value))}
-          aria-label="Gravedad de simulación"
-        />
-        <small>{gravityStrength}%</small>
-      </label>
+          <label className="graph-hud-slider">
+            <span>Grosor de conexiones</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={linkWeightStrength}
+              onChange={(event) => onLinkWeightStrengthChange(Number(event.target.value))}
+              aria-label="Grosor de conexiones"
+            />
+            <small>{linkWeightStrength}%</small>
+          </label>
 
-      <label className="graph-hud-slider">
-        <span>Peso</span>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={linkWeightStrength}
-          onChange={(event) => onLinkWeightStrengthChange(Number(event.target.value))}
-          aria-label="Peso de enlaces"
-        />
-        <small>{linkWeightStrength}%</small>
-      </label>
+          <label className="graph-hud-slider">
+            <span>Atracción enlaces</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={linkAttractionStrength}
+              onChange={(event) => onLinkAttractionStrengthChange(Number(event.target.value))}
+              aria-label="Atracción de enlaces"
+            />
+            <small>{linkAttractionStrength}%</small>
+          </label>
 
-      <label className="graph-hud-slider">
-        <span>Atracción enlaces</span>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={linkAttractionStrength}
-          onChange={(event) => onLinkAttractionStrengthChange(Number(event.target.value))}
-          aria-label="Atracción de enlaces"
-        />
-        <small>{linkAttractionStrength}%</small>
-      </label>
+          <label className="graph-hud-slider">
+            <span>Agrupación por tipo</span>
+            <input
+              type="range"
+              min={0}
+              max={1000}
+              value={collectionCohesionStrength}
+              onChange={(event) => onCollectionCohesionStrengthChange(Number(event.target.value))}
+              aria-label="Agrupación por tipo"
+            />
+            <small>{collectionCohesionStrength}%</small>
+          </label>
 
-      <label className="graph-hud-slider">
-        <span>Cohesión colección</span>
-        <input
-          type="range"
-          min={0}
-          max={1000}
-          value={collectionCohesionStrength}
-          onChange={(event) => onCollectionCohesionStrengthChange(Number(event.target.value))}
-          aria-label="Cohesión de colección"
-        />
-        <small>{collectionCohesionStrength}%</small>
-      </label>
-
-      <label className="graph-hud-slider">
-        <span>Repulsión borde colección</span>
-        <input
-          type="range"
-          min={0}
-          max={1000}
-          value={collectionBoundaryRepulsionStrength}
-          onChange={(event) => onCollectionBoundaryRepulsionStrengthChange(Number(event.target.value))}
-          aria-label="Repulsión del borde de colección"
-        />
-        <small>{collectionBoundaryRepulsionStrength}%</small>
-      </label>
+          <label className="graph-hud-slider">
+            <span>Repulsión borde colección</span>
+            <input
+              type="range"
+              min={0}
+              max={1000}
+              value={collectionBoundaryRepulsionStrength}
+              onChange={(event) => onCollectionBoundaryRepulsionStrengthChange(Number(event.target.value))}
+              aria-label="Repulsión del borde de colección"
+            />
+            <small>{collectionBoundaryRepulsionStrength}%</small>
+          </label>
+        </div>
+      </details>
     </div>
   )
 }

@@ -13,41 +13,56 @@ type OnboardingScreenProps = {
 }
 
 export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
+  const [view, setView] = useState<'landing' | 'onboarding'>('landing')
   const [authorName, setAuthorName] = useState('')
   const [provider, setProvider] = useState<Provider>('OpenRouter')
   const [model, setModel] = useState(providerModels.OpenRouter[0])
   const [apiKey, setApiKey] = useState('')
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false)
+
+  if (view === 'landing') {
+    return (
+      <main className="onboarding-shell">
+        <section className="hero-panel" style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+          <div className="eyebrow">La nueva forma de crear universos</div>
+          <h1>Escribe con una IA que respeta tu visión.</h1>
+          <p>
+            El único espacio de trabajo creativo donde las sugerencias de la IA están 100% bajo tu control.
+            Organiza entidades, descubre conexiones ocultas y da vida a tus historias sin perder tu voz.
+          </p>
+          
+          <div style={{ margin: '2rem 0', padding: '1rem', border: '1px solid var(--border-subtle)', borderRadius: '8px', background: 'var(--surface-sunken)' }}>
+            <span style={{ fontSize: '3rem' }}>🌌</span>
+            <p><strong>Vista Previa del Espacio de Trabajo</strong></p>
+            <small style={{ color: 'var(--text-secondary)' }}>Interfaz orientada a escritores creativos, libre de distracciones.</small>
+          </div>
+
+          <Button className="primary-button" variant="primary" type="button" onClick={() => setView('onboarding')} style={{ fontSize: '1.25rem', padding: '0.75rem 2rem' }}>
+            Empieza a diseñar tu mundo
+          </Button>
+
+          <div className="hero-grid" style={{ marginTop: '3rem', textAlign: 'left' }}>
+            <article className="hero-feature">
+              <strong>IA bajo control radical</strong>
+              <span>Tú decides cuándo pedir ideas y cuándo confirmar sugerencias. La IA nunca impone, solo propone.</span>
+            </article>
+            <article className="hero-feature">
+              <strong>Escenas vivas y conectadas</strong>
+              <span>Observa cómo evolucionan tus personajes con un sistema de referencias visual que evita que pierdas el hilo narrativo.</span>
+            </article>
+            <article className="hero-feature">
+              <strong>Adiós al síndrome del lienzo en blanco</strong>
+              <span>Gira tu historia con desarrollos de conflictos y propuestas narrativas instantáneas.</span>
+            </article>
+          </div>
+        </section>
+      </main>
+    )
+  }
 
   return (
     <main className="onboarding-shell">
-      <section className="hero-panel">
-        <div className="eyebrow">Primer paso</div>
-        <h1>Organiza tu novela, tu mundo y tus ideas en un solo lugar.</h1>
-        <p>
-          Prepara tu espacio creativo en menos de un minuto. Elige cómo quieres usar la IA y entra
-          a escribir con colecciones, entidades, referencias cruzadas y vista de relaciones.
-        </p>
-
-        <div className="hero-grid">
-          <article className="hero-feature">
-            <strong>Todo en contexto</strong>
-            <span>Escenas, personajes, lugares y notas conectadas en un mismo flujo.</span>
-          </article>
-          <article className="hero-feature">
-            <strong>Escritura con estructura</strong>
-            <span>Documento libre, propiedades reutilizables y plantillas para arrancar rápido.</span>
-          </article>
-          <article className="hero-feature">
-            <strong>Referencias vivas</strong>
-            <span>{'{{}}'} para enlazar ideas, previsualizarlas y moverte entre ellas sin perder foco.</span>
-          </article>
-          <article className="hero-feature">
-            <strong>IA bajo control</strong>
-            <span>Sugerencias útiles, confirmación explícita y distintos modelos según tu estilo.</span>
-          </article>
-        </div>
-      </section>
-
       <form
         className="onboarding-card"
         onSubmit={(event) => {
@@ -56,11 +71,12 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
         }}
       >
         <div className="section-title">
-          <span className="eyebrow">Onboarding</span>
-          <h2>Empieza en menos de un minuto</h2>
+          <button type="button" onClick={() => setView('landing')} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>← Volver</button>
+          <br /><br />
+          <h2>¿Cómo quieres configurar tu espacio?</h2>
         </div>
 
-        <Field label="Tu nombre o perfil creativo">
+        <Field label="¿Cómo deberíamos llamarte? (Tu nombre o pseudónimo)">
           <input
             value={authorName}
             onChange={(event) => setAuthorName(event.target.value)}
@@ -68,51 +84,88 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
           />
         </Field>
 
-        <div className="inline-grid">
-          <Field label="Proveedor">
-            <select
-              value={provider}
-              onChange={(event) => {
-                const nextProvider = event.target.value as Provider
-                setProvider(nextProvider)
-                setModel(providerModels[nextProvider][0])
-              }}
-            >
-              {Object.keys(providerModels).map((providerOption) => (
-                <option key={providerOption} value={providerOption}>
-                  {providerOption}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Modelo">
-            <select value={model} onChange={(event) => setModel(event.target.value)}>
-              {providerModels[provider].map((modelOption) => (
-                <option key={modelOption} value={modelOption}>
-                  {modelOption}
-                </option>
-              ))}
-            </select>
-          </Field>
+        <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <Button 
+            className="primary-button" 
+            variant="primary" 
+            type="button" 
+            onClick={() => onSubmit({ authorName, provider: 'Local/Ollama', model: 'demo', apiKey: '' })}
+          >
+            Probar sin API key — Modo demo
+          </Button>
+          
+          <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>o</div>
+          
+          <Button 
+            variant="ghost" 
+            type="button" 
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            style={{ border: '1px solid var(--border-subtle)' }}
+          >
+            {showAdvanced ? 'Ocultar configuración de IA propia' : 'Conectar mi propia IA (API Key)'}
+          </Button>
         </div>
 
-        <Field
-          label="API key o token"
-          hint="Déjalo vacío si solo quieres entrar al modo local o demo."
-        >
-          <input
-            value={apiKey}
-            onChange={(event) => setApiKey(event.target.value)}
-            placeholder="sk-or-v1-..."
-            type="password"
-            autoComplete="current-password"
-          />
-        </Field>
+        {showAdvanced && (
+          <div style={{ marginTop: '2rem', padding: '1rem', border: '1px solid var(--border-subtle)', borderRadius: '8px' }}>
+            <div className="inline-grid">
+              <Field label="Proveedor IA">
+                <select
+                  value={provider}
+                  onChange={(event) => {
+                    const nextProvider = event.target.value as Provider
+                    setProvider(nextProvider)
+                    setModel(providerModels[nextProvider][0])
+                  }}
+                >
+                  {Object.keys(providerModels).map((providerOption) => (
+                    <option key={providerOption} value={providerOption}>
+                      {providerOption}
+                    </option>
+                  ))}
+                </select>
+              </Field>
 
-        <Button className="primary-button" variant="primary" type="submit">
-          Entrar al espacio de trabajo
-        </Button>
+              <Field label="Modelo a utilizar">
+                <select value={model} onChange={(event) => setModel(event.target.value)}>
+                  {providerModels[provider].map((modelOption) => (
+                    <option key={modelOption} value={modelOption}>
+                      {modelOption}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+
+            <Field label="Tu API Key">
+              <input
+                value={apiKey}
+                onChange={(event) => setApiKey(event.target.value)}
+                placeholder="sk-or-v1-..."
+                type="password"
+                autoComplete="current-password"
+              />
+            </Field>
+
+            <label style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.9rem' }}>
+              <input 
+                type="checkbox" 
+                checked={acceptedPrivacy} 
+                onChange={(e) => setAcceptedPrivacy(e.target.checked)} 
+              />
+              Entiendo que mi API key se guardará localmente. <a href="#" style={{ color: 'var(--text-accent)' }}>Ver Política de Privacidad</a>.
+            </label>
+
+            <Button 
+              className="primary-button" 
+              variant="primary" 
+              type="submit"
+              disabled={!acceptedPrivacy || !apiKey}
+            >
+              Guardar configuración y Entrar
+            </Button>
+          </div>
+        )}
       </form>
     </main>
   )

@@ -129,7 +129,7 @@ export function InspectorContextTab({
               <article key={entity.id} className="reference-card-mini">
                 <strong>{entity.title}</strong>
                 <p>{buildSnippet(entity, entity.title)}</p>
-                <div className="reference-badges" aria-label="Metadatos de referencia">
+                <div className="reference-badges" aria-label="Información del enlace">
                   {entity.fields.slice(0, 3).map((field) => (
                     <span key={field.id} className="reference-badge">
                       {field.key}

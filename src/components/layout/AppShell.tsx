@@ -335,6 +335,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
                   onUpdateActiveTabColor={workspace.updateActiveTabColor}
                   entitiesEnabled={workspace.panels.entities}
                   entities={workspace.activeTabEntities}
+                  archivedEntities={workspace.archivedTabEntities}
                   activeEntityId={workspace.activeEntity?.id}
                   selectedTemplateId={workspace.selectedNewEntityTemplateId}
                   onTemplateChange={workspace.setNewEntityTemplateId}

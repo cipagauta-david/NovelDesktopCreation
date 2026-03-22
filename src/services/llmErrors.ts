@@ -41,24 +41,24 @@ function isRetryable(category: LlmErrorCategory): boolean {
   return category === 'rate-limit' || category === 'server' || category === 'timeout' || category === 'network'
 }
 
-function buildUserMessage(category: LlmErrorCategory, provider: Provider): string {
+function buildUserMessage(category: LlmErrorCategory, _provider: Provider): string {
   switch (category) {
     case 'auth':
-      return `Credenciales inválidas para ${provider}. Revisa tu API key en ajustes.`
+      return `No pudimos validar tu acceso. Puedes revisar tu API key en los Ajustes.`
     case 'rate-limit':
-      return `${provider} reporta límite de tasa. Reintentando automáticamente…`
+      return `La IA está recibiendo demasiadas peticiones en este momento. Espera un momento, reintentaremos automáticamente...`
     case 'network':
-      return `No se pudo conectar a ${provider}. Verifica tu conexión de red.`
+      return `Parece que hay problemas con la conexión a internet. Verifícala e intenta de nuevo.`
     case 'server':
-      return `Error en el servidor de ${provider}. Reintentando…`
+      return `El servicio de la IA no responde. Intentando de nuevo en un momento...`
     case 'timeout':
-      return `La solicitud a ${provider} expiró. Reintentando…`
+      return `La IA tardó mucho en preparar su respuesta. Reintentando...`
     case 'contract':
-      return `Respuesta inválida de ${provider}. Se ignoró por seguridad de contrato.`
+      return `Hubo un error interpretando la respuesta de la IA. Intenta reformular tu instrucción.`
     case 'cancelled':
-      return 'Solicitud cancelada por el usuario.'
+      return 'Generación detenida.'
     default:
-      return `Error desconocido con ${provider}. Intenta de nuevo.`
+      return `Ocurrió un error inesperado al conectar con la IA. Por favor, intenta de nuevo.`
   }
 }
 

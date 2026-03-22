@@ -57,7 +57,8 @@ export function useWorkspace(
   const activeTab = useMemo(() => activeProject?.tabs.find((t) => t.id === data.activeTabId) ?? activeProject?.tabs[0] ?? null, [activeProject, data.activeTabId])
   const projectEntities = useMemo(() => activeProject?.entities ?? [], [activeProject])
   const tabEntities = useMemo(() => projectEntities.filter((e) => e.tabId === activeTab?.id && e.status === 'active'), [activeTab?.id, projectEntities])
-  
+  const archivedTabEntities = useMemo(() => projectEntities.filter((e) => e.tabId === activeTab?.id && e.status === 'archived'), [activeTab?.id, projectEntities])
+
   const activeEntity = useMemo(() => {
     if (!activeTab) return projectEntities.find((e) => e.id === data.activeEntityId) ?? projectEntities[0] ?? null
     return tabEntities.find((e) => e.id === data.activeEntityId) ?? tabEntities[0] ?? null
@@ -269,7 +270,7 @@ export function useWorkspace(
     newProjectDescription: projectManagement.newProjectDescription, setNewProjectDescription: projectManagement.setNewProjectDescription,
     newTabName: tabManagement.newTabName, setNewTabName: tabManagement.setNewTabName,
     newEntityTemplateId: entityManagement.newEntityTemplateId, setNewEntityTemplateId: entityManagement.setNewEntityTemplateId,
-    activeProject, activeTab, activeEntity, activeDraft, activeTemplates: activeProject?.templates ?? [], activeTabEntities: tabEntities, selectedNewEntityTemplateId: entityManagement.selectedNewEntityTemplateId,
+    activeProject, activeTab, activeEntity, activeDraft, activeTemplates: activeProject?.templates ?? [], activeTabEntities: tabEntities, archivedTabEntities, selectedNewEntityTemplateId: entityManagement.selectedNewEntityTemplateId,
     searchResults, graphModel: graphManagement.graphModel, suggestionOptions, referenceSuggestion, pendingProposal: aiManagement.pendingProposal, panels, editorViewRef: entityManagement.editorViewRef, onboardingReady: Boolean(data.settings), completeOnboarding,
     // AI streaming
     streamStatus: aiManagement.streamStatus, streamingText: aiManagement.streamingText, llmTraces: aiManagement.llmTraces, stopGeneration: aiManagement.stopGeneration,

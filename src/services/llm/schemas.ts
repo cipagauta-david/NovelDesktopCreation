@@ -222,7 +222,7 @@ export function parseWithContract<T>(
   }
 
   bumpValidationMetric(opts.provider, opts.contract)
-  const detail = result.error.issues[0]?.message ?? 'payload inválido'
+  const detail = result.error.issues[0]?.message ?? 'Algo salió mal, intenta de nuevo'
   throw new LlmError({
     provider: opts.provider,
     message: `${opts.message}: ${detail}`,

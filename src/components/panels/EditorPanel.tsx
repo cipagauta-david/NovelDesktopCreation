@@ -93,6 +93,7 @@ export function EditorPanel({
   const [hoverPayload, setHoverPayload] = useState<EntityHoverPayload | null>(null)
   const [assetDragActive, setAssetDragActive] = useState(false)
   const [detailsPanelOpen, setDetailsPanelOpen] = useState(false)
+  const [detailsTab, setDetailsTab] = useState<'meta' | 'props' | 'assets'>('meta')
   const writingLaneRef = useRef<HTMLDivElement | null>(null)
   const entityById = useMemo(() => new Map(allEntities.map((entry) => [entry.id, entry])), [allEntities])
 
@@ -358,16 +359,28 @@ export function EditorPanel({
       </div>
 
       {!zenMode && (
-        <aside className={detailsPanelOpen ? 'editor-details-drawer open' : 'editor-details-drawer'} aria-label="Detalles de entidad">
-          <EditorMetadata draft={draft} templates={templates} zenMode={zenMode} onDraftChange={onDraftChange} />
-          <EditorProperties
-            fields={draft.fields as FieldValue[]}
-            assetCount={entity.assets.length}
-            onAddField={onAddField}
-            onUpdateField={onUpdateField}
-            onRemoveField={onRemoveField}
-          />
-          <EditorAssets assets={entity.assets} onAttachImages={onAttachImages} />
+        <aside className={detailsPanelOpen ? 'editor-details-drawer open' : 'editor-details-drawer'} aria-label="Inspector de la entidad">
+          <div className="inspector-tabs-header" style={{ display: 'flex', borderBottom: '1px solid var(--border-subtle)', marginBottom: '1rem' }}>
+             <button type="button" className={`dock-panel-icon-tab ${detailsTab === 'meta' ? 'active' : ''}`} onClick={() => setDetailsTab('meta')} style={{ flex: 1, padding: '0.5rem' }}>Metadatos</button>
+             <button type="button" className={`dock-panel-icon-tab ${detailsTab === 'props' ? 'active' : ''}`} onClick={() => setDetailsTab('props')} style={{ flex: 1, padding: '0.5rem' }}>Propiedades</button>
+             <button type="button" className={`dock-panel-icon-tab ${detailsTab === 'assets' ? 'active' : ''}`} onClick={() => setDetailsTab('assets')} style={{ flex: 1, padding: '0.5rem' }}>Archivos</button>
+          </div>
+          
+          {detailsTab === 'meta' && (
+            <EditorMetadata draft={draft} templates={templates} zenMode={zenMode} onDraftChange={onDraftChange} />
+          )}
+          {detailsTab === 'props' && (
+             <EditorProperties
+               fields={draft.fields as FieldValue[]}
+               assetCount={entity.assets.length}
+               onAddField={onAddField}
+               onUpdateField={onUpdateField}
+               onRemoveField={onRemoveField}
+             />
+          )}
+          {detailsTab === 'assets' && (
+             <EditorAssets assets={entity.assets} onAttachImages={onAttachImages} />
+          )}
         </aside>
       )}
     </section>

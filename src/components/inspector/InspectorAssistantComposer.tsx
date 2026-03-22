@@ -28,8 +28,23 @@ export function InspectorAssistantComposer({ value, streamStatus, onChange, onSu
     textarea.style.height = `${Math.min(textarea.scrollHeight, 320)}px`
   }, [value])
 
+  const setMode = (modePrompt: string) => {
+    onChange(`${value}${value ? '\n' : ''}${modePrompt}`)
+  }
+
   return (
     <form ref={formRef} className="assistant-composer" onSubmit={onSubmit}>
+      <div className="assistant-composer-modes" style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+        <Button type="button" variant="ghost" size="sm" onClick={() => setMode('Sugerir nuevas referencias y variables de fondo para esta escena:')}>
+          Referencias
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => setMode('Proponer los próximos 3 pasos narrativos (Propuesta Narrativa):')}>
+          Propuesta
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => setMode('Desarrollar la Pregunta Dramática o conflicto central:')}>
+          Conflicto
+        </Button>
+      </div>
       <div className="assistant-composer-input-shell">
         <textarea
           ref={textareaRef}
