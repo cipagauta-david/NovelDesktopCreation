@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef } from 'react'
-import { forceLink, forceManyBody, forceSimulation, forceX, forceY, type SimulationNodeDatum } from 'd3-force'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { hierarchy, tree } from 'd3-hierarchy'
 
 import { hexToRgba, resolveCollectionColor } from '../../../../utils/collectionColors'
 import { getGraphThemePalette } from '../palette'
@@ -7,29 +7,65 @@ import { createDefaultCamera, fitCameraToPoints, toScreen } from './d3Camera'
 import { useD3CanvasInteractions } from './d3CanvasInteractions'
 import type { D3PixiRendererProps } from './rendererProps'
 
-type SimNode = SimulationNodeDatum & { id: string; degree: number; title: string; ref: D3PixiRendererProps['nodes'][number] }
-
-type SimLink = { source: string | SimNode; target: string | SimNode }
-
-const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
-
-const isForceDebugEnabled = () =>
-  import.meta.env.DEV && typeof window !== 'undefined' && Boolean((window as { __NDC_GRAPH_FORCE_DEBUG__?: boolean }).__NDC_GRAPH_FORCE_DEBUG__)
-
-function addContribution(
-  target: Map<string, number>,
-  sourceId: string,
-  contribution: number,
-) {
-  target.set(sourceId, (target.get(sourceId) ?? 0) + contribution)
+interface TreeNode {
+  id: string
+  title: string
+  ref: D3PixiRendererProps['nodes'][number]
+  degree: number
+  children: TreeNode[]
+  parent?: TreeNode
 }
 
-function summarizeTopSources(sourceMap: Map<string, number>, top = 3) {
-  return Array.from(sourceMap.entries())
-    .sort((left, right) => right[1] - left[1])
-    .slice(0, top)
-    .map(([sourceId, value]) => `${sourceId}:${value.toFixed(2)}`)
-    .join(', ')
+const TAU = Math.PI * 2
+
+function normalizeAngle(angle: number): number {
+  return ((angle + Math.PI) % TAU + TAU) % TAU - Math.PI
+}
+
+function buildLabelLines(text: string, maxCharsPerLine = 18, maxLines = 2): string[] {
+  const words = text.trim().split(/\s+/).filter(Boolean)
+  if (!words.length) return ['']
+
+  const lines: string[] = []
+  let wordIndex = 0
+  let hardCutOccurred = false
+
+  while (wordIndex < words.length && lines.length < maxLines) {
+    let line = ''
+
+    while (wordIndex < words.length) {
+      const word = words[wordIndex]
+      const candidate = line ? `${line} ${word}` : word
+
+      if (candidate.length <= maxCharsPerLine) {
+        line = candidate
+        wordIndex += 1
+        continue
+      }
+
+      if (!line) {
+        line = word.slice(0, maxCharsPerLine)
+        if (word.length > maxCharsPerLine) hardCutOccurred = true
+        wordIndex += 1
+      }
+
+      break
+    }
+
+    if (!line) break
+    lines.push(line)
+  }
+
+  const hasOverflow = wordIndex < words.length || hardCutOccurred
+  if (hasOverflow) {
+    const lastLineIndex = Math.min(lines.length, maxLines) - 1
+    const lastLine = lines[lastLineIndex] || ''
+    lines[lastLineIndex] = lastLine.length >= maxCharsPerLine
+      ? `${lastLine.slice(0, Math.max(0, maxCharsPerLine - 1))}…`
+      : `${lastLine}…`
+  }
+
+  return lines.slice(0, maxLines)
 }
 
 export function D3PixiRenderer({
@@ -41,62 +77,284 @@ export function D3PixiRenderer({
   edges,
   activeEntityId,
   highlightedNodeId,
-  repulsionStrength,
-  gravityStrength,
-  linkWeightStrength,
-  linkAttractionStrength,
-  collectionCohesionStrength,
-  collectionBoundaryRepulsionStrength,
   simulationPaused,
   centerViewRequestId,
   orbitAroundCenter,
   degreeByNodeId,
   onNodeSelect,
-  onNodePositionChange,
+  // Mapping panel forces to Radial Engine
+  repulsionStrength, // Amplitud Angular (Separación)
+  gravityStrength, // Espaciado de Anillos (Gravedad)
+  linkWeightStrength, // Grosor 
+   // Tensión de Bezier
+  collectionBoundaryRepulsionStrength, // Corte de profundidad (Depth limit)
+  textFontSize, // Tamaño de fuente constante
 }: D3PixiRendererProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const simulationRef = useRef<ReturnType<typeof forceSimulation<SimNode>> | null>(null)
   const drawRef = useRef<() => void>(() => undefined)
-  const simNodesRef = useRef<SimNode[]>([])
-  const nodeByIdRef = useRef<Map<string, SimNode>>(new Map())
   const livePositionRef = useRef<Map<string, { x: number; y: number }>>(new Map())
   const cameraRef = useRef(createDefaultCamera())
   const lastCenterRequestRef = useRef(0)
+
   const orbitFrameRef = useRef<number | null>(null)
   const orbitAngleRef = useRef(0)
   const orbitLastTimestampRef = useRef(0)
-  const orbitBlendRef = useRef(0)
 
-  const simNodes = useMemo(
-    () =>
-      nodes.map((node): SimNode => ({
-        id: node.id,
-        title: node.title,
-        ref: node,
-        degree: degreeByNodeId.get(node.id) ?? 0,
-        x: livePositionRef.current.get(node.id)?.x ?? node.x ?? width / 2,
-        y: livePositionRef.current.get(node.id)?.y ?? node.y ?? height / 2,
-      })),
-    [degreeByNodeId, height, nodes, width],
-  )
-
-  const simLinks = useMemo<SimLink[]>(() => edges.map((edge) => ({ source: edge.source, target: edge.target })), [edges])
+  const [internalRootId, setInternalRootId] = useState<string | null>(null)
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
+  const focusEntityId = internalRootId || activeEntityId
 
   useEffect(() => {
-    simNodesRef.current = simNodes
-    nodeByIdRef.current = new Map(simNodes.map((node) => [node.id, node]))
-  }, [simNodes])
+    if (activeEntityId) setInternalRootId(activeEntityId)
+  }, [activeEntityId])
 
   useEffect(() => {
-    if (!nodes.length || cameraRef.current.scale !== 1 || cameraRef.current.offsetX !== 0 || cameraRef.current.offsetY !== 0) return
-    fitCameraToPoints(
-      cameraRef.current,
-      nodes.map((node) => ({ x: node.x, y: node.y })),
-      width,
-      height,
-      padding,
-    )
-  }, [height, nodes, padding, width])
+    const validIds = new Set(nodes.map(node => node.id))
+    for (const nodeId of Array.from(livePositionRef.current.keys())) {
+      if (!validIds.has(nodeId)) {
+        livePositionRef.current.delete(nodeId)
+      }
+    }
+  }, [nodes])
+
+  // Fase 2: Animation state definitions
+  const prevLayoutStateRef = useRef<Map<string, { angle: number; radius: number }>>(new Map())
+  const targetLayoutStateRef = useRef<Map<string, { angle: number; radius: number, depth: number }>>(new Map())
+  const animationProgressRef = useRef<number>(1)
+  const reRootAnimFrameRef = useRef<number | null>(null)
+
+  const interactableNodesMapperRef = useRef<Map<string, { id: string, title: string, ref: D3PixiRendererProps['nodes'][number], x: number, y: number, degree: number }>>(new Map())
+
+  const interactableNodes = useMemo(() => {
+    const list = nodes.map(n => ({
+      id: n.id,
+      title: n.title,
+      ref: n,
+      degree: degreeByNodeId.get(n.id) ?? 0,
+      x: width / 2,
+      y: height / 2,
+    }))
+    interactableNodesMapperRef.current.clear()
+    list.forEach(item => interactableNodesMapperRef.current.set(item.id, item))
+    return list
+  }, [nodes, degreeByNodeId, width, height])
+
+  const rootNode = useMemo(() => {
+    if (!nodes.length) return null
+
+    // Spanning Tree logic from Step 1
+    const treeNodesMap = new Map<string, TreeNode>()
+    nodes.forEach(n => {
+      treeNodesMap.set(n.id, {
+        id: n.id,
+        title: n.title,
+        ref: n,
+        degree: degreeByNodeId.get(n.id) ?? 0,
+        children: []
+      })
+    })
+
+    let rootId = focusEntityId
+    if (!rootId || !treeNodesMap.has(rootId)) {
+      rootId = nodes.reduce((a, b) => (degreeByNodeId.get(a.id) ?? 0) > (degreeByNodeId.get(b.id) ?? 0) ? a : b).id
+    }
+
+    const actualRoot = treeNodesMap.get(rootId)!
+
+    const visited = new Set<string>()
+    visited.add(rootId)
+    const queue = [rootId]
+
+    const adj = new Map<string, string[]>()
+    edges.forEach(e => {
+      if (!adj.has(e.source)) adj.set(e.source, [])
+      if (!adj.has(e.target)) adj.set(e.target, [])
+      adj.get(e.source)!.push(e.target)
+      adj.get(e.target)!.push(e.source)
+    })
+
+    while (queue.length > 0) {
+      const currentId = queue.shift()!
+      const current = treeNodesMap.get(currentId)!
+      const neighbors = adj.get(currentId) || []
+
+      for (const nxt of neighbors) {
+        if (!visited.has(nxt)) {
+          visited.add(nxt)
+          const child = treeNodesMap.get(nxt)!
+          current.children.push(child)
+          child.parent = current
+          queue.push(nxt)
+        }
+      }
+    }
+
+    const rootIsIsolated = (adj.get(rootId)?.length ?? 0) === 0
+    if (rootIsIsolated) {
+      const rootTabId = actualRoot.ref.tabId
+      const sameCollectionSeeds = nodes
+        .filter(n => n.id !== rootId && n.tabId === rootTabId)
+        .map(n => n.id)
+        .filter(id => !visited.has(id))
+
+      for (const seedId of sameCollectionSeeds) {
+        const seed = treeNodesMap.get(seedId)!
+        actualRoot.children.push(seed)
+        seed.parent = actualRoot
+        visited.add(seedId)
+      }
+
+      // Expand level by level. Nodes are claimed from a shared available pool;
+      // when a parent claims a child, later parents cannot claim it.
+      const firstRingParents = sameCollectionSeeds.map(id => treeNodesMap.get(id)!).filter(Boolean)
+      let currentRingParents = firstRingParents
+
+      while (currentRingParents.length > 0) {
+        const nextRingParents: TreeNode[] = []
+
+        for (const parent of currentRingParents) {
+          const neighbors = adj.get(parent.id) || []
+          for (const childId of neighbors) {
+            if (visited.has(childId)) continue
+            const child = treeNodesMap.get(childId)
+            if (!child) continue
+
+            parent.children.push(child)
+            child.parent = parent
+            visited.add(childId)
+            nextRingParents.push(child)
+          }
+        }
+
+        currentRingParents = nextRingParents
+      }
+
+      // Last resort for totally disconnected leftovers: distribute under ring 1.
+      const fallbackParents = firstRingParents
+
+      let roundRobinIndex = 0
+      for (const n of nodes) {
+        if (visited.has(n.id)) continue
+
+        const unv = treeNodesMap.get(n.id)!
+        const parent = fallbackParents.length
+          ? fallbackParents[roundRobinIndex % fallbackParents.length]
+          : actualRoot
+
+        parent.children.push(unv)
+        unv.parent = parent
+        visited.add(n.id)
+        roundRobinIndex += 1
+      }
+    } else {
+      for (const n of nodes) {
+        if (!visited.has(n.id)) {
+          const unv = treeNodesMap.get(n.id)!
+          actualRoot.children.push(unv)
+          unv.parent = actualRoot
+          visited.add(n.id)
+        }
+      }
+    }
+
+    return actualRoot
+  }, [nodes, edges, focusEntityId, degreeByNodeId])
+
+  const treeData = useMemo(() => {
+    if (!rootNode) return null
+    const rootHierarchy = hierarchy(rootNode)
+
+    rootHierarchy.sort((a, b) => a.data.ref.tabId.localeCompare(b.data.ref.tabId))
+
+    // Fase 4: "Espaciado de Anillos"
+    const radiusMultiplier = (gravityStrength / 100) + 0.5
+    const computedMaxRadius = Math.max(10, Math.min(width, height) / 2 - padding - 60) * radiusMultiplier
+
+    const treeLayout = tree<TreeNode>()
+      .size([2 * Math.PI, computedMaxRadius])
+      .separation((a, b) => {
+        // Fase 4: "Amplitud Angular" (default 78 makes it ~2x)
+        const dist = a.parent === b.parent ? 1 : (1.35 + repulsionStrength / 100)
+        return dist / (a.depth || 1)
+      })
+
+    treeLayout(rootHierarchy)
+    return rootHierarchy
+  }, [rootNode, width, height, padding,  repulsionStrength, gravityStrength])
+
+  const scheduleRender = () => {
+    requestAnimationFrame(() => {
+      drawRef.current()
+    })
+  }
+
+  // Fase 2: Control the fluid animation transition
+  useEffect(() => {
+    if (!treeData) return
+
+    // Build prev states from currently rendered positions when available.
+    // This avoids jumps/tangled links when root changes quickly.
+    const prev = new Map<string, { angle: number; radius: number }>()
+    const cx = width / 2
+    const cy = height / 2
+    const currentOrbit = orbitAngleRef.current
+
+    treeData.each(node => {
+      const nodeId = node.data.id
+      const live = livePositionRef.current.get(nodeId)
+      if (live) {
+        const dx = live.x - cx
+        const dy = live.y - cy
+        prev.set(nodeId, {
+          angle: normalizeAngle(Math.atan2(dy, dx) - currentOrbit),
+          radius: Math.hypot(dx, dy),
+        })
+        return
+      }
+
+      const priorTarget = targetLayoutStateRef.current.get(nodeId)
+      if (priorTarget) {
+        prev.set(nodeId, { angle: priorTarget.angle, radius: priorTarget.radius })
+        return
+      }
+
+      prev.set(nodeId, { angle: (node.x ?? 0) - Math.PI / 2, radius: node.y ?? 0 })
+    })
+    prevLayoutStateRef.current = prev
+
+    const next = new Map<string, { angle: number; radius: number, depth: number }>()
+    treeData.each(node => {
+      next.set(node.data.id, { angle: (node.x ?? 0) - Math.PI / 2, radius: (node.y ?? 0), depth: (node.depth ?? 0) })
+    })
+    targetLayoutStateRef.current = next
+
+    animationProgressRef.current = 0
+    let lastTime = performance.now()
+
+    const animateTransition = (time: number) => {
+      const delta = Math.max(0, time - lastTime)
+      lastTime = time
+      // Approximately 600ms long transition
+      animationProgressRef.current += delta / 600
+
+      if (animationProgressRef.current >= 1) {
+        animationProgressRef.current = 1
+        scheduleRender()
+        reRootAnimFrameRef.current = null
+        return
+      }
+
+      scheduleRender()
+      reRootAnimFrameRef.current = requestAnimationFrame(animateTransition)
+    }
+
+    if (reRootAnimFrameRef.current !== null) cancelAnimationFrame(reRootAnimFrameRef.current)
+    reRootAnimFrameRef.current = requestAnimationFrame(animateTransition)
+
+    return () => {
+      if (reRootAnimFrameRef.current !== null) cancelAnimationFrame(reRootAnimFrameRef.current)
+    }
+  }, [treeData])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -106,461 +364,23 @@ export function D3PixiRenderer({
     const context = canvas.getContext('2d')
     if (!context) return
 
-    const linkDistance = clamp(120 - linkWeightStrength * 0.9, 28, 140)
-    const linkStrength = clamp(0.06 + (linkWeightStrength / 100) * 0.44 + (linkAttractionStrength / 100) * 0.5, 0.04, 0.98)
-    const charge = -(72 + repulsionStrength * 13.8)
-    const gravity = 0.008 + (gravityStrength / 100) * 0.07
-    const chargeDistanceMax = clamp(Math.max(width, height) * 0.9, 260, 1100)
-    const gravityCenterX = width / 2
-    const gravityCenterY = height / 2
-    let debugTickCount = 0
-    let debugHintShown = false
-
-    simulationRef.current?.stop()
-    const simulation = forceSimulation(simNodes)
-      .force('charge', forceManyBody<SimNode>().strength(charge).distanceMin(18).distanceMax(chargeDistanceMax))
-      .force('link', forceLink<SimNode, SimLink>(simLinks).id((node) => node.id).distance(linkDistance).strength(linkStrength))
-      .force('x', forceX<SimNode>(gravityCenterX).strength(gravity))
-      .force('y', forceY<SimNode>(gravityCenterY).strength(gravity))
-      .alphaTarget(0)
-      .alphaDecay(0.05)
-      .velocityDecay(0.25)
-
-    const getCollectionClusters = () => {
-      const groups = new Map<string, SimNode[]>()
-      for (const node of simNodes) {
-        const bucket = groups.get(node.ref.tabId)
-        if (bucket) bucket.push(node)
-        else groups.set(node.ref.tabId, [node])
-      }
-
-      const clusters: Array<{ tabId: string; centerX: number; centerY: number; radius: number; nodes: SimNode[]; color: string }> = []
-      for (const [tabId, groupedNodes] of groups) {
-        if (!groupedNodes.length) {
-          continue
-        }
-
-        let centerX = 0
-        let centerY = 0
-        for (const node of groupedNodes) {
-          centerX += node.x ?? width / 2
-          centerY += node.y ?? height / 2
-        }
-        centerX /= groupedNodes.length
-        centerY /= groupedNodes.length
-
-        let maxDistance = 22
-        for (const node of groupedNodes) {
-          const dx = (node.x ?? width / 2) - centerX
-          const dy = (node.y ?? height / 2) - centerY
-          maxDistance = Math.max(maxDistance, Math.sqrt(dx * dx + dy * dy))
-        }
-
-        clusters.push({
-          tabId,
-          centerX,
-          centerY,
-          radius: maxDistance + 30,
-          nodes: groupedNodes,
-          color: resolveCollectionColor(tabId, groupedNodes[0]?.ref.tabColor),
-        })
-      }
-
-      return clusters
-    }
-
-    const applyCollectionSeparationForce = (
-      debugByNode?: Map<string, {
-        separation: number
-        separationSources: Map<string, number>
-        separationRadial: number
-      }>,
-      currentAlpha = 1,
-    ) => {
-      const clusters = getCollectionClusters()
-      if (clusters.length <= 1) {
-        return
-      }
-
-      const minGap = 32
-      const separationStrength = (collectionBoundaryRepulsionStrength / 100) * 0.26 * currentAlpha
-
-      for (let i = 0; i < clusters.length; i += 1) {
-        for (let j = i + 1; j < clusters.length; j += 1) {
-          const first = clusters[i]
-          const second = clusters[j]
-          const dx = second.centerX - first.centerX
-          const dy = second.centerY - first.centerY
-          const distance = Math.max(0.0001, Math.sqrt(dx * dx + dy * dy))
-          const requiredDistance = first.radius + second.radius + minGap
-
-          if (distance >= requiredDistance) {
-            continue
-          }
-
-          const overlap = requiredDistance - distance
-          const nx = dx / distance
-          const ny = dy / distance
-          const firstImpulse = (overlap * separationStrength) / Math.max(1, first.nodes.length)
-          const secondImpulse = (overlap * separationStrength) / Math.max(1, second.nodes.length)
-
-          for (const node of first.nodes) {
-            const forceX = -nx * firstImpulse
-            const forceY = -ny * firstImpulse
-            node.vx = (node.vx ?? 0) + forceX
-            node.vy = (node.vy ?? 0) + forceY
-            if (debugByNode) {
-              const current = debugByNode.get(node.id)
-              if (current) {
-                current.separation += firstImpulse
-                addContribution(current.separationSources, second.tabId, firstImpulse)
-                const nodeX = node.x ?? width / 2
-                const nodeY = node.y ?? height / 2
-                const toCenterX = gravityCenterX - nodeX
-                const toCenterY = gravityCenterY - nodeY
-                const toCenterLength = Math.max(0.0001, Math.sqrt(toCenterX * toCenterX + toCenterY * toCenterY))
-                current.separationRadial += (forceX * toCenterX + forceY * toCenterY) / toCenterLength
-              }
-            }
-          }
-
-          for (const node of second.nodes) {
-            const forceX = nx * secondImpulse
-            const forceY = ny * secondImpulse
-            node.vx = (node.vx ?? 0) + forceX
-            node.vy = (node.vy ?? 0) + forceY
-            if (debugByNode) {
-              const current = debugByNode.get(node.id)
-              if (current) {
-                current.separation += secondImpulse
-                addContribution(current.separationSources, first.tabId, secondImpulse)
-                const nodeX = node.x ?? width / 2
-                const nodeY = node.y ?? height / 2
-                const toCenterX = gravityCenterX - nodeX
-                const toCenterY = gravityCenterY - nodeY
-                const toCenterLength = Math.max(0.0001, Math.sqrt(toCenterX * toCenterX + toCenterY * toCenterY))
-                current.separationRadial += (forceX * toCenterX + forceY * toCenterY) / toCenterLength
-              }
-            }
-          }
-        }
-      }
-    }
-
-    const applyCollectionCohesionForce = (currentAlpha = 1) => {
-      if (collectionCohesionStrength <= 0) {
-        return
-      }
-
-      const clusters = getCollectionClusters()
-      if (!clusters.length) {
-        return
-      }
-
-      const strength = (collectionCohesionStrength / 100) * 0.06 * currentAlpha
-
-      for (const cluster of clusters) {
-        for (const node of cluster.nodes) {
-          const nodeX = node.x ?? width / 2
-          const nodeY = node.y ?? height / 2
-          const pullX = (cluster.centerX - nodeX) * strength
-          const pullY = (cluster.centerY - nodeY) * strength
-          node.vx = (node.vx ?? 0) + pullX
-          node.vy = (node.vy ?? 0) + pullY
-        }
-      }
-    }
-
-    const applyCollectionBoundaryRepulsion = (
-      debugByNode?: Map<string, {
-        boundary: number
-        boundarySources: Map<string, number>
-        boundaryRadial: number
-      }>,
-      currentAlpha = 1,
-    ) => {
-      if (collectionBoundaryRepulsionStrength <= 0) {
-        return
-      }
-
-      const clusters = getCollectionClusters()
-      if (clusters.length <= 1) {
-        return
-      }
-
-      const strength = (collectionBoundaryRepulsionStrength / 100) * 0.48 * currentAlpha
-
-      for (let i = 0; i < clusters.length; i += 1) {
-        for (let j = i + 1; j < clusters.length; j += 1) {
-          const first = clusters[i]
-          const second = clusters[j]
-          const dx = second.centerX - first.centerX
-          const dy = second.centerY - first.centerY
-          const distance = Math.max(0.0001, Math.sqrt(dx * dx + dy * dy))
-          const boundaryDistance = Math.max(36, first.radius) + Math.max(36, second.radius)
-          const influenceDistance = boundaryDistance * 2.35
-
-          if (distance >= influenceDistance) {
-            continue
-          }
-
-          const overlap = Math.max(0, boundaryDistance - distance)
-          const nx = dx / distance
-          const ny = dy / distance
-          const normalizedDistance = Math.max(0.22, distance / boundaryDistance)
-          const coulombTerm = strength / (normalizedDistance * normalizedDistance)
-          const overlapBoost = overlap > 0 ? 1 + overlap / boundaryDistance : 0.32
-          const pairImpulse = coulombTerm * overlapBoost
-          const firstImpulse = pairImpulse / Math.max(1, first.nodes.length)
-          const secondImpulse = pairImpulse / Math.max(1, second.nodes.length)
-
-          for (const node of first.nodes) {
-            const forceX = -nx * firstImpulse
-            const forceY = -ny * firstImpulse
-            node.vx = (node.vx ?? 0) + forceX
-            node.vy = (node.vy ?? 0) + forceY
-            if (debugByNode) {
-              const current = debugByNode.get(node.id)
-              if (current) {
-                current.boundary += firstImpulse
-                addContribution(current.boundarySources, second.tabId, firstImpulse)
-                const nodeX = node.x ?? width / 2
-                const nodeY = node.y ?? height / 2
-                const toCenterX = gravityCenterX - nodeX
-                const toCenterY = gravityCenterY - nodeY
-                const toCenterLength = Math.max(0.0001, Math.sqrt(toCenterX * toCenterX + toCenterY * toCenterY))
-                current.boundaryRadial += (forceX * toCenterX + forceY * toCenterY) / toCenterLength
-              }
-            }
-          }
-
-          for (const node of second.nodes) {
-            const forceX = nx * secondImpulse
-            const forceY = ny * secondImpulse
-            node.vx = (node.vx ?? 0) + forceX
-            node.vy = (node.vy ?? 0) + forceY
-            if (debugByNode) {
-              const current = debugByNode.get(node.id)
-              if (current) {
-                current.boundary += secondImpulse
-                addContribution(current.boundarySources, first.tabId, secondImpulse)
-                const nodeX = node.x ?? width / 2
-                const nodeY = node.y ?? height / 2
-                const toCenterX = gravityCenterX - nodeX
-                const toCenterY = gravityCenterY - nodeY
-                const toCenterLength = Math.max(0.0001, Math.sqrt(toCenterX * toCenterX + toCenterY * toCenterY))
-                current.boundaryRadial += (forceX * toCenterX + forceY * toCenterY) / toCenterLength
-              }
-            }
-          }
-        }
-      }
-    }
-
-    const logForceDebugSnapshot = (
-      debugByNode: Map<string, {
-        boundary: number
-        boundarySources: Map<string, number>
-        boundaryRadial: number
-        separation: number
-        separationSources: Map<string, number>
-        separationRadial: number
-      }>,
-      currentAlpha: number,
-    ) => {
-      const rows: Array<Record<string, string | number>> = []
-      const linkByNode = new Map<string, { sum: number; sources: Map<string, number> }>()
-      const chargeByNode = new Map<string, { sum: number; sources: Map<string, number> }>()
-      const gravityByNode = new Map<string, number>()
-      const radialByNode = new Map<string, { charge: number; link: number; gravity: number }>()
-
-      for (const node of simNodes) {
-        linkByNode.set(node.id, { sum: 0, sources: new Map() })
-        chargeByNode.set(node.id, { sum: 0, sources: new Map() })
-        radialByNode.set(node.id, { charge: 0, link: 0, gravity: 0 })
-      }
-
-      for (const edge of edges) {
-        const source = nodeByIdRef.current.get(edge.source)
-        const target = nodeByIdRef.current.get(edge.target)
-        if (!source || !target) {
-          continue
-        }
-
-        const deltaX = (target.x ?? width / 2) - (source.x ?? width / 2)
-        const deltaY = (target.y ?? height / 2) - (source.y ?? height / 2)
-        const distance = Math.max(0.0001, Math.sqrt(deltaX * deltaX + deltaY * deltaY))
-        const magnitude = Math.abs(distance - linkDistance) * linkStrength * currentAlpha
-
-        const sourceAcc = linkByNode.get(source.id)
-        const targetAcc = linkByNode.get(target.id)
-        const forceMagnitude = (distance - linkDistance) * linkStrength * currentAlpha
-        const ux = deltaX / distance
-        const uy = deltaY / distance
-
-        const sourceX = source.x ?? width / 2
-        const sourceY = source.y ?? height / 2
-        const sourceToCenterX = gravityCenterX - sourceX
-        const sourceToCenterY = gravityCenterY - sourceY
-        const sourceToCenterLength = Math.max(0.0001, Math.sqrt(sourceToCenterX * sourceToCenterX + sourceToCenterY * sourceToCenterY))
-        const sourceRadial = (ux * forceMagnitude * sourceToCenterX + uy * forceMagnitude * sourceToCenterY) / sourceToCenterLength
-
-        const targetX = target.x ?? width / 2
-        const targetY = target.y ?? height / 2
-        const targetToCenterX = gravityCenterX - targetX
-        const targetToCenterY = gravityCenterY - targetY
-        const targetToCenterLength = Math.max(0.0001, Math.sqrt(targetToCenterX * targetToCenterX + targetToCenterY * targetToCenterY))
-        const targetRadial = ((-ux) * forceMagnitude * targetToCenterX + (-uy) * forceMagnitude * targetToCenterY) / targetToCenterLength
-
-        if (sourceAcc) {
-          sourceAcc.sum += magnitude
-          addContribution(sourceAcc.sources, target.id, magnitude)
-          const sourceRadialAcc = radialByNode.get(source.id)
-          if (sourceRadialAcc) {
-            sourceRadialAcc.link += sourceRadial
-          }
-        }
-        if (targetAcc) {
-          targetAcc.sum += magnitude
-          addContribution(targetAcc.sources, source.id, magnitude)
-          const targetRadialAcc = radialByNode.get(target.id)
-          if (targetRadialAcc) {
-            targetRadialAcc.link += targetRadial
-          }
-        }
-      }
-
-      for (let firstIndex = 0; firstIndex < simNodes.length; firstIndex += 1) {
-        for (let secondIndex = firstIndex + 1; secondIndex < simNodes.length; secondIndex += 1) {
-          const firstNode = simNodes[firstIndex]
-          const secondNode = simNodes[secondIndex]
-          const deltaX = (secondNode.x ?? width / 2) - (firstNode.x ?? width / 2)
-          const deltaY = (secondNode.y ?? height / 2) - (firstNode.y ?? height / 2)
-          const distanceSquared = Math.max(22, deltaX * deltaX + deltaY * deltaY)
-          const magnitude = (Math.abs(charge) / distanceSquared) * currentAlpha
-
-          const firstAcc = chargeByNode.get(firstNode.id)
-          const secondAcc = chargeByNode.get(secondNode.id)
-          const distance = Math.max(0.0001, Math.sqrt(distanceSquared))
-          const ux = deltaX / distance
-          const uy = deltaY / distance
-
-          const firstToCenterX = gravityCenterX - (firstNode.x ?? width / 2)
-          const firstToCenterY = gravityCenterY - (firstNode.y ?? height / 2)
-          const firstToCenterLength = Math.max(0.0001, Math.sqrt(firstToCenterX * firstToCenterX + firstToCenterY * firstToCenterY))
-          const secondToCenterX = gravityCenterX - (secondNode.x ?? width / 2)
-          const secondToCenterY = gravityCenterY - (secondNode.y ?? height / 2)
-          const secondToCenterLength = Math.max(0.0001, Math.sqrt(secondToCenterX * secondToCenterX + secondToCenterY * secondToCenterY))
-          const firstChargeRadial = ((-ux) * magnitude * firstToCenterX + (-uy) * magnitude * firstToCenterY) / firstToCenterLength
-          const secondChargeRadial = (ux * magnitude * secondToCenterX + uy * magnitude * secondToCenterY) / secondToCenterLength
-          if (firstAcc) {
-            firstAcc.sum += magnitude
-            addContribution(firstAcc.sources, secondNode.id, magnitude)
-            const firstRadialAcc = radialByNode.get(firstNode.id)
-            if (firstRadialAcc) {
-              firstRadialAcc.charge += firstChargeRadial
-            }
-          }
-          if (secondAcc) {
-            secondAcc.sum += magnitude
-            addContribution(secondAcc.sources, firstNode.id, magnitude)
-            const secondRadialAcc = radialByNode.get(secondNode.id)
-            if (secondRadialAcc) {
-              secondRadialAcc.charge += secondChargeRadial
-            }
-          }
-        }
-      }
-
-      for (const node of simNodes) {
-        const deltaX = (node.x ?? width / 2) - gravityCenterX
-        const deltaY = (node.y ?? height / 2) - gravityCenterY
-        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
-        const gravityValue = distance * gravity * currentAlpha
-        gravityByNode.set(node.id, gravityValue)
-        const radialAcc = radialByNode.get(node.id)
-        if (radialAcc) {
-          radialAcc.gravity = gravityValue
-        }
-      }
-
-      for (const node of simNodes) {
-        const linkAcc = linkByNode.get(node.id)
-        const chargeAcc = chargeByNode.get(node.id)
-        const boundaryAcc = debugByNode.get(node.id)
-        const gravityAcc = gravityByNode.get(node.id) ?? 0
-        const boundary = boundaryAcc?.boundary ?? 0
-        const separation = boundaryAcc?.separation ?? 0
-        const link = linkAcc?.sum ?? 0
-        const chargeApprox = chargeAcc?.sum ?? 0
-        const nodeX = node.x ?? width / 2
-        const nodeY = node.y ?? height / 2
-        const dxCenter = nodeX - gravityCenterX
-        const dyCenter = nodeY - gravityCenterY
-        const distanceToCenter = Math.sqrt(dxCenter * dxCenter + dyCenter * dyCenter)
-        const speed = Math.sqrt((node.vx ?? 0) * (node.vx ?? 0) + (node.vy ?? 0) * (node.vy ?? 0))
-        const kinetic = 0.5 * speed * speed
-        const radialAcc = radialByNode.get(node.id)
-        const radialCharge = radialAcc?.charge ?? 0
-        const radialLink = radialAcc?.link ?? 0
-        const radialGravity = radialAcc?.gravity ?? 0
-        const radialBoundary = boundaryAcc?.boundaryRadial ?? 0
-        const radialSeparation = boundaryAcc?.separationRadial ?? 0
-        const netRadial = radialCharge + radialLink + radialGravity + radialBoundary + radialSeparation
-        const totalApprox = chargeApprox + link + gravityAcc + boundary + separation
-
-        rows.push({
-          nodeId: node.id,
-          title: node.title,
-          tabId: node.ref.tabId,
-          alpha: Number(currentAlpha.toFixed(4)),
-          x: Number(nodeX.toFixed(1)),
-          y: Number(nodeY.toFixed(1)),
-          distCenter: Number(distanceToCenter.toFixed(2)),
-          speed: Number(speed.toFixed(3)),
-          kinetic: Number(kinetic.toFixed(4)),
-          radialCharge: Number(radialCharge.toFixed(4)),
-          radialLink: Number(radialLink.toFixed(4)),
-          radialGravity: Number(radialGravity.toFixed(4)),
-          radialBoundary: Number(radialBoundary.toFixed(4)),
-          radialSeparation: Number(radialSeparation.toFixed(4)),
-          netRadial: Number(netRadial.toFixed(4)),
-          chargeApprox: Number(chargeApprox.toFixed(3)),
-          link: Number(link.toFixed(3)),
-          gravity: Number(gravityAcc.toFixed(3)),
-          boundary,
-          separation,
-          totalApprox: Number(totalApprox.toFixed(3)),
-          chargeFrom: summarizeTopSources(chargeAcc?.sources ?? new Map()),
-          linkFrom: summarizeTopSources(linkAcc?.sources ?? new Map()),
-          gravityFrom: 'gravity-center',
-          boundaryFrom: summarizeTopSources(boundaryAcc?.boundarySources ?? new Map()),
-          separationFrom: summarizeTopSources(boundaryAcc?.separationSources ?? new Map()),
-        })
-      }
-
-      const filteredRows = rows.filter((row) => {
-        const title = String(row.title ?? '').toLowerCase()
-        return title.includes('outlier') || title.includes('naranja')
-      })
-
-      console.groupCollapsed(`[GraphForceDebug] tick=${debugTickCount} nodes=${filteredRows.length}/${rows.length} (filter: outlier|naranja)`)
-      console.table(filteredRows)
-      console.groupEnd()
-    }
+    // Corte de profundidad max defaults to 10
+    const depthCutOff = Math.max(1, Math.round(collectionBoundaryRepulsionStrength / 10))
 
     const draw = () => {
       context.clearRect(0, 0, width, height)
+      if (!treeData) return
+
       context.lineCap = 'round'
       context.lineJoin = 'round'
       const isDarkTheme = themeMode === 'dark'
       const palette = getGraphThemePalette(themeMode)
       const camera = cameraRef.current
-      const textScale = Math.max(0.75, Math.min(1.45, camera.scale))
-      const centerWorldX = gravityCenterX
-      const centerWorldY = gravityCenterY
-      const centerScreen = toScreen(camera, centerWorldX, centerWorldY)
 
+      const cx = width / 2
+      const cy = height / 2
+
+      const centerScreen = toScreen(camera, cx, cy)
       context.save()
       context.strokeStyle = hexToRgba(palette.centerGuide, 0.9)
       context.lineWidth = 1.6
@@ -568,167 +388,187 @@ export function D3PixiRenderer({
       context.beginPath()
       context.arc(centerScreen.x, centerScreen.y, 10, 0, Math.PI * 2)
       context.stroke()
-      context.setLineDash([])
-      context.beginPath()
-      context.moveTo(centerScreen.x - 14, centerScreen.y)
-      context.lineTo(centerScreen.x + 14, centerScreen.y)
-      context.moveTo(centerScreen.x, centerScreen.y - 14)
-      context.lineTo(centerScreen.x, centerScreen.y + 14)
-      context.stroke()
-      context.fillStyle = hexToRgba(palette.centerGuide, 0.84)
-      context.fillRect(centerScreen.x - 2, centerScreen.y - 2, 4, 4)
       context.restore()
 
-      const collectionClusters = getCollectionClusters()
-      for (const cluster of collectionClusters) {
-        const clusterScreen = toScreen(camera, cluster.centerX, cluster.centerY)
-        context.save()
-        context.strokeStyle = hexToRgba(cluster.color, 0.74)
-        context.lineWidth = 1.3
-        context.setLineDash([6, 5])
-        context.beginPath()
-        context.arc(clusterScreen.x, clusterScreen.y, cluster.radius * camera.scale, 0, Math.PI * 2)
-        context.stroke()
-        context.restore()
-      }
+      const nodeLayoutData = new Map<string, { x: number, y: number, angle: number, radius: number }>()
+      const nodeDepthById = new Map<string, number>()
+      const parentIdByNodeId = new Map<string, string | null>()
+      const currentOrbit = orbitAngleRef.current
 
-      for (const edge of edges) {
-        const source = nodeByIdRef.current.get(edge.source)
-        const target = nodeByIdRef.current.get(edge.target)
-        if (!source || !target) continue
-        const sourceScreen = toScreen(camera, source.x ?? width / 2, source.y ?? height / 2)
-        const targetScreen = toScreen(camera, target.x ?? width / 2, target.y ?? height / 2)
-        const isRelated = !activeEntityId || edge.source === activeEntityId || edge.target === activeEntityId
+      const animT = Math.min(1, animationProgressRef.current)
+      // Ease out cubic logic 
+      const easeT = 1 - Math.pow(1 - animT, 3)
+
+      treeData.each(node => {
+        if ((node.depth ?? 0) > depthCutOff) return
+
+        const target = targetLayoutStateRef.current.get(node.data.id)!
+        const prev = prevLayoutStateRef.current.get(node.data.id) ?? target
+
+        // Fase 2: Zero-crossing angular interpolation avoiding 180 backtrack
+        let diff = target.angle - prev.angle
+        diff = ((diff + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI
+
+        const interpAngle = prev.angle + diff * easeT
+        const interpRadius = prev.radius + (target.radius - prev.radius) * easeT
+
+        const angle = interpAngle + currentOrbit
+
+        const worldX = cx + interpRadius * Math.cos(angle)
+        const worldY = cy + interpRadius * Math.sin(angle)
+
+        nodeLayoutData.set(node.data.id, { x: worldX, y: worldY, angle, radius: interpRadius })
+        nodeDepthById.set(node.data.id, node.depth ?? 0)
+        parentIdByNodeId.set(node.data.id, node.parent?.data.id ?? null)
+        livePositionRef.current.set(node.data.id, { x: worldX, y: worldY })
+
+        const interactable = interactableNodesMapperRef.current.get(node.data.id)
+        if (interactable) {
+          interactable.x = worldX
+          interactable.y = worldY
+        }
+      })
+
+      // Fase 4: Tensión de Curva (Bezier Offset)
+      const curveTension = 0
+
+      // Draw only real graph edges. Tree links include synthetic connections used
+      // for layouting disconnected components and should not be shown as relations.
+      edges.forEach(edge => {
+        const sourceDepth = nodeDepthById.get(edge.source)
+        const targetDepth = nodeDepthById.get(edge.target)
+        if (typeof sourceDepth !== 'number' || typeof targetDepth !== 'number') return
+        if (sourceDepth > depthCutOff || targetDepth > depthCutOff) return
+
+        // Ring constraints:
+        // - No lateral links on the same ring.
+        // - Inward links are allowed only to direct parent.
+        // This guarantees: many outward children, only one inward parent.
+        if (sourceDepth === targetDepth) return
+
+        const sourceParentId = parentIdByNodeId.get(edge.source) ?? null
+        const targetParentId = parentIdByNodeId.get(edge.target) ?? null
+
+        const sourceAllows = targetDepth > sourceDepth || sourceParentId === edge.target
+        const targetAllows = sourceDepth > targetDepth || targetParentId === edge.source
+        if (!sourceAllows || !targetAllows) return
+
+        const sourceLayout = nodeLayoutData.get(edge.source)
+        const targetLayout = nodeLayoutData.get(edge.target)
+        if (!sourceLayout || !targetLayout) return
+
+        const sourceScreen = toScreen(camera, sourceLayout.x, sourceLayout.y)
+        const targetScreen = toScreen(camera, targetLayout.x, targetLayout.y)
+
+        const isRelated = !focusEntityId || edge.source === focusEntityId || edge.target === focusEntityId
+
         context.strokeStyle = isRelated
           ? hexToRgba(palette.edgeRelated, 1)
           : hexToRgba(palette.edgeMuted, 0.3)
-        context.lineWidth = (isRelated ? 2 : 1) * Math.max(0.7, camera.scale)
+
+        context.lineWidth = (isRelated ? 2 : 1) * Math.max(0.7, camera.scale) * Math.max(0.1, (linkWeightStrength / 50))
+
+        const currentSourceRad = sourceLayout.radius
+        const currentTargetRad = targetLayout.radius
+        const innerRadius = Math.min(currentSourceRad, currentTargetRad)
+        const outerRadius = Math.max(currentSourceRad, currentTargetRad)
+        const controlRadius = innerRadius + (outerRadius - innerRadius) * curveTension
+
+        // Use circular midpoint to avoid wrap-around artifacts near -PI/PI.
+        const angularDelta = normalizeAngle(targetLayout.angle - sourceLayout.angle)
+        const controlAngle = sourceLayout.angle + angularDelta * 0.5
+
+        const controlWorldX = cx + controlRadius * Math.cos(controlAngle)
+        const controlWorldY = cy + controlRadius * Math.sin(controlAngle)
+        const controlScreen = toScreen(camera, controlWorldX, controlWorldY)
+
         context.beginPath()
         context.moveTo(sourceScreen.x, sourceScreen.y)
-        context.lineTo(targetScreen.x, targetScreen.y)
+        context.quadraticCurveTo(controlScreen.x, controlScreen.y, targetScreen.x, targetScreen.y)
         context.stroke()
-      }
+      })
 
-      for (const node of simNodes) {
-        node.x = node.x ?? width / 2
-        node.y = node.y ?? height / 2
-        livePositionRef.current.set(node.id, { x: node.x, y: node.y })
-        const screen = toScreen(camera, node.x, node.y)
-        const collectionColor = resolveCollectionColor(node.ref.tabId, node.ref.tabColor)
-        const isActive = node.id === activeEntityId
-        const isHighlighted = node.id === highlightedNodeId
-        const radius = (7 + Math.min(10, Math.sqrt(node.degree) * 1.9) + (isActive ? 3 : 0)) * Math.max(0.65, Math.min(2.3, camera.scale))
+      treeData.each(node => {
+        if (node.depth > depthCutOff) return
+
+        const layout = nodeLayoutData.get(node.data.id)
+        if (!layout) return
+
+        const screen = toScreen(camera, layout.x, layout.y)
+        const isActive = node.data.id === focusEntityId
+        const isHighlighted = node.data.id === highlightedNodeId
+        const isHovered = node.data.id === hoveredNodeId
+        const collectionColor = resolveCollectionColor(node.data.ref.tabId, node.data.ref.tabColor)
+        const radius = (7 + Math.min(10, Math.sqrt(node.data.degree) * 1.9) + (isActive ? 3 : 0)) * Math.max(0.65, Math.min(2.3, camera.scale))
+
+        // Render optional hover halo before circle
+        if (isHovered && !isActive) {
+          context.fillStyle = hexToRgba(palette.nodeHighlight, 0.15)
+          context.beginPath()
+          context.arc(screen.x, screen.y, radius + 8 * camera.scale, 0, Math.PI * 2)
+          context.fill()
+        }
 
         context.fillStyle = isHighlighted
           ? hexToRgba(palette.nodeHighlight, 0.95)
-          : isActive
+          : isActive || isHovered
             ? hexToRgba(collectionColor, 0.98)
             : hexToRgba(collectionColor, isDarkTheme ? 0.84 : 0.9)
-        context.strokeStyle = isHighlighted ? hexToRgba(palette.nodeHighlight, 0.95) : hexToRgba(collectionColor, 1)
-        context.lineWidth = isHighlighted || isActive ? 2.2 : 1.2
+
+        context.strokeStyle = isHighlighted || isHovered ? hexToRgba(palette.nodeHighlight, 0.95) : hexToRgba(collectionColor, 1)
+        context.lineWidth = isHighlighted || isActive || isHovered ? 2.2 : 1.2
         context.beginPath()
         context.arc(screen.x, screen.y, radius, 0, Math.PI * 2)
         context.fill()
         context.stroke()
 
-        const showLabel = camera.scale >= 0.72 || isActive || isHighlighted
-        if (!showLabel) continue
-        const label = node.title.length > 20 ? `${node.title.slice(0, 20)}…` : node.title
-        context.fillStyle = hexToRgba(palette.label, 0.95)
-        context.font = `${Math.round(11 * textScale)}px Inter, sans-serif`
+        const showLabel = camera.scale >= 0.72 || isActive || isHighlighted || isHovered
+        if (!showLabel) return
+
+        const labelLines = buildLabelLines(node.data.title)
+        context.fillStyle = hexToRgba(palette.label, animT * 0.95)
+        context.font = `${textFontSize}px Inter, sans-serif`
+
         context.textAlign = 'center'
-        context.textBaseline = 'top'
-        context.fillText(label, screen.x, screen.y + radius + 6)
-      }
+        context.textBaseline = 'bottom'
+        const offset = radius + 6
+        const baseY = screen.y - offset
+        const lineHeight = Math.max(12, Math.round(textFontSize * 1.15))
+        labelLines.forEach((line, index) => {
+          const y = baseY - (labelLines.length - 1 - index) * lineHeight
+          context.fillText(line, screen.x, y)
+        })
+      })
     }
 
     drawRef.current = draw
-
-    simulation.on('tick', () => {
-      const currentAlpha = simulation.alpha()
-      const circleForcesAlpha = Math.min(currentAlpha, 0.02)
-      const debugEnabled = isForceDebugEnabled()
-      if (debugEnabled && !debugHintShown) {
-        debugHintShown = true
-        console.info('[GraphForceDebug] enabled. Toggle with window.__NDC_GRAPH_FORCE_DEBUG__ = true|false')
-      }
-
-      const debugByNode = debugEnabled
-        ? new Map(
-            simNodes.map((node) => [
-              node.id,
-              {
-                boundary: 0,
-                boundarySources: new Map<string, number>(),
-                boundaryRadial: 0,
-                separation: 0,
-                separationSources: new Map<string, number>(),
-                separationRadial: 0,
-              },
-            ]),
-          )
-        : undefined
-
-      applyCollectionSeparationForce(debugByNode, circleForcesAlpha)
-      applyCollectionCohesionForce(circleForcesAlpha)
-      applyCollectionBoundaryRepulsion(debugByNode, circleForcesAlpha)
-      draw()
-
-      if (debugEnabled && debugByNode) {
-        debugTickCount += 1
-        if (debugTickCount % 18 === 0) {
-          logForceDebugSnapshot(debugByNode, currentAlpha)
-        }
-      }
-    })
-    simulationRef.current = simulation
-    if (simulationPaused) simulation.alphaTarget(0).stop()
-    else simulation.alphaTarget(0).alpha(0.9).restart()
     draw()
 
-    return () => {
-      simulation.stop()
-      simulationRef.current = null
-    }
-  }, [
-    activeEntityId,
-    collectionCohesionStrength,
-    collectionBoundaryRepulsionStrength,
-    edges,
-    gravityStrength,
-    height,
-    highlightedNodeId,
-    linkAttractionStrength,
-    linkWeightStrength,
-    padding,
-    repulsionStrength,
-    simLinks,
-    simNodes,
-    simulationPaused,
-    width,
-    themeMode,
-  ])
+  }, [width, height, treeData, focusEntityId, highlightedNodeId, hoveredNodeId, themeMode, linkWeightStrength,  collectionBoundaryRepulsionStrength, textFontSize])
 
   useEffect(() => {
-    const simulation = simulationRef.current
-    if (!simulation) return
-    if (simulationPaused) {
-      simulation.alphaTarget(0).stop()
-      return
+    scheduleRender()
+  }, [cameraRef.current.offsetX, cameraRef.current.offsetY, cameraRef.current.scale, padding])
+
+  useEffect(() => {
+    if (!nodes.length || !treeData) return
+    const points = Array.from(livePositionRef.current.values())
+    if (!points.length) return
+    if (cameraRef.current.scale === 1 && cameraRef.current.offsetX === 0 && cameraRef.current.offsetY === 0) {
+      fitCameraToPoints(cameraRef.current, points, width, height, padding)
+      scheduleRender()
     }
-    simulation.alphaTarget(0).alpha(0.5).restart()
-  }, [simulationPaused])
+  }, [height, nodes.length, padding, width, treeData])
 
   useEffect(() => {
     if (!centerViewRequestId || centerViewRequestId === lastCenterRequestRef.current) return
     lastCenterRequestRef.current = centerViewRequestId
-    const points = simNodes.map((node) => ({ x: node.x ?? width / 2, y: node.y ?? height / 2 }))
-    fitCameraToPoints(cameraRef.current, points, width, height, padding)
-    drawRef.current()
-    if (!simulationPaused) {
-      simulationRef.current?.alpha(0.35).restart()
+    const points = Array.from(livePositionRef.current.values())
+    if (points.length) {
+      fitCameraToPoints(cameraRef.current, points, width, height, padding)
+      scheduleRender()
     }
-  }, [centerViewRequestId, height, padding, simNodes, simulationPaused, width])
+  }, [centerViewRequestId, height, padding, width, treeData])
 
   useEffect(() => {
     if (orbitFrameRef.current !== null) {
@@ -737,100 +577,60 @@ export function D3PixiRenderer({
     }
 
     orbitLastTimestampRef.current = 0
-    const orbitSpeed = 0.26
+    const orbitSpeed = 0.08
 
     const animate = (timestamp: number) => {
-      const targetBlend = orbitAroundCenter && !simulationPaused ? 1 : 0
-      const blendSpeed = targetBlend > orbitBlendRef.current ? 3.6 : 6.2
-      const previousTimestamp = orbitLastTimestampRef.current || timestamp
-      const deltaSeconds = Math.min(0.08, Math.max(0, (timestamp - previousTimestamp) / 1000))
-      orbitLastTimestampRef.current = timestamp
-
-      const blendDelta = targetBlend - orbitBlendRef.current
-      const blendStep = Math.min(Math.abs(blendDelta), deltaSeconds * blendSpeed)
-      orbitBlendRef.current += Math.sign(blendDelta) * blendStep
-
-      const effectiveBlend = Math.max(0, Math.min(1, orbitBlendRef.current))
-      const rotationStep = deltaSeconds * orbitSpeed * effectiveBlend
-      orbitAngleRef.current = (orbitAngleRef.current + rotationStep) % (Math.PI * 2)
-      const nodeList = simNodesRef.current
-
-      if (nodeList.length > 0 && effectiveBlend > 0.0001) {
-        const centerX = width / 2
-        const centerY = height / 2
-
-        const cos = Math.cos(rotationStep)
-        const sin = Math.sin(rotationStep)
-
-        for (const node of nodeList) {
-          const nodeX = node.x ?? width / 2
-          const nodeY = node.y ?? height / 2
-          const relativeX = nodeX - centerX
-          const relativeY = nodeY - centerY
-          const rotatedX = relativeX * cos - relativeY * sin
-          const rotatedY = relativeX * sin + relativeY * cos
-          node.x = centerX + rotatedX
-          node.y = centerY + rotatedY
-          livePositionRef.current.set(node.id, { x: node.x, y: node.y })
-        }
-
-        simulationRef.current?.alpha(0.02)
-      }
-
-      drawRef.current()
-
-      if (targetBlend > 0 || orbitBlendRef.current > 0.0001) {
+      const isOrbiting = orbitAroundCenter && !simulationPaused
+      if (!isOrbiting) {
+        orbitLastTimestampRef.current = timestamp
         orbitFrameRef.current = requestAnimationFrame(animate)
         return
       }
 
-      orbitFrameRef.current = null
-      orbitLastTimestampRef.current = 0
-      orbitBlendRef.current = 0
-      return
+      const previousTimestamp = orbitLastTimestampRef.current || timestamp
+      const deltaSeconds = Math.min(0.08, Math.max(0, (timestamp - previousTimestamp) / 1000))
+      orbitLastTimestampRef.current = timestamp
+
+      if (deltaSeconds > 0) {
+        orbitAngleRef.current = normalizeAngle(orbitAngleRef.current + deltaSeconds * orbitSpeed)
+        scheduleRender()
+      }
+
+      orbitFrameRef.current = requestAnimationFrame(animate)
     }
 
-    if (orbitAroundCenter || orbitBlendRef.current > 0.0001) {
-      orbitFrameRef.current = requestAnimationFrame(animate)
-    } else {
-      drawRef.current()
-    }
+    orbitFrameRef.current = requestAnimationFrame(animate)
 
     return () => {
-      if (orbitFrameRef.current !== null) {
-        cancelAnimationFrame(orbitFrameRef.current)
-        orbitFrameRef.current = null
-      }
+      if (orbitFrameRef.current !== null) cancelAnimationFrame(orbitFrameRef.current)
     }
-  }, [height, orbitAroundCenter, simulationPaused, width])
+  }, [orbitAroundCenter, simulationPaused])
 
   useD3CanvasInteractions({
     canvasRef,
     cameraRef,
-    nodes: simNodes,
+    nodes: interactableNodes,
     width,
     height,
     padding,
-    onNodeSelect,
-    onNodePositionChange,
-    onDragMove: () => {
-      const simulation = simulationRef.current
-      if (!simulation) return
-      simulation.alphaTarget(0.045).alpha(Math.max(simulation.alpha(), 0.085)).restart()
-    },
-    onDragEnd: () => {
-      const simulation = simulationRef.current
-      if (!simulation) return
-      if (!simulationPaused) {
-        simulation.alphaTarget(0).alpha(Math.max(simulation.alpha(), 0.16)).restart()
-        return
+    nodesMap: livePositionRef,
+    onNodeSetRoot: setInternalRootId,
+    onNodeSelect: (nodeId) => {
+      const node = interactableNodesMapperRef.current.get(nodeId)
+      if (node) {
+        onNodeSelect(node.ref)
       }
-      simulation.alphaTarget(0)
     },
-    onPanOrZoom: () => {
-      simulationRef.current?.alphaTarget(0).alpha(0.02)
-      drawRef.current()
+    onNodeHover: (nodeId) => {
+      setHoveredNodeId(nodeId)
+      scheduleRender()
     },
+    // Fase 3: Arrastre Rotacional. Updates orbit based on mouse movement relative to center.
+    onDragRotate: (deltaAngle: number) => {
+      orbitAngleRef.current = normalizeAngle(orbitAngleRef.current + deltaAngle)
+      scheduleRender()
+    },
+    onPanOrZoom: () => scheduleRender(),
   })
 
   return <canvas ref={canvasRef} className="graph-canvas graph-pixi" role="img" aria-label="Mapa narrativo del proyecto" />

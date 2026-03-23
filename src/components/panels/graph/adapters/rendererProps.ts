@@ -13,6 +13,7 @@ type SharedRendererProps = {
   linkAttractionStrength: number
   collectionCohesionStrength: number
   collectionBoundaryRepulsionStrength: number
+  textFontSize: number
   simulationPaused: boolean
   centerViewRequestId: number
   orbitAroundCenter: boolean

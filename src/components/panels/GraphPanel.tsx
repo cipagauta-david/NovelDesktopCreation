@@ -56,16 +56,46 @@ export const GraphPanel = memo(function GraphPanel({
   const [centerViewRequestId, setCenterViewRequestId] = useState(0)
   const [hudPosition, setHudPosition] = useState({ x: 0, y: 0 })
   const [graphViewport, setGraphViewport] = useState({ width: VIEW_WIDTH, height: VIEW_HEIGHT })
-  const [viewSettings, setViewSettings] = useState<GraphViewSettings>({
-    repulsionStrength: 78,
-    gravityStrength: 38,
-    linkWeightStrength: 34,
-    linkAttractionStrength: 52,
-    collectionCohesionStrength: 36,
-    collectionBoundaryRepulsionStrength: 128,
-    searchTerm: '',
-    collectionVisibility: {},
+  const GRAPH_SETTINGS_KEY = 'ndc_graph_settings'
+
+  const [viewSettings, setViewSettings] = useState<GraphViewSettings>(() => {
+    const defaultSettings = {
+      repulsionStrength: 78,
+      gravityStrength: 38,
+      linkWeightStrength: 34,
+      linkAttractionStrength: 52,
+      collectionCohesionStrength: 100,
+      collectionBoundaryRepulsionStrength: 50,
+      textFontSize: 12,
+    }
+    
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = window.localStorage.getItem(GRAPH_SETTINGS_KEY)
+        if (saved) return { ...defaultSettings, ...JSON.parse(saved), searchTerm: '', collectionVisibility: {} }
+      }
+    } catch { }
+
+    return { ...defaultSettings, searchTerm: '', collectionVisibility: {} }
   })
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        const { searchTerm, collectionVisibility, ...toSave } = viewSettings
+        window.localStorage.setItem(GRAPH_SETTINGS_KEY, JSON.stringify(toSave))
+      }
+    }, 400)
+    return () => clearTimeout(timeoutId)
+  }, [
+    viewSettings.repulsionStrength,
+    viewSettings.gravityStrength,
+    viewSettings.linkWeightStrength,
+    viewSettings.linkAttractionStrength,
+    viewSettings.collectionCohesionStrength,
+    viewSettings.collectionBoundaryRepulsionStrength,
+    viewSettings.textFontSize,
+  ])
   const rendererAdapter = resolveGraphRendererAdapter(GRAPH_RENDERER_KIND)
   const rendererStatus = rendererAdapter.getStatus()
   const useD3PixiRenderer = rendererAdapter.kind === 'd3-pixi' && rendererStatus.ready
@@ -429,6 +459,7 @@ export const GraphPanel = memo(function GraphPanel({
             linkAttractionStrength={viewSettings.linkAttractionStrength}
             collectionCohesionStrength={viewSettings.collectionCohesionStrength}
             collectionBoundaryRepulsionStrength={viewSettings.collectionBoundaryRepulsionStrength}
+            textFontSize={viewSettings.textFontSize}
             simulationPaused={simulationPaused}
             position={hudPosition}
             disableSimulationToggle={!useSimulationRenderer}
@@ -481,6 +512,12 @@ export const GraphPanel = memo(function GraphPanel({
                 collectionBoundaryRepulsionStrength: value,
               }))
             }
+            onTextFontSizeChange={(value) =>
+              setViewSettings((current) => ({
+                ...current,
+                textFontSize: value,
+              }))
+            }
             onCenterView={centerGraphView}
             onToggleSimulation={() => setSimulationPaused((current) => !current)}
             onPositionChange={(nextPosition) => {
@@ -510,6 +547,7 @@ export const GraphPanel = memo(function GraphPanel({
             linkAttractionStrength={viewSettings.linkAttractionStrength}
             collectionCohesionStrength={viewSettings.collectionCohesionStrength}
             collectionBoundaryRepulsionStrength={viewSettings.collectionBoundaryRepulsionStrength}
+            textFontSize={viewSettings.textFontSize}
             simulationPaused={simulationPaused}
             centerViewRequestId={centerViewRequestId}
             orbitAroundCenter={orbitAroundCenter}

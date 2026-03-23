@@ -21,10 +21,14 @@ type InteractionArgs = {
   width: number
   height: number
   padding: number
-  onNodeSelect: (node: GraphNode) => void
+  nodesMap: React.MutableRefObject<Map<string, { x: number, y: number }>> 
+  onNodeSetRoot: (nodeId: string) => void
+  onNodeSelect?: (nodeId: string) => void
+  onNodeHover?: (nodeId: string | null) => void
   onNodePositionChange?: (entityId: string, x: number, y: number) => void
-  onDragMove: () => void
+  onDragMove?: () => void
   onDragEnd?: () => void
+  onDragRotate?: (deltaAngle: number) => void
   onPanOrZoom: () => void
 }
 
@@ -35,10 +39,14 @@ export function useD3CanvasInteractions({
   width,
   height,
   padding,
+  nodesMap,
+  onNodeSetRoot,
   onNodeSelect,
+  onNodeHover,
   onNodePositionChange,
   onDragMove,
   onDragEnd,
+  onDragRotate,
   onPanOrZoom,
 }: InteractionArgs) {
   useEffect(() => {
@@ -52,19 +60,39 @@ export function useD3CanvasInteractions({
     let dragVelocity = { x: 0, y: 0 }
     canvas.style.cursor = 'grab'
 
-    const toLocal = (event: PointerEvent | WheelEvent) => ({ x: event.offsetX, y: event.offsetY })
-    const findNode = ({ x, y }: { x: number; y: number }) => {
+    let currentHover: string | null = null
+
+    const toLocal = (event: PointerEvent | WheelEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      const x = ((event.clientX - rect.left) / rect.width) * canvas.width
+      const y = ((event.clientY - rect.top) / rect.height) * canvas.height
+      return { x, y }
+    }
+    
+    const findNode = ({ x, y }: { x: number; y: number }): SimNodeLike | null => {
+      const radius = 22 / Math.max(0.1, cameraRef.current.scale)
+      let closest: SimNodeLike | null = null
+      let minDistance = Infinity
+
       for (const node of nodes) {
-        const dx = (node.x ?? 0) - x
-        const dy = (node.y ?? 0) - y
-        if (Math.sqrt(dx * dx + dy * dy) <= 18) return node
+        const livePos = nodesMap.current.get(node.id)
+        const dx = (livePos?.x ?? 0) - x
+        const dy = (livePos?.y ?? 0) - y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist < minDistance) {
+          minDistance = dist
+          closest = node
+        }
       }
+      
+      if (minDistance <= radius) return closest
       return null
     }
 
     const onDown = (event: PointerEvent) => {
       const screen = toLocal(event)
-      const node = findNode(toWorld(cameraRef.current, screen.x, screen.y))
+      const clickedWorld = toWorld(cameraRef.current, screen.x, screen.y)
+      const node = findNode(clickedWorld)
       moved = false
       lastScreen = screen
       if (!node) {
@@ -76,17 +104,30 @@ export function useD3CanvasInteractions({
 
       dragging = node
       moved = false
-      const world = toWorld(cameraRef.current, screen.x, screen.y)
-      lastWorld = world
+      const worldPos = toWorld(cameraRef.current, screen.x, screen.y)
+      lastWorld = worldPos
       dragVelocity = { x: 0, y: 0 }
-      dragging.fx = dragging.x
-      dragging.fy = dragging.y
+      
+      const livePos = nodesMap.current.get(node.id)
+      dragging.fx = livePos?.x ?? 0
+      dragging.fy = livePos?.y ?? 0
       canvas.style.cursor = 'grabbing'
       canvas.setPointerCapture(event.pointerId)
     }
 
     const onMove = (event: PointerEvent) => {
       const screen = toLocal(event)
+      
+      if (!dragging && !panning) {
+        const node = findNode(toWorld(cameraRef.current, screen.x, screen.y))
+        const newHover = node ? node.id : null
+        if (currentHover !== newHover) {
+          currentHover = newHover
+          onNodeHover?.(newHover)
+          canvas.style.cursor = newHover ? 'pointer' : 'grab'
+        }
+      }
+
       if (panning) {
         moved = true
         cameraRef.current.offsetX += screen.x - lastScreen.x
@@ -99,6 +140,18 @@ export function useD3CanvasInteractions({
       if (!dragging) return
       moved = true
       const pos = toWorld(cameraRef.current, screen.x, screen.y)
+      
+      const dx1 = lastWorld.x - width / 2
+      const dy1 = lastWorld.y - height / 2
+      const angle1 = Math.atan2(dy1, dx1)
+      
+      const dx2 = pos.x - width / 2
+      const dy2 = pos.y - height / 2
+      const angle2 = Math.atan2(dy2, dx2)
+      
+      let deltaAngle = angle2 - angle1
+      deltaAngle = ((deltaAngle + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI
+
       dragVelocity = {
         x: pos.x - lastWorld.x,
         y: pos.y - lastWorld.y,
@@ -106,7 +159,12 @@ export function useD3CanvasInteractions({
       lastWorld = pos
       dragging.fx = pos.x
       dragging.fy = pos.y
-      onDragMove()
+      
+      if (onDragRotate) {
+        onDragRotate(deltaAngle)
+      } else if (onDragMove) {
+        onDragMove()
+      }
     }
 
     const onUp = (event: PointerEvent) => {
@@ -125,14 +183,25 @@ export function useD3CanvasInteractions({
       node.vy = Math.max(-14, Math.min(14, dragVelocity.y * 1.9))
       node.fx = null
       node.fy = null
-      if (!moved && event.ctrlKey && typeof node.x === 'number' && typeof node.y === 'number') {
-        cameraRef.current.offsetX = width / 2 - node.x * cameraRef.current.scale
-        cameraRef.current.offsetY = height / 2 - node.y * cameraRef.current.scale
-        onPanOrZoom()
+      
+      if (!moved) {
+        event.stopPropagation()
+        event.preventDefault()
+        
+        if (event.ctrlKey || event.metaKey) {
+          onNodeSetRoot(node.id)
+          onNodeSelect?.(node.id)
+        }
+        
+        if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId)
+        canvas.style.cursor = 'grab'
+        dragging = null
+        return
       }
+      
       onDragEnd?.()
       if (typeof node.x === 'number' && typeof node.y === 'number') onNodePositionChange?.(node.id, node.x, node.y)
-      if (!moved) onNodeSelect(node.ref)
+      
       if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId)
       canvas.style.cursor = 'grab'
       dragging = null
@@ -145,10 +214,18 @@ export function useD3CanvasInteractions({
       onPanOrZoom()
     }
 
+    const onClickPrevent = (event: MouseEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        event.stopPropagation()
+        event.preventDefault()
+      }
+    }
+
     canvas.addEventListener('pointerdown', onDown)
     canvas.addEventListener('pointermove', onMove)
     canvas.addEventListener('pointerup', onUp)
     canvas.addEventListener('pointerleave', onUp)
+    canvas.addEventListener('click', onClickPrevent, { capture: true })
     canvas.addEventListener('wheel', onWheel, { passive: false })
 
     return () => {
@@ -156,7 +233,8 @@ export function useD3CanvasInteractions({
       canvas.removeEventListener('pointermove', onMove)
       canvas.removeEventListener('pointerup', onUp)
       canvas.removeEventListener('pointerleave', onUp)
+      canvas.removeEventListener('click', onClickPrevent, { capture: true })
       canvas.removeEventListener('wheel', onWheel)
     }
-  }, [cameraRef, canvasRef, height, nodes, onDragEnd, onDragMove, onNodePositionChange, onNodeSelect, onPanOrZoom, padding, width])
+  }, [cameraRef, canvasRef, height, nodes, nodesMap, onDragEnd, onDragMove, onNodePositionChange, onNodeSelect, onNodeSetRoot, onNodeHover, onPanOrZoom, padding, width])
 }

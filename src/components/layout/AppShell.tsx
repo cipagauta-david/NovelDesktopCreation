@@ -116,8 +116,8 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   const handleSelectResult = useCallback((entityId: string, tabId: string) => { selectEntity(entityId, tabId); setSearchPaletteOpen(false) }, [selectEntity])
   const handleGraphSelectEntity = useCallback((eId: string, tId: string) => {
     selectEntity(eId, tId)
-    if (!zenMode && !panels.inspector) togglePanel('inspector')
-  }, [selectEntity, zenMode, panels.inspector, togglePanel])
+    setWorkspaceView('graph')
+  }, [selectEntity, setWorkspaceView])
 
   const handleMainColumnScroll = useCallback(() => {
     setSpectralMode(true)

@@ -12,6 +12,7 @@ type GraphHudProps = {
   linkAttractionStrength: number
   collectionCohesionStrength: number
   collectionBoundaryRepulsionStrength: number
+  textFontSize: number
   simulationPaused: boolean
   position?: { x: number; y: number }
   disableSimulationToggle?: boolean
@@ -26,6 +27,7 @@ type GraphHudProps = {
   onLinkAttractionStrengthChange: (value: number) => void
   onCollectionCohesionStrengthChange: (value: number) => void
   onCollectionBoundaryRepulsionStrengthChange: (value: number) => void
+  onTextFontSizeChange: (value: number) => void
   onCenterView: () => void
   onToggleSimulation: () => void
   onPositionChange?: (position: { x: number; y: number }) => void
@@ -43,6 +45,7 @@ export function GraphHud({
   linkAttractionStrength,
   collectionCohesionStrength,
   collectionBoundaryRepulsionStrength,
+  textFontSize,
   simulationPaused,
   position,
   disableSimulationToggle,
@@ -57,6 +60,7 @@ export function GraphHud({
   onLinkAttractionStrengthChange,
   onCollectionCohesionStrengthChange,
   onCollectionBoundaryRepulsionStrengthChange,
+  onTextFontSizeChange,
   onCenterView,
   onToggleSimulation,
   onPositionChange,
@@ -168,27 +172,27 @@ export function GraphHud({
         <summary>Ajustes Avanzados</summary>
         <div className="graph-hud-advanced-content">
           <label className="graph-hud-slider">
-            <span>Separación entre elementos</span>
+            <span>Amplitud Angular</span>
             <input
               type="range"
               min={0}
               max={200}
               value={repulsionStrength}
               onChange={(event) => onRepulsionStrengthChange(Number(event.target.value))}
-              aria-label="Separación entre elementos"
+              aria-label="Amplitud Angular"
             />
             <small>{repulsionStrength}%</small>
           </label>
 
           <label className="graph-hud-slider">
-            <span>Atracción al centro</span>
+            <span>Espaciado de Anillos</span>
             <input
               type="range"
               min={0}
-              max={100}
+              max={1000}
               value={gravityStrength}
               onChange={(event) => onGravityStrengthChange(Number(event.target.value))}
-              aria-label="Atracción al centro"
+              aria-label="Espaciado de Anillos"
             />
             <small>{gravityStrength}%</small>
           </label>
@@ -207,42 +211,29 @@ export function GraphHud({
           </label>
 
           <label className="graph-hud-slider">
-            <span>Atracción enlaces</span>
+            <span>Tamaño de fuente</span>
             <input
               type="range"
-              min={0}
+              min={8}
+              max={32}
+              value={textFontSize}
+              onChange={(event) => onTextFontSizeChange(Number(event.target.value))}
+              aria-label="Tamaño de fuente"
+            />
+            <small>{textFontSize}px</small>
+          </label>
+
+          <label className="graph-hud-slider">
+            <span>Corte de Profundidad</span>
+            <input
+              type="range"
+              min={10}
               max={100}
-              value={linkAttractionStrength}
-              onChange={(event) => onLinkAttractionStrengthChange(Number(event.target.value))}
-              aria-label="Atracción de enlaces"
-            />
-            <small>{linkAttractionStrength}%</small>
-          </label>
-
-          <label className="graph-hud-slider">
-            <span>Agrupación por tipo</span>
-            <input
-              type="range"
-              min={0}
-              max={1000}
-              value={collectionCohesionStrength}
-              onChange={(event) => onCollectionCohesionStrengthChange(Number(event.target.value))}
-              aria-label="Agrupación por tipo"
-            />
-            <small>{collectionCohesionStrength}%</small>
-          </label>
-
-          <label className="graph-hud-slider">
-            <span>Repulsión borde colección</span>
-            <input
-              type="range"
-              min={0}
-              max={1000}
               value={collectionBoundaryRepulsionStrength}
               onChange={(event) => onCollectionBoundaryRepulsionStrengthChange(Number(event.target.value))}
-              aria-label="Repulsión del borde de colección"
+              aria-label="Corte de Profundidad"
             />
-            <small>{collectionBoundaryRepulsionStrength}%</small>
+            <small>{Math.max(1, Math.round(collectionBoundaryRepulsionStrength / 10))} Niveles</small>
           </label>
         </div>
       </details>
