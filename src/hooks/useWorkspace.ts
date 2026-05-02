@@ -90,7 +90,7 @@ export function useWorkspace(
   const setPendingProposal = aiManagement.setPendingProposal
 
   // Motor de persistencia optimista con el worker
-  usePersistenceManagement(activeProject, activeEntity, draft, setData, setSaveStatus, saveStatus, worker)
+  usePersistenceManagement(data, activeProject, activeEntity, draft, setData, setSaveStatus, saveStatus, worker)
 
   const graphManagement = useGraphManagement({
     activeProject,
@@ -277,6 +277,7 @@ export function useWorkspace(
     selectProject: projectManagement.selectProject, renameActiveProject: projectManagement.renameActiveProject, deleteActiveProject: projectManagement.deleteActiveProject, createProject: projectManagement.createProject, clearWorkspace,
     selectTab: tabManagement.selectTab, createTab: tabManagement.createTab, moveActiveTab: tabManagement.moveActiveTab, renameActiveTab: tabManagement.renameActiveTab, deleteActiveTab: tabManagement.deleteActiveTab, updateTabPrompt: tabManagement.updateTabPrompt, updateTabColor: tabManagement.updateTabColor, updateActiveTabColor: tabManagement.updateActiveTabColor,
     selectEntity: entityManagement.selectEntity, createEntity: entityManagement.createEntity, duplicateActiveEntity: entityManagement.duplicateActiveEntity, archiveActiveEntity: entityManagement.archiveActiveEntity, deleteActiveEntity: entityManagement.deleteActiveEntity,
+    archiveEntity: entityManagement.archiveEntity, deleteEntity: entityManagement.deleteEntity, saveEntityAsTemplate: entityManagement.saveEntityAsTemplate,
     applyActiveTemplate: entityManagement.applyActiveTemplate, setDraft, addField: entityManagement.addField, updateField: entityManagement.updateField, removeField: entityManagement.removeField, attachImages: entityManagement.attachImages,
     insertReference: entityManagement.insertReference, handleEditorChange: entityManagement.handleEditorChange, navigateFromReference: entityManagement.navigateFromReference, saveCurrentAsTemplate: entityManagement.saveCurrentAsTemplate,
     generateAiProposal: aiManagement.generateAiProposal, confirmAiProposal: aiManagement.confirmAiProposal, dismissProposal: aiManagement.dismissProposal, togglePanel, worker,

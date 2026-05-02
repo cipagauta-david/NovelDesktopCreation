@@ -29,6 +29,7 @@ function isDesktopRuntime(): boolean {
 const IDLE_DELAY = 5000 // 5 segundos de inactividad antes de guardar
 
 export function usePersistenceManagement(
+  data: PersistedState,
   activeProject: Project | undefined,
   activeEntity: EntityRecord | null,
   draft: DraftState | null,
@@ -45,6 +46,15 @@ export function usePersistenceManagement(
   const idleTimerRef = useRef<number | null>(null)
   const lastContentRef = useRef<string | null>(null)
   const isEditingRef = useRef<boolean>(false)
+  const hasHydratedRef = useRef(false)
+  const persistTimerRef = useRef<number | null>(null)
+
+  const cancelGlobalPersistTimer = useCallback(() => {
+    if (persistTimerRef.current !== null) {
+      window.clearTimeout(persistTimerRef.current)
+      persistTimerRef.current = null
+    }
+  }, [])
 
   // Función para cancelar el timer de guardado
   const cancelIdleTimer = useCallback(() => {
@@ -214,12 +224,56 @@ export function usePersistenceManagement(
     }
   }, [draft, activeEntity, activeProject, cancelIdleTimer, executeSave, setSaveStatus])
 
+  useEffect(() => {
+    if (!worker) return
+
+    if (!hasHydratedRef.current) {
+      hasHydratedRef.current = true
+      return
+    }
+
+    cancelGlobalPersistTimer()
+    persistTimerRef.current = window.setTimeout(() => {
+      const correlationId = startCorrelationIntent('workspace.persist.snapshot')
+
+      if (isDesktop) {
+        addBreadcrumb('Snapshot persistido via IPC SQLite', 'workspace.save', {
+          projectId: data.activeProjectId,
+          runtime: 'desktop',
+        })
+        withSpan('ipc.state.save', {
+          projectId: data.activeProjectId,
+          correlationId,
+          runtime: 'desktop',
+        }, async () => {
+          await stateStorage.saveState(data)
+        }).catch((err) => {
+          console.error('[Persistence] Desktop snapshot save failed, falling back to worker', err)
+          worker.persistState(data, { correlationId, origin: 'snapshot-fallback' }).catch(console.error)
+        })
+      } else {
+        withSpan('worker.persist_state', {
+          projectId: data.activeProjectId,
+          correlationId,
+          origin: 'snapshot',
+        }, async () => {
+          await worker.persistState(data, { correlationId, origin: 'snapshot' })
+        }).catch(console.error)
+      }
+    }, 900)
+
+    return () => {
+      cancelGlobalPersistTimer()
+    }
+  }, [cancelGlobalPersistTimer, data, isDesktop, stateStorage, worker])
+
   // Cleanup cuando cambia el entity activo
   useEffect(() => {
     return () => {
       cancelIdleTimer()
+      cancelGlobalPersistTimer()
     }
-  }, [cancelIdleTimer])
+  }, [cancelGlobalPersistTimer, cancelIdleTimer])
 
   // Resetear el save status después de guardar
   useEffect(() => {

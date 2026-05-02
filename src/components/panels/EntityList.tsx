@@ -39,6 +39,9 @@ type EntityListProps = {
   onCreateEntity: () => void
   onSelectEntity: (entityId: string, tabId: string) => void
   onReorderEntities?: (entityIds: string[]) => void
+  onArchiveEntity?: (entityId: string) => void
+  onDeleteEntity?: (entityId: string) => void
+  onCreateTemplateFromEntity?: (entityId: string) => void
 }
 
 export const EntityList = memo(function EntityList({
@@ -53,6 +56,9 @@ export const EntityList = memo(function EntityList({
   onCreateEntity,
   onSelectEntity,
   onReorderEntities,
+  onArchiveEntity,
+  onDeleteEntity,
+  onCreateTemplateFromEntity,
 }: EntityListProps) {
   const [showComposer, setShowComposer] = useState(false)
   const [isSectionOpen, setIsSectionOpen] = useState(true)
@@ -170,6 +176,9 @@ export const EntityList = memo(function EntityList({
                             entity={entity}
                             isActive={entity.id === activeEntityId}
                             onSelect={() => onSelectEntity(entity.id, entity.tabId)}
+                            onArchive={onArchiveEntity ? () => onArchiveEntity(entity.id) : undefined}
+                            onDelete={onDeleteEntity ? () => onDeleteEntity(entity.id) : undefined}
+                            onCreateTemplate={onCreateTemplateFromEntity ? () => onCreateTemplateFromEntity(entity.id) : undefined}
                           />
                         </div>
                       )
@@ -199,6 +208,9 @@ export const EntityList = memo(function EntityList({
                    entity={entity}
                    isActive={entity.id === activeEntityId}
                    onSelect={() => onSelectEntity(entity.id, entity.tabId)}
+                   onArchive={onArchiveEntity ? () => onArchiveEntity(entity.id) : undefined}
+                   onDelete={onDeleteEntity ? () => onDeleteEntity(entity.id) : undefined}
+                   onCreateTemplate={onCreateTemplateFromEntity ? () => onCreateTemplateFromEntity(entity.id) : undefined}
                  />
                </div>
              ))

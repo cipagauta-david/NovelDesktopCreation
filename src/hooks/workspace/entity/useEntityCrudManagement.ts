@@ -10,7 +10,7 @@ import type {
   Project,
   WorkspaceView,
 } from '../../../types/workspace'
-import { createHistoryEvent, isoNow, uid } from '../../../utils/workspace'
+import { createHistoryEvent, draftStateFromEntity, isoNow, uid } from '../../../utils/workspace'
 
 type UseEntityCrudManagementArgs = {
   setData: Dispatch<SetStateAction<PersistedState>>
@@ -138,12 +138,20 @@ export function useEntityCrudManagement({
   }
 
   function archiveActiveEntity() {
-    if (!activeProject || !activeEntity) return
-    const nextEntity = activeTabEntities.find((entity) => entity.id !== activeEntity.id)
+    if (!activeEntity) return
+    archiveEntity(activeEntity.id)
+  }
+
+  function archiveEntity(entityId: string) {
+    if (!activeProject) return
+    const entityToArchive = activeProject.entities.find((entity) => entity.id === entityId)
+    if (!entityToArchive) return
+    const nextEntity = activeTabEntities.find((entity) => entity.id !== entityToArchive.id)
+
     withProjectUpdate(activeProject.id, (project) => ({
       ...project,
       entities: project.entities.map((entity) =>
-        entity.id !== activeEntity.id
+        entity.id !== entityToArchive.id
           ? entity
           : {
               ...entity,
@@ -159,34 +167,55 @@ export function useEntityCrudManagement({
       updatedAt: isoNow(),
     }), {
       label: 'Entidad archivada',
-      details: `${activeEntity.title} pasó a estado archivado.`,
-      tabId: activeEntity.tabId,
-      entityId: activeEntity.id,
+      details: `${entityToArchive.title} pasó a estado archivado.`,
+      tabId: entityToArchive.tabId,
+      entityId: entityToArchive.id,
     })
-    setData((current) => ({ ...current, activeEntityId: nextEntity?.id ?? '' }))
+
+    setData((current) => (
+      current.activeEntityId === entityToArchive.id
+        ? { ...current, activeEntityId: nextEntity?.id ?? '' }
+        : current
+    ))
+    setToast('Entidad archivada.')
   }
 
   function deleteActiveEntity() {
-    if (!activeProject || !activeEntity) return
-    const remainingEntities = activeProject.entities.filter((entity) => entity.id !== activeEntity.id)
+    if (!activeEntity) return
+    deleteEntity(activeEntity.id)
+  }
+
+  function deleteEntity(entityId: string) {
+    if (!activeProject) return
+    const entityToDelete = activeProject.entities.find((entity) => entity.id === entityId)
+    if (!entityToDelete) return
+
+    const remainingEntities = activeProject.entities.filter((entity) => entity.id !== entityToDelete.id)
     const nextEntity = remainingEntities.find(
-      (entity) => entity.tabId === activeTab?.id && entity.status === 'active',
+      (entity) => entity.tabId === entityToDelete.tabId && entity.status === 'active',
     )
+
     withProjectUpdate(activeProject.id, (project) => ({
       ...project,
-      entities: project.entities.filter((entity) => entity.id !== activeEntity.id),
+      entities: project.entities.filter((entity) => entity.id !== entityToDelete.id),
       updatedAt: isoNow(),
       history: [
-        createHistoryEvent('Entidad eliminada', `${activeEntity.title} fue eliminada.`),
+        createHistoryEvent('Entidad eliminada', `${entityToDelete.title} fue eliminada.`),
         ...project.history,
       ].slice(0, 40),
     }), {
       label: 'Entidad eliminada',
-      details: `${activeEntity.title} fue eliminada.`,
-      tabId: activeEntity.tabId,
-      entityId: activeEntity.id,
+      details: `${entityToDelete.title} fue eliminada.`,
+      tabId: entityToDelete.tabId,
+      entityId: entityToDelete.id,
     })
-    setData((current) => ({ ...current, activeEntityId: nextEntity?.id ?? '' }))
+
+    setData((current) => (
+      current.activeEntityId === entityToDelete.id
+        ? { ...current, activeEntityId: nextEntity?.id ?? '' }
+        : current
+    ))
+    setToast('Entidad eliminada.')
   }
 
   function applyActiveTemplate() {
@@ -207,13 +236,25 @@ export function useEntityCrudManagement({
   }
 
   function saveCurrentAsTemplate() {
-    if (!activeProject || !activeDraft || !activeEntity) return
+    if (!activeEntity) return
+    saveEntityAsTemplate(activeEntity.id)
+  }
+
+  function saveEntityAsTemplate(entityId: string) {
+    if (!activeProject) return
+    const entity = activeProject.entities.find((entry) => entry.id === entityId)
+    if (!entity) return
+
+    const sourceDraft = activeDraft && activeDraft.entityId === entity.id
+      ? activeDraft
+      : draftStateFromEntity(entity)
+
     const template: EntityTemplate = {
       id: uid('template'),
-      name: `${activeDraft.title || activeEntity.title} — template`,
+      name: `${sourceDraft.title || entity.title} — template`,
       description: 'Generado desde una entidad real del workspace.',
-      fields: activeDraft.fields.map((field) => field.key || 'Campo'),
-      defaultContent: activeDraft.content,
+      fields: sourceDraft.fields.map((field) => field.key || 'Campo'),
+      defaultContent: sourceDraft.content,
     }
 
     withProjectUpdate(activeProject.id, (project) => ({
@@ -227,10 +268,10 @@ export function useEntityCrudManagement({
     }), {
       label: 'Template guardado',
       details: `${template.name} listo para reutilizar.`,
-      entityId: activeEntity.id,
-      tabId: activeEntity.tabId,
+      entityId: entity.id,
+      tabId: entity.tabId,
     })
-    setToast('Template guardado y listo para nuevas entidades.')
+    setToast(`Template creado desde ${entity.title}.`)
   }
 
   return {
@@ -241,8 +282,11 @@ export function useEntityCrudManagement({
     createEntity,
     duplicateActiveEntity,
     archiveActiveEntity,
+    archiveEntity,
     deleteActiveEntity,
+    deleteEntity,
     applyActiveTemplate,
     saveCurrentAsTemplate,
+    saveEntityAsTemplate,
   }
 }

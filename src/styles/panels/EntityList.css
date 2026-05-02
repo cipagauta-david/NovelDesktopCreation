@@ -33,12 +33,27 @@
   touch-action: none;
 }
 
+.list-card-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.list-card-row .action-menu {
+  flex-shrink: 0;
+}
+
+.list-card-row .icon-button {
+  margin-top: 0.15rem;
+}
+
 .entity-list-scrollable .list-card {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   gap: 0.5rem;
-  width: 100%;
+  flex: 1;
+  width: auto;
   border-radius: 0;
   border-left: 2px solid transparent;
   background: transparent;

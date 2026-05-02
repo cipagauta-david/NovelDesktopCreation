@@ -77,7 +77,9 @@ export function useEntityManagement(
     createEntity: crud.createEntity,
     duplicateActiveEntity: crud.duplicateActiveEntity,
     archiveActiveEntity: crud.archiveActiveEntity,
+    archiveEntity: crud.archiveEntity,
     deleteActiveEntity: crud.deleteActiveEntity,
+    deleteEntity: crud.deleteEntity,
     applyActiveTemplate: crud.applyActiveTemplate,
     addField: draft.addField,
     updateField: draft.updateField,
@@ -87,5 +89,6 @@ export function useEntityManagement(
     handleEditorChange: references.handleEditorChange,
     navigateFromReference: references.navigateFromReference,
     saveCurrentAsTemplate: crud.saveCurrentAsTemplate,
+    saveEntityAsTemplate: crud.saveEntityAsTemplate,
   }
 }

@@ -342,6 +342,9 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
                   onCreateEntity={workspace.createEntity}
                   onSelectEntity={workspace.selectEntity}
                   onReorderEntities={workspace.reorderEntities}
+                    onArchiveEntity={workspace.archiveEntity}
+                    onDeleteEntity={workspace.deleteEntity}
+                    onCreateTemplateFromEntity={workspace.saveEntityAsTemplate}
                   activeNavigationTab={navigationTab}
                   onActiveNavigationTabChange={setNavigationTab}
                   onCollapse={handleToggleNav}

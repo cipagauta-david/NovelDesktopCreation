@@ -43,6 +43,9 @@ type NavigationPanelProps = {
   onCreateEntity: () => void
   onSelectEntity: (entityId: string, tabId: string) => void
   onReorderEntities?: (entityIds: string[]) => void
+  onArchiveEntity?: (entityId: string) => void
+  onDeleteEntity?: (entityId: string) => void
+  onCreateTemplateFromEntity?: (entityId: string) => void
   activeNavigationTab: 'workspace' | 'content'
   onActiveNavigationTabChange: (tab: 'workspace' | 'content') => void
   onCollapse: () => void
@@ -84,6 +87,9 @@ export const NavigationPanel = memo(function NavigationPanel({
   onCreateEntity,
   onSelectEntity,
   onReorderEntities,
+  onArchiveEntity,
+  onDeleteEntity,
+  onCreateTemplateFromEntity,
   activeNavigationTab,
   onActiveNavigationTabChange,
   onCollapse,
@@ -174,6 +180,9 @@ export const NavigationPanel = memo(function NavigationPanel({
                 onCreateEntity={onCreateEntity}
                 onSelectEntity={onSelectEntity}
                 onReorderEntities={onReorderEntities}
+                onArchiveEntity={onArchiveEntity}
+                onDeleteEntity={onDeleteEntity}
+                onCreateTemplateFromEntity={onCreateTemplateFromEntity}
               />
             ) : null}
           </div>
