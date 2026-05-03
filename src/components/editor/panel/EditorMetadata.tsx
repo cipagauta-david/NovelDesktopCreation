@@ -2,7 +2,6 @@ import { memo } from 'react'
 import type { DraftState, EntityTemplate } from '../../../types/workspace'
 import { Field } from '../../common/Field'
 import { SectionCard } from '../../common/SectionCard'
-import { cn } from '@/lib/utils'
 import '../../../styles/editor/panel/EditorMetadata.css';
 
 
@@ -10,19 +9,17 @@ import '../../../styles/editor/panel/EditorMetadata.css';
 type EditorMetadataProps = {
   draft: DraftState
   templates: EntityTemplate[]
-  zenMode: boolean
   onDraftChange: (next: DraftState) => void
 }
 
 // V0ID_NOTE: memo isolates this panel from the editor's keystroke cycle.
 // The parent draft object changes on every character, but metadata fields are low-frequency.
-export const EditorMetadata = memo(function EditorMetadata({ draft, templates, zenMode, onDraftChange }: EditorMetadataProps) {
+export const EditorMetadata = memo(function EditorMetadata({ draft, templates, onDraftChange }: EditorMetadataProps) {
   return (
     <SectionCard
       title="Metadatos"
       meta="Plantilla, etiquetas y claves de contexto"
       defaultOpen={false}
-      className={cn('editor-meta-shell', { 'is-hidden': zenMode })}
     >
       <div className="form-grid compact-metadata-grid">
         <Field label="Plantilla">

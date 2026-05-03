@@ -1,4 +1,6 @@
 .editor-panel {
+  container-type: inline-size;
+  container-name: editor-panel;
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -30,13 +32,9 @@
   overflow: visible;
 }
 
-.editor-panel .editor-meta-shell {
-  grid-area: doc;
-  min-width: 0;
-}
-
 .editor-panel .editor-doc-shell {
   grid-area: doc;
+  position: relative;
   min-width: 0;
 }
 
@@ -102,7 +100,6 @@
 }
 
 .editor-topbar-shell,
-.editor-meta-shell,
 .editor-side-shell {
   opacity: 1;
   transform: none;
@@ -146,7 +143,6 @@
 }
 
 .editor-topbar-shell.is-hidden,
-.editor-meta-shell.is-hidden,
 .editor-side-shell.is-hidden {
   display: none;
 }

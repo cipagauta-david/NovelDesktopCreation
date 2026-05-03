@@ -379,7 +379,7 @@ export function EditorPanel({
           </div>
           
           {detailsTab === 'meta' && (
-            <EditorMetadata draft={draft} templates={templates} zenMode={zenMode} onDraftChange={onDraftChange} />
+            <EditorMetadata draft={draft} templates={templates} onDraftChange={onDraftChange} />
           )}
           {detailsTab === 'props' && (
              <EditorProperties

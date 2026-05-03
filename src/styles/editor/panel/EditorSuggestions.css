@@ -1,25 +1,15 @@
-.surface-glass {
-  background: var(--surface-glass);
-  border: 1px solid var(--border-subtle);
-  backdrop-filter: blur(16px);
-}
-
-.shadow-glow {
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-primary) 22%, transparent),
-    0 0 18px color-mix(in srgb, var(--color-primary-glow) 80%, transparent);
-}
-
+/* SUGGESTIONS POPOVER — Glassmorphic Neural Trigger */
 .suggestions-popover {
   display: grid;
   gap: 0.55rem;
   padding: 0.55rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-active);
-  box-shadow:
-    0 12px 48px rgba(2, 6, 23, 0.28),
-    0 0 1px rgba(148, 163, 184, 0.22);
   max-width: clamp(16rem, 40vw, 26rem);
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-popover);
 }
 
 .suggestions-scroll-container {
@@ -33,9 +23,8 @@
   background: var(--surface-glass);
   border-color: var(--border-active);
   box-shadow:
-    0 12px 48px rgba(0, 0, 0, 0.6),
-    0 0 1px rgba(148, 163, 184, 0.1),
-    0 0 20px var(--color-primary-glow);
+    var(--shadow-popover),
+    0 0 24px var(--color-primary-glow);
 }
 
 .suggestions-popover-title {
@@ -94,6 +83,9 @@
   isolation: isolate;
   will-change: transform, opacity;
   animation: fade-up-in var(--motion-fast);
+  box-shadow:
+    var(--shadow-popover),
+    0 0 24px var(--color-primary-glow);
 }
 
 .suggestions-popover button {
@@ -111,29 +103,4 @@
   margin-bottom: 8px;
   padding: 0.2rem 0.4rem 0.4rem;
   border-bottom: 1px solid var(--border-divider);
-}
-
-/* SUGGESTIONS POPOVER — Glassmorphic Neural Trigger */
-.suggestions-popover {
-  background: var(--surface-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border-active);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-popover);
-}
-
-:root[data-theme="dark"] .suggestions-popover {
-  background: var(--surface-glass);
-  border-color: var(--border-active);
-  box-shadow:
-    var(--shadow-popover),
-    0 0 24px var(--color-primary-glow);
-}
-
-.floating-suggestions-popover {
-  border-color: var(--border-active);
-  box-shadow:
-    var(--shadow-popover),
-    0 0 24px var(--color-primary-glow);
 }

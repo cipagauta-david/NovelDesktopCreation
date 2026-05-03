@@ -88,15 +88,6 @@ export const EditorDocumentSection = memo(function EditorDocumentSection({
 
         {editorSurface}
 
-        <EditorSuggestions
-          active={referenceSuggestionActive}
-          options={suggestionOptions}
-          style={suggestionsStyle}
-          onInsertReference={onInsertReference}
-        />
-
-        <EntityHover position={hoveredReference} entity={hoveredEntity} />
-
         {assetDragActive && (
           <div className="editor-drop-overlay" aria-live="polite">
             <strong>Suelta imagenes para anexarlas a la entidad activa</strong>
@@ -104,6 +95,17 @@ export const EditorDocumentSection = memo(function EditorDocumentSection({
           </div>
         )}
       </div>
+
+      {/* Popovers live outside .writing-lane (which has overflow:hidden) so they
+          are never clipped. editor-doc-shell carries position:relative as anchor. */}
+      <EditorSuggestions
+        active={referenceSuggestionActive}
+        options={suggestionOptions}
+        style={suggestionsStyle}
+        onInsertReference={onInsertReference}
+      />
+
+      <EntityHover position={hoveredReference} entity={hoveredEntity} />
     </section>
   )
 })

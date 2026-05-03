@@ -72,7 +72,7 @@ export const EditorSuggestions = memo(function EditorSuggestions({ active, optio
   }
 
   return (
-    <div className="suggestions-popover floating-suggestions-popover surface-glass shadow-glow" style={style} role="listbox" aria-label="Sugerencias de referencias">
+    <div className="suggestions-popover floating-suggestions-popover" style={style} role="listbox" aria-label="Sugerencias de referencias">
       <div className="suggestions-popover-title suggestions-popover-title-neural">Variables Neurales / Sugerencias</div>
       <div ref={parentRef} className="suggestions-scroll-container">
         <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
