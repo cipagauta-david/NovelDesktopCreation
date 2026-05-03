@@ -3,10 +3,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3, 0.75rem);
+  gap: var(--space-3);
   min-height: 3.25rem;
   width: 100%;
-  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+  padding: var(--space-2) var(--space-3);
   background: transparent;
   border: none;
   box-shadow: none;
@@ -34,7 +34,7 @@
 
 .breadcrumb-separator {
   color: var(--text-ghost);
-  font-size: 0.85rem;
+  font-size: var(--font-size-0);
   flex-shrink: 0;
 }
 
@@ -50,7 +50,7 @@
 
 .breadcrumb-meta {
   color: var(--text-ghost);
-  font-size: 0.72rem;
+  font-size: var(--font-size--2);
   white-space: nowrap;
   margin-left: 0.25rem;
 }
@@ -73,10 +73,10 @@
 .view-mode-button {
   min-height: 1.85rem;
   height: 1.85rem;
-  padding: 0 var(--space-2, 0.5rem);
+  padding: 0 var(--space-2);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  font-size: 0.78rem;
+  font-size: var(--font-size--1);
   font-weight: 600;
   color: var(--text-muted);
   background: transparent;
@@ -106,17 +106,17 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--space-2, 0.5rem);
+  gap: var(--space-2);
   flex: 1 1 auto;
 }
 
 .header-search-trigger {
   min-height: 1.85rem;
   height: 1.85rem;
-  padding: 0 var(--space-2, 0.5rem);
+  padding: 0 var(--space-2);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  font-size: 0.78rem;
+  font-size: var(--font-size--1);
   font-weight: 500;
   color: var(--text-muted);
   background: color-mix(in srgb, var(--bg-surface-raised) 70%, transparent);
@@ -127,7 +127,7 @@
 
 .header-search-trigger small {
   color: var(--text-ghost);
-  font-size: 0.68rem;
+  font-size: var(--font-size--2);
 }
 
 .header-search-trigger:hover,
@@ -150,7 +150,7 @@
   padding: 0;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  font-size: 0.92rem;
+  font-size: var(--font-size-0);
   color: var(--text-muted);
   background: transparent;
   display: inline-grid;
@@ -176,12 +176,12 @@
   align-items: center;
   gap: 0.35rem;
   min-height: 1.85rem;
-  padding: 0 var(--space-2, 0.5rem);
+  padding: 0 var(--space-2);
   border-radius: 999px;
   border: 1px solid var(--border-subtle);
   background: color-mix(in srgb, var(--bg-surface-raised) 70%, transparent);
   color: var(--text-secondary);
-  font-size: 0.72rem;
+  font-size: var(--font-size--2);
   font-weight: 600;
 }
 
@@ -207,7 +207,7 @@
 
 .workspace-status {
   color: var(--text-ghost);
-  font-size: 0.7rem;
+  font-size: var(--font-size--2);
   white-space: nowrap;
 }
 
@@ -215,7 +215,7 @@
 @media (max-width: 768px) {
   .workspace-header {
     flex-wrap: wrap;
-    gap: var(--space-2, 0.5rem);
+    gap: var(--space-2);
   }
 
   .workspace-header-breadcrumb {

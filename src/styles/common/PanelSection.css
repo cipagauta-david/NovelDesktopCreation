@@ -72,7 +72,7 @@
 }
 
 .section-card-body > * + * {
-  margin-top: var(--space-3, 0.75rem);
+  margin-top: var(--space-3);
 }
 
 .section-toggle {
@@ -83,7 +83,7 @@
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: var(--font-size--1);
   flex-shrink: 0;
 }
 

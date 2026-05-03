@@ -24,7 +24,11 @@
   --radius-md: 0.625rem;
   --radius-lg: 0.875rem;
   --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-pill: 999px;
+  --radius-xs: 0.3125rem;
 
+  --font-size--2: clamp(0.68rem, 0.65rem + 0.1vw, 0.72rem);
   --font-size--1: clamp(0.75rem, 0.7rem + 0.15vw, 0.8125rem);
   --font-size-0: clamp(0.875rem, 0.82rem + 0.2vw, 0.9375rem);
   --font-size-1: clamp(0.95rem, 0.88rem + 0.25vw, 1rem);
@@ -98,6 +102,18 @@
   --motion-fast: 140ms ease;
   --motion-base: 220ms ease;
   --motion-slow: 320ms ease;
+
+  /* ── Shell layout tokens ── */
+  --shell-header-height: 3.25rem;
+  --shell-panel-gap: 0;
+  --shell-rail-width: 3rem;
+
+  /* ── Panel tabs tokens ── */
+  --panel-tabs-bg: var(--bg-surface-raised);
+  --panel-tabs-border: var(--border-subtle);
+  --panel-tab-hover-bg: color-mix(in srgb, var(--bg-surface) 88%, var(--bg-surface-raised));
+  --panel-tab-active-bg: var(--bg-surface);
+  --panel-tab-active-shadow: var(--shadow-popover);
 }
 
 :root[data-focus-mode='true'] {
@@ -170,6 +186,13 @@
   /* ── Spectral tokens ── */
   --zen-opacity-idle: 0.15;
   --zen-opacity-active: 1;
+
+  /* ── Panel tabs tokens (dark) ── */
+  --panel-tabs-bg: var(--bg-surface);
+  --panel-tabs-border: var(--border-subtle);
+  --panel-tab-hover-bg: var(--bg-surface-raised);
+  --panel-tab-active-bg: color-mix(in srgb, var(--bg-surface-raised) 90%, var(--accent-primary));
+  --panel-tab-active-shadow: none;
 }
 
 * {
@@ -180,6 +203,15 @@
 *::before,
 *::after {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
 html,

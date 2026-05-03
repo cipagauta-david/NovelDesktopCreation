@@ -6,7 +6,7 @@
   display: grid;
   gap: 0.45rem;
   padding: 0.82rem 0.9rem 0.75rem;
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--surface-glass) 92%, transparent);
   border: 1px solid color-mix(in srgb, var(--entity-pill-accent) 20%, var(--border-subtle));
   box-shadow: var(--shadow-popover);

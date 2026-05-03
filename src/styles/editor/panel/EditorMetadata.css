@@ -1,7 +1,7 @@
 .compact-metadata-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3, 0.75rem);
+  gap: var(--space-3);
   align-items: start;
 }
 

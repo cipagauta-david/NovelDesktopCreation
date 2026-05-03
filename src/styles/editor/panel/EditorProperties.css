@@ -1,13 +1,13 @@
 .field-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto;
-  gap: var(--space-2, 0.5rem);
+  gap: var(--space-2);
   align-items: center;
 }
 
 .heading-style-preview {
   display: grid;
-  gap: var(--space-2, 0.5rem);
+  gap: var(--space-2);
   padding: 0.78rem 0.85rem;
   border-radius: var(--radius-md);
   background: var(--bg-surface-raised);

@@ -107,7 +107,7 @@
   align-items: center;
   gap: 0.45rem;
   color: var(--text-secondary);
-  font-size: 0.74rem;
+  font-size: var(--font-size--1);
   font-weight: 600;
 }
 
@@ -115,8 +115,7 @@
   width: 30px;
   height: 30px;
   padding: 0;
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--surface-panel-border, var(--border-subtle)) 92%, transparent);
+  border-radius: var(--radius-md);
   background: transparent;
   cursor: pointer;
 }
@@ -137,7 +136,7 @@
 }
 
 .tab-tree-copy small {
-  font-size: 0.74rem;
+  font-size: var(--font-size--1);
 }
 
 .tab-tree-item {

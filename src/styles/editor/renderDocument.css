@@ -35,9 +35,9 @@
   min-height: 1.6em;
   margin-inline: -0.2rem;
   padding-inline: 0.2rem;
-  color: var(--text-primary);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+  color: var(--text-heading);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
 }
 
 .doc-blank {
@@ -67,7 +67,7 @@
   height: 0.18rem;
   margin-top: 0.6rem;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--accent-primary) 28%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 30%, transparent);
 }
 
 :root.dark .doc-heading-1::after {
@@ -76,14 +76,14 @@
 }
 
 .doc-heading-2 {
-  font-size: clamp(1.3rem, 1.15rem + 0.8vw, 1.75rem);
+  font-size: clamp(1.5rem, 2.3vw, 2rem);
   line-height: 1.3;
   margin-top: 0.8rem;
   margin-bottom: 0.45rem;
 }
 
 .doc-heading-3 {
-  font-size: clamp(1.1rem, 1rem + 0.3vw, 1.28rem);
+  font-size: clamp(1.15rem, 1.4vw, 1.35rem);
   line-height: 1.35;
   margin-top: 0.6rem;
   margin-bottom: 0.4rem;
@@ -132,27 +132,4 @@
 .doc-heading-3 {
   color: var(--text-primary);
   font-weight: 700;
-}
-
-.doc-heading-2 {
-  font-size: clamp(1.5rem, 2.3vw, 2rem);
-}
-
-.doc-heading-3 {
-  font-size: clamp(1.15rem, 1.4vw, 1.35rem);
-}
-
-.doc-active-raw-line {
-  color: var(--text-heading);
-  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
-}
-
-/* Heading underline accent */
-.doc-heading-1::after {
-  background: color-mix(in srgb, var(--accent-primary) 30%, transparent);
-}
-
-:root.dark .doc-heading-1::after {
-  background: color-mix(in srgb, var(--accent-primary) 46%, transparent);
-  box-shadow: none;
 }

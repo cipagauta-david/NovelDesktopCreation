@@ -11,7 +11,7 @@
 
 .metric-card {
   padding: 0.85rem 0.95rem;
-  border-radius: 18px;
+  border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--surface-elevated) 86%, transparent);
   display: grid;
   gap: 0.22rem;
