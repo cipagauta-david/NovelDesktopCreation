@@ -113,13 +113,13 @@
 }
 
 .save-indicator.saving .save-indicator-dot {
-  background: #f59e0b;
-  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.12);
+  background: var(--status-warning);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--status-warning) 12%, transparent);
 }
 
 .save-indicator.saved .save-indicator-dot {
-  background: #22c55e;
-  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+  background: var(--status-success);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--status-success) 12%, transparent);
 }
 
 .mode-switch-pill {

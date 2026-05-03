@@ -1,4 +1,4 @@
-import '../../styles/common/PanelTabs.css'
+import { Tab, Tabs } from '@nextui-org/react'
 
 export type PanelTabOption<T extends string> = {
   id: T
@@ -14,19 +14,28 @@ type PanelTabsProps<T extends string> = {
 
 export function PanelTabs<T extends string>({ ariaLabel, activeTab, options, onChange }: PanelTabsProps<T>) {
   return (
-    <div className="panel-tabs-container" role="tablist" aria-label={ariaLabel}>
+    <Tabs
+      aria-label={ariaLabel}
+      selectedKey={activeTab}
+      onSelectionChange={(key) => onChange(key as T)}
+      variant="underlined"
+      size="sm"
+      classNames={{
+        base: 'w-full',
+        tabList: [
+          'w-full gap-0 rounded-none border-b px-1',
+          'bg-[var(--panel-tabs-bg)] border-[var(--panel-tabs-border)]',
+        ].join(' '),
+        tab: 'h-9 px-3 text-[0.8125rem] font-medium text-[var(--text-muted)] data-[hover=true]:text-[var(--text-primary)]',
+        cursor: 'bg-[var(--accent-primary)] w-full h-[2px]',
+        tabContent:
+          'group-data-[selected=true]:text-[var(--text-primary)] group-data-[selected=true]:font-semibold',
+        panel: 'hidden p-0',
+      }}
+    >
       {options.map((option) => (
-        <button
-          key={option.id}
-          type="button"
-          role="tab"
-          aria-selected={activeTab === option.id}
-          className={activeTab === option.id ? 'panel-tab active' : 'panel-tab'}
-          onClick={() => onChange(option.id)}
-        >
-          {option.label}
-        </button>
+        <Tab key={option.id} title={option.label} />
       ))}
-    </div>
+    </Tabs>
   )
 }

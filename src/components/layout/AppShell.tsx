@@ -11,7 +11,7 @@ import { InspectorAssistantComposer } from '../inspector/InspectorAssistantCompo
 import { Field } from '../common/Field'
 import { Button } from '../ui/Button'
 import { FormStack } from '../common/FormStack'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/Dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { ResizeHandle } from '../../hooks/workspace/usePanelWidths'
 import type { PersistedState } from '../../types/workspace'

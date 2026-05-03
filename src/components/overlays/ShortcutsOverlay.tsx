@@ -1,8 +1,11 @@
 import { useEffect } from 'react'
-import { Button } from '../ui/Button'
-import '../../styles/overlays/ShortcutsOverlay.css';
-
-
+import { Button } from '@/components/ui/Button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 const shortcuts: { keys: string; description: string }[] = [
   { keys: 'Ctrl + K', description: 'Abrir búsqueda / Command Palette' },
@@ -23,7 +26,7 @@ export function ShortcutsOverlay({ open, onClose }: Props) {
   useEffect(() => {
     if (!open) return
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' || e.key === '?') {
+      if (e.key === '?') {
         e.preventDefault()
         onClose()
       }
@@ -32,34 +35,28 @@ export function ShortcutsOverlay({ open, onClose }: Props) {
     return () => window.removeEventListener('keydown', handler)
   }, [open, onClose])
 
-  if (!open) return null
-
   return (
-    <div className="shortcuts-overlay-backdrop" onClick={onClose} role="presentation">
-      <div
-        className="shortcuts-overlay"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-label="Atajos de teclado"
-      >
-        <div className="shortcuts-header">
-          <h2>Atajos de teclado</h2>
-          <Button type="button" variant="ghost" className="ghost-button compact-button" onClick={onClose} aria-label="Cerrar">
-            ✕
-          </Button>
-        </div>
-        <ul className="shortcuts-list">
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
+      <DialogContent className="max-w-md" aria-label="Atajos de teclado">
+        <DialogHeader>
+          <DialogTitle>Atajos de teclado</DialogTitle>
+        </DialogHeader>
+        <ul className="grid gap-2 list-none p-0 m-0">
           {shortcuts.map((s) => (
-            <li key={s.keys} className="shortcut-row">
-              <kbd className="shortcut-keys">{s.keys}</kbd>
-              <span className="shortcut-desc">{s.description}</span>
+            <li
+              key={s.keys}
+              className="flex justify-between items-center gap-4 py-1.5 border-b border-border/40 last:border-0"
+            >
+              <kbd className="font-mono text-[0.8rem] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{s.keys}</kbd>
+              <span className="text-sm text-foreground">{s.description}</span>
             </li>
           ))}
         </ul>
-        <p className="shortcuts-footer">
-          Presiona <kbd>?</kbd> o <kbd>Esc</kbd> para cerrar
+        <p className="text-xs text-muted-foreground text-center mt-2">
+          Presiona <kbd className="font-mono bg-muted px-1 rounded">?</kbd> o{' '}
+          <kbd className="font-mono bg-muted px-1 rounded">Esc</kbd> para cerrar
         </p>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

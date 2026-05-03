@@ -5,11 +5,14 @@ import '@fontsource-variable/crimson-pro/index.css'
 import './index.css'
 import App from './App.tsx'
 import { initObservability } from './services/observability'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
 initObservability()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <TooltipProvider>
+      <App />
+    </TooltipProvider>
   </StrictMode>,
 )

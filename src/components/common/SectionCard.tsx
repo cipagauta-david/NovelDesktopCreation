@@ -1,7 +1,6 @@
 import { useId, useState, type ReactNode } from 'react'
-import '../../styles/common/SectionCard.css';
-
-import '../../styles/common/PanelSection.css'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 
 type SectionCardProps = {
   title: ReactNode
@@ -33,50 +32,45 @@ export function SectionCard({
   const isControlled = typeof open === 'boolean'
   const isOpen = collapsible ? (isControlled ? open : internalOpen) : true
 
-  const sectionClasses = ['section-card', className].filter(Boolean).join(' ')
-  const bodyClasses = ['section-card-body', bodyClassName].filter(Boolean).join(' ')
-
   function setOpen(nextOpen: boolean) {
-    if (!collapsible) {
-      return
-    }
-
-    if (!isControlled) {
-      setInternalOpen(nextOpen)
-    }
+    if (!collapsible) return
+    if (!isControlled) setInternalOpen(nextOpen)
     onOpenChange?.(nextOpen)
   }
 
   return (
-    <section className={sectionClasses}>
-      <header className="section-card-header">
-        <div>
-          <h3>{title}</h3>
-          {meta && <div className="section-meta">{meta}</div>}
+    <Card size="sm" className={cn('gap-2', className)} role="region">
+      <CardHeader className="px-3 py-0 border-b-0 gap-1">
+        <div className="flex items-start justify-between gap-2 flex-wrap min-w-0">
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-[0.78rem] font-semibold uppercase tracking-wide text-muted-foreground">
+              {title}
+            </CardTitle>
+            {meta && <div className="mt-0.5 text-[0.74rem] text-muted-foreground/70">{meta}</div>}
+          </div>
+          <div className="flex gap-1 items-center flex-shrink-0">
+            {actions}
+            {collapsible && (
+              <button
+                type="button"
+                className="section-toggle"
+                aria-expanded={isOpen}
+                aria-controls={bodyId}
+                aria-label={isOpen ? `Contraer ${String(title)}` : `Expandir ${String(title)}`}
+                onClick={() => setOpen(!isOpen)}
+              >
+                {isOpen ? '⌃' : '⌄'}
+              </button>
+            )}
+          </div>
         </div>
-
-        <div className="section-card-actions">
-          {actions}
-          {collapsible && (
-            <button
-              type="button"
-              className="section-toggle"
-              aria-expanded={isOpen}
-              aria-controls={bodyId}
-              aria-label={isOpen ? `Contraer ${String(title)}` : `Expandir ${String(title)}`}
-              onClick={() => setOpen(!isOpen)}
-            >
-              {isOpen ? '⌃' : '⌄'}
-            </button>
-          )}
-        </div>
-      </header>
+      </CardHeader>
 
       {isOpen && (
-        <div id={bodyId} className={bodyClasses}>
+        <CardContent id={bodyId} className={cn('px-3 pb-3', bodyClassName)}>
           {children}
-        </div>
+        </CardContent>
       )}
-    </section>
+    </Card>
   )
 }

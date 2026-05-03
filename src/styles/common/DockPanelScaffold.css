@@ -38,14 +38,12 @@
   padding-top: 0.1rem;
 }
 
-:root.dark .dock-panel,
 :root[data-theme="dark"] .dock-panel {
   background: color-mix(in srgb, var(--surface-glass) 88%, transparent);
   border-color: color-mix(in srgb, var(--border-subtle) 72%, transparent);
   box-shadow: var(--shadow-popover);
 }
 
-:root.dark .dock-panel-sticky-head,
 :root[data-theme="dark"] .dock-panel-sticky-head {
   background: linear-gradient(
     180deg,

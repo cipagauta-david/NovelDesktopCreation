@@ -1,3 +1,4 @@
+import { Skeleton, Spinner } from '@nextui-org/react'
 import type {
   AiProposal,
   CollectionTab,
@@ -82,16 +83,20 @@ export function InspectorContextTab({
         <PanelSection title="Generando con IA..." meta="Streaming activo">
           <div className="proposal-card streaming-card">
             <div className="streaming-indicator">
-              <span className="streaming-dot" />
+              <Spinner
+                size="sm"
+                color="current"
+                classNames={{ base: 'text-[var(--brand-accent)]', circle1: 'border-b-[var(--brand-accent)]', circle2: 'border-b-[var(--brand-accent)]' }}
+              />
               <span>Recibiendo tokens...</span>
             </div>
             {streamingText ? (
               <p className="streaming-preview">{streamingText.slice(-400)}</p>
             ) : (
               <div className="streaming-skeleton" aria-hidden="true">
-                <span />
-                <span />
-                <span />
+                <Skeleton className="rounded-full h-[0.7rem] w-full" />
+                <Skeleton className="rounded-full h-[0.7rem] w-[86%]" />
+                <Skeleton className="rounded-full h-[0.7rem] w-[68%]" />
               </div>
             )}
             <Button type="button" variant="ghost" className="ghost-button destructive-text" onClick={onStopGeneration}>

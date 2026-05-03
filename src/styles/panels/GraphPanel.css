@@ -15,7 +15,6 @@
   min-height: 0;
 }
 
-:root.dark .graph-panel,
 :root[data-theme="dark"] .graph-panel {
   background: color-mix(in srgb, var(--surface-elevated) 90%, transparent);
   border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
@@ -23,12 +22,6 @@
 
 .graph-node:active {
   cursor: grabbing;
-}
-
-.graph-node text {
-  fill: #f8fafc;
-  font-size: 0.68rem;
-  pointer-events: none;
 }
 
 /* GRAPH CANVAS — El Mapa Estelar */
@@ -47,9 +40,11 @@
     var(--surface-base);
   mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 1) 58%, rgba(0, 0, 0, 0.35) 84%, transparent 100%);
   -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 1) 58%, rgba(0, 0, 0, 0.35) 84%, transparent 100%);
+  contain: layout style;
+  transform: translateZ(0);
 }
 
-:root.dark .graph-canvas {
+:root[data-theme="dark"] .graph-canvas {
   background:
     radial-gradient(
       circle at 30% 30%,
@@ -104,12 +99,6 @@
 /* Star clusters: tab-based color coding */
 
 
-/* Canvas: direct GPU compositing */
-.graph-canvas {
-  contain: layout style;
-  transform: translateZ(0);
-}
-
 .graph-canvas-shell {
   position: relative;
   isolation: isolate;
@@ -123,7 +112,7 @@
   stroke-width: 1;
 }
 
-:root.dark .graph-node-label rect {
+:root[data-theme="dark"] .graph-node-label rect {
   fill: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
   stroke: color-mix(in srgb, var(--border-subtle) 88%, transparent);
 }
@@ -236,6 +225,11 @@
   background: transparent;
   cursor: pointer;
   margin-left: 0.1rem;
+}
+
+@keyframes neural-pulse {
+  0%, 100% { opacity: 0.72; transform: scale(1); }
+  50% { opacity: 0.28; transform: scale(1.18); }
 }
 
 .graph-hud-toggle.active {

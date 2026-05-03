@@ -1,6 +1,7 @@
+import { Progress } from '@nextui-org/react'
 import type { LlmTraceEntry, Provider } from '../../types/workspace'
 import { EmptyMiniState } from '../common/EmptyMiniState'
-import '../../styles/inspector/InspectorMetricsDashboard.css';
+import '../../styles/inspector/InspectorMetricsDashboard.css'
 
 
 
@@ -82,6 +83,15 @@ export function InspectorMetricsDashboard({ traces }: InspectorMetricsDashboardP
         <article className="metric-card">
           <span>Error rate</span>
           <strong>{toPercent(errorRate)}</strong>
+          <Progress
+            value={errorRate}
+            size="sm"
+            aria-label="Error rate"
+            classNames={{
+              track: 'bg-[var(--border-subtle)]',
+              indicator: errorRate > 10 ? 'bg-[var(--status-danger)]' : 'bg-[var(--status-success)]',
+            }}
+          />
           <small>{errors} / {total} requests</small>
         </article>
 
@@ -98,6 +108,15 @@ export function InspectorMetricsDashboard({ traces }: InspectorMetricsDashboardP
           return (
             <article key={metric.provider} className="history-item">
               <strong>{metric.provider}</strong>
+              <Progress
+                value={providerErrorRate}
+                size="sm"
+                aria-label={`${metric.provider} error rate`}
+                classNames={{
+                  track: 'bg-[var(--border-subtle)]',
+                  indicator: providerErrorRate > 10 ? 'bg-[var(--status-danger)]' : 'bg-[var(--status-success)]',
+                }}
+              />
               <small>
                 {metric.total} requests · error rate {toPercent(providerErrorRate)}
               </small>

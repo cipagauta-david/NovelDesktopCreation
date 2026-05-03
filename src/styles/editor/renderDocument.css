@@ -70,7 +70,7 @@
   background: color-mix(in srgb, var(--accent-primary) 30%, transparent);
 }
 
-:root.dark .doc-heading-1::after {
+:root[data-theme="dark"] .doc-heading-1::after {
   background: color-mix(in srgb, var(--accent-primary) 46%, transparent);
   box-shadow: none;
 }
