@@ -151,9 +151,11 @@ export function EditorPanel({
     })
   }, [])
 
-  function handleCursorActivity(selectionEnd: number | null) {
+  // V0ID_NOTE: useCallback prevents handleCursorActivity from being a new reference on
+  // every render — it's a dep of commonEditorProps callbacks, so instability cascades.
+  const handleCursorActivity = useCallback((selectionEnd: number | null) => {
     setCursorPosition(Math.max(selectionEnd ?? 0, 0))
-  }
+  }, [])
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -274,37 +276,47 @@ export function EditorPanel({
     }
   }, [cursorPosition, editorViewRef, referenceSuggestionActive, suggestionOptions.length])
 
-  const commonEditorProps = {
+  // V0ID_NOTE: stable callbacks for CodeMirror events prevent liveEditorExtensions deps
+  // from being invalidated — each inline handler was recreating the entire extension array.
+  const handleCreateEditor = useCallback((view: EditorView) => {
+    editorViewRef.current = view
+    handleCursorActivity(view.state.selection.main.head)
+  }, [editorViewRef, handleCursorActivity])
+
+  const handleEditorChange = useCallback((value: string, viewUpdate: ViewUpdate) => {
+    const nextSelectionEnd = viewUpdate.state.selection.main.head
+    editorViewRef.current = viewUpdate.view
+    onHandleEditorChange(value, nextSelectionEnd)
+    handleCursorActivity(nextSelectionEnd)
+  }, [editorViewRef, onHandleEditorChange, handleCursorActivity])
+
+  const handleEditorUpdate = useCallback((viewUpdate: ViewUpdate) => {
+    editorViewRef.current = viewUpdate.view
+    handleCursorActivity(viewUpdate.state.selection.main.head)
+  }, [editorViewRef, handleCursorActivity])
+
+  const commonEditorProps = useMemo(() => ({
     value: draft.content,
     minHeight: '420px',
     theme: 'dark' as const,
     editable: true,
     placeholder: 'Escribe aquí la entidad. Usa {{}} para referencias cruzadas.',
     basicSetup: editorBasicSetup,
-    onCreateEditor: (view: EditorView) => {
-      editorViewRef.current = view
-      handleCursorActivity(view.state.selection.main.head)
-    },
-    onChange: (value: string, viewUpdate: ViewUpdate) => {
-      const nextSelectionEnd = viewUpdate.state.selection.main.head
-      editorViewRef.current = viewUpdate.view
-      onHandleEditorChange(value, nextSelectionEnd)
-      handleCursorActivity(nextSelectionEnd)
-    },
-    onUpdate: (viewUpdate: ViewUpdate) => {
-      editorViewRef.current = viewUpdate.view
-      handleCursorActivity(viewUpdate.state.selection.main.head)
-    },
-  }
+    onCreateEditor: handleCreateEditor,
+    onChange: handleEditorChange,
+    onUpdate: handleEditorUpdate,
+  }), [draft.content, handleCreateEditor, handleEditorChange, handleEditorUpdate])
 
-  const editorSurface = (
+  // V0ID_NOTE: memoize the JSX node — passing a new ReactNode reference on every render
+  // to EditorDocumentSection.memo is equivalent to busting the memo entirely.
+  const editorSurface = useMemo(() => (
     <CodeMirror
       {...commonEditorProps}
       extensions={liveEditorExtensions}
       className="editor-code-mirror editor-live-editor"
       aria-label="Editor narrativo inmersivo"
     />
-  )
+  ), [commonEditorProps, liveEditorExtensions])
 
   const documentEditor = (
     <EditorDocumentSection
@@ -351,7 +363,7 @@ export function EditorPanel({
         onGenerateAiProposal={onGenerateAiProposal}
         onToggleZenMode={onToggleZenMode}
         detailsOpen={detailsPanelOpen}
-        onToggleDetails={() => setDetailsPanelOpen((current) => !current)}
+        onToggleDetails={useCallback(() => setDetailsPanelOpen((current) => !current), [])}
       />
 
       <div className="editor-grid">

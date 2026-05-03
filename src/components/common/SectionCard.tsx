@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from 'react'
+import { useCallback, useId, useState, type ReactNode } from 'react'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -37,11 +37,11 @@ export function SectionCard({
   const isControlled = typeof open === 'boolean'
   const isOpen = collapsible ? (isControlled ? open : internalOpen) : true
 
-  function setOpen(nextOpen: boolean) {
+  const setOpen = useCallback((nextOpen: boolean) => {
     if (!collapsible) return
     if (!isControlled) setInternalOpen(nextOpen)
     onOpenChange?.(nextOpen)
-  }
+  }, [collapsible, isControlled, onOpenChange])
 
   return (
     <Card size="sm" className={cn('gap-2', className)} role="region">

@@ -1,5 +1,7 @@
+import { memo, useMemo } from 'react'
 import type { DraftState, EntityRecord } from '../../../types/workspace'
 import { formatTimestamp } from '../../../utils/workspace'
+import { cn } from '@/lib/utils'
 import { ActionRow } from '../../common/ActionRow'
 import { ActionMenu } from '../../common/ActionMenu'
 import { Button } from '../../ui/Button'
@@ -23,7 +25,9 @@ type EditorHeaderProps = {
   onToggleDetails: () => void
 }
 
-export function EditorHeader({
+// V0ID_NOTE: memo prevents this entire header from re-rendering on every draft keystroke —
+// the parent updates draft on each character, but EditorHeader only cares about title changes.
+export const EditorHeader = memo(function EditorHeader({
   draft,
   entity,
   saveStatus,
@@ -38,8 +42,18 @@ export function EditorHeader({
   detailsOpen,
   onToggleDetails,
 }: EditorHeaderProps) {
+  const menuItems = useMemo(
+    () => [
+      { label: 'Aplicar template seleccionado', onSelect: onApplyTemplate },
+      { label: 'Duplicar entidad', onSelect: onDuplicate },
+      { label: 'Archivar entidad', onSelect: onArchive },
+      { label: 'Eliminar entidad', onSelect: onDelete, destructive: true },
+    ],
+    [onApplyTemplate, onDuplicate, onArchive, onDelete]
+  )
+
   return (
-    <div className={zenMode ? 'panel-header editor-topbar-shell is-hidden' : 'panel-header editor-topbar-shell'}>
+    <div className={cn('panel-header editor-topbar-shell', { 'is-hidden': zenMode })}>
       <div className="editor-heading">
         <span className="eyebrow">Entidad activa</span>
         <div className="editor-title-row">
@@ -71,27 +85,22 @@ export function EditorHeader({
         </div>
       </div>
       <ActionRow>
-        <Button className="ai-button" variant="ai" type="button" onClick={onGenerateAiProposal}>
+        <Button variant="ai" type="button" onClick={onGenerateAiProposal}>
           Sugerencia IA
         </Button>
-        <Button className="ghost-button mode-switch-pill" variant="ghost" type="button" onClick={onToggleZenMode}>
+        <Button variant="ghost" type="button" onClick={onToggleZenMode}>
           {zenMode ? 'Salir de foco' : 'Modo foco'}
         </Button>
         {!zenMode && (
-          <Button className="ghost-button mode-switch-pill" variant="ghost" type="button" onClick={onToggleDetails}>
+          <Button variant="ghost" type="button" onClick={onToggleDetails}>
             {detailsOpen ? 'Ocultar detalles' : 'Mostrar detalles'}
           </Button>
         )}
         <ActionMenu
           label="Opciones de entidad"
-          items={[
-            { label: 'Aplicar template seleccionado', onSelect: onApplyTemplate },
-            { label: 'Duplicar entidad', onSelect: onDuplicate },
-            { label: 'Archivar entidad', onSelect: onArchive },
-            { label: 'Eliminar entidad', onSelect: onDelete, destructive: true },
-          ]}
+          items={menuItems}
         />
       </ActionRow>
     </div>
   )
-}
+})

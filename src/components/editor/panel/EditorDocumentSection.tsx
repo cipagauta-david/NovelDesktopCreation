@@ -1,5 +1,6 @@
-import type { CSSProperties, Dispatch, DragEvent, ReactNode, RefObject, SetStateAction } from 'react'
+import { memo, useCallback, type CSSProperties, type DragEvent, type ReactNode, type RefObject } from 'react'
 
+import { cn } from '@/lib/utils'
 import type { EntityRecord } from '../../../types/workspace'
 import { EditorSuggestions } from './EditorSuggestions'
 import { EntityHover } from './EntityHover'
@@ -22,10 +23,10 @@ type EditorDocumentSectionProps = {
   hoveredEntity: EntityRecord | null
   hasValidImageDrag: (event: DragEvent<HTMLElement>) => boolean
   onAttachImages: (files: FileList | null) => Promise<void>
-  setAssetDragActive: Dispatch<SetStateAction<boolean>>
+  setAssetDragActive: (active: boolean) => void
 }
 
-export function EditorDocumentSection({
+export const EditorDocumentSection = memo(function EditorDocumentSection({
   zenMode,
   isAiStreaming,
   assetDragActive,
@@ -41,49 +42,43 @@ export function EditorDocumentSection({
   onAttachImages,
   setAssetDragActive,
 }: EditorDocumentSectionProps) {
+  const handleImageDragActivate = useCallback((event: DragEvent<HTMLElement>) => {
+    if (!hasValidImageDrag(event)) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'copy'
+    setAssetDragActive(true)
+  }, [hasValidImageDrag, setAssetDragActive])
+
+  // V0ID_NOTE: extracting these into useCallback prevents new function instances on every
+  // render — inline handlers inside JSX defeat the entire point of memo on this component.
+  const handleDragLeave = useCallback((event: DragEvent<HTMLElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+      setAssetDragActive(false)
+    }
+  }, [setAssetDragActive])
+
+  const handleDrop = useCallback((event: DragEvent<HTMLElement>) => {
+    if (!hasValidImageDrag(event)) return
+    event.preventDefault()
+    setAssetDragActive(false)
+    void onAttachImages(event.dataTransfer.files)
+  }, [hasValidImageDrag, onAttachImages, setAssetDragActive])
+
   return (
     <section className="editor-doc-shell" aria-label="Documento">
       <div
         ref={writingLaneRef}
-        className={[
+        className={cn(
           zenMode ? 'writing-lane zen-writing-lane' : 'writing-lane',
-          isAiStreaming ? 'ai-streaming' : '',
-          assetDragActive ? 'is-file-dragging' : '',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+          isAiStreaming && 'ai-streaming',
+          assetDragActive && 'is-file-dragging'
+        )}
         aria-live="polite"
         aria-busy={isAiStreaming || undefined}
-        onDragEnter={(event) => {
-          if (!hasValidImageDrag(event)) {
-            return
-          }
-          event.preventDefault()
-          setAssetDragActive(true)
-        }}
-        onDragOver={(event) => {
-          if (!hasValidImageDrag(event)) {
-            return
-          }
-          event.preventDefault()
-          event.dataTransfer.dropEffect = 'copy'
-          if (!assetDragActive) {
-            setAssetDragActive(true)
-          }
-        }}
-        onDragLeave={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget as Node)) {
-            setAssetDragActive(false)
-          }
-        }}
-        onDrop={(event) => {
-          if (!hasValidImageDrag(event)) {
-            return
-          }
-          event.preventDefault()
-          setAssetDragActive(false)
-          void onAttachImages(event.dataTransfer.files)
-        }}
+        onDragEnter={handleImageDragActivate}
+        onDragOver={handleImageDragActivate}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
         <span className="visually-hidden">
           {isAiStreaming
@@ -111,4 +106,4 @@ export function EditorDocumentSection({
       </div>
     </section>
   )
-}
+})

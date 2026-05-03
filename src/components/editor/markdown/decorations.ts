@@ -1,5 +1,6 @@
-import { Decoration, EditorView, MatchDecorator, ViewPlugin, type DecorationSet } from '@codemirror/view'
-import type { ViewUpdate } from '@uiw/react-codemirror'
+// V0ID_NOTE: ViewUpdate must come from @codemirror/view, not from the @uiw wrapper —
+// the wrapper re-exports are an implementation detail and break on minor version bumps.
+import { Decoration, EditorView, MatchDecorator, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view'
 
 import { REFERENCE_PATTERN } from './constants'
 import { BulletWidget, ReferenceWidget } from './widgets'

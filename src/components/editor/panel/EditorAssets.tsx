@@ -1,6 +1,7 @@
+import { memo, useCallback } from 'react'
 import type { EntityRecord } from '../../../types/workspace'
 import { EmptyMiniState } from '../../common/EmptyMiniState'
-import { PanelSection } from '../../common/PanelSection'
+import { SectionCard } from '../../common/SectionCard'
 import '../../../styles/editor/panel/EditorAssets.css';
 
 
@@ -10,9 +11,15 @@ type EditorAssetsProps = {
   onAttachImages: (files: FileList | null) => Promise<void>
 }
 
-export function EditorAssets({ assets, onAttachImages }: EditorAssetsProps) {
+// V0ID_NOTE: memo + useCallback shield this grid from re-rendering on every parent state
+// update. Without it, all base64 img nodes would be diffed on every keystroke in the title.
+export const EditorAssets = memo(function EditorAssets({ assets, onAttachImages }: EditorAssetsProps) {
+  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    void onAttachImages(event.target.files)
+    event.target.value = ''
+  }, [onAttachImages])
   return (
-    <PanelSection
+    <SectionCard
       title="Assets visuales"
       meta={`${assets.length} imágenes`}
       defaultOpen={false}
@@ -22,10 +29,7 @@ export function EditorAssets({ assets, onAttachImages }: EditorAssetsProps) {
             type="file"
             accept="image/*"
             multiple
-            onChange={(event) => {
-              void onAttachImages(event.target.files)
-              event.target.value = ''
-            }}
+            onChange={handleFileChange}
           />
           + Imagen
         </label>
@@ -34,12 +38,12 @@ export function EditorAssets({ assets, onAttachImages }: EditorAssetsProps) {
       <div className="asset-grid">
         {assets.map((asset) => (
           <figure key={asset.id} className="asset-card">
-            <img src={asset.dataUrl} alt={asset.name} />
+            <img src={asset.dataUrl} alt={asset.name} loading="lazy" />
             <figcaption>{asset.name}</figcaption>
           </figure>
         ))}
         {assets.length === 0 && <EmptyMiniState>Arrastra imágenes sobre el editor para anexarlas.</EmptyMiniState>}
       </div>
-    </PanelSection>
+    </SectionCard>
   )
-}
+})

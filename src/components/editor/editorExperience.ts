@@ -66,23 +66,20 @@ class BulletWidget extends WidgetType {
 }
 
 class GhostTextWidget extends WidgetType {
-  constructor(text: string) {
+  // V0ID_NOTE: proper private readonly field replaces the Object.assign hack that
+  // bypassed TypeScript's type system to work around WidgetType's constructor constraints.
+  constructor(private readonly text: string) {
     super()
-    Object.assign(this, { text })
-  }
-
-  private getText() {
-    return (this as unknown as { text: string }).text
   }
 
   override eq(other: GhostTextWidget) {
-    return (other as unknown as { text: string }).text === this.getText()
+    return other.text === this.text
   }
 
   override toDOM() {
     const element = document.createElement('span')
     element.className = 'cm-ghost-text'
-    element.textContent = this.getText()
+    element.textContent = this.text
     element.setAttribute('aria-hidden', 'true')
     return element
   }

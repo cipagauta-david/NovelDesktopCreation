@@ -10,15 +10,17 @@ export const REFERENCE_TOKEN_PATTERN = /(\{\{entity:[^|}]+\|[^}]+\}\})/g
 const RAW_REFERENCE_PATTERN = /^\{\{entity:([^|}]+)\|([^}]+)\}\}$/
 
 export function renderInlineContent(text: string) {
+  // V0ID_NOTE: index is sufficient as key — this array is derived from a deterministic split
+  // and never reordered. Using the full chunk string as a key wastes string comparison budget.
   return text.split(REFERENCE_TOKEN_PATTERN).map((chunk, index) => {
     const token = getReferenceTokens(chunk)[0]
     if (!token) {
-      return <span key={`${chunk}-${index}`}>{chunk}</span>
+      return <span key={index}>{chunk}</span>
     }
 
     return (
       <span
-        key={`${token.raw}-${index}`}
+        key={index}
         className="editor-inline-pill entity-reference"
         contentEditable={false}
         spellCheck={false}
@@ -36,12 +38,12 @@ function renderRawInlineContent(line: string) {
   return line.split(REFERENCE_TOKEN_PATTERN).map((chunk, index) => {
     const tokenMatch = RAW_REFERENCE_PATTERN.exec(chunk)
     if (!tokenMatch) {
-      return <span key={`${chunk}-${index}`}>{chunk}</span>
+      return <span key={index}>{chunk}</span>
     }
 
     const [, entityId, label] = tokenMatch
     return (
-      <span key={`${chunk}-${index}`} className="doc-entity-token" contentEditable={false} spellCheck={false}>
+      <span key={index} className="doc-entity-token" contentEditable={false} spellCheck={false}>
         <span className="doc-entity-prefix">{'{{entity:'}</span>
         <span className="doc-entity-id">{entityId}</span>
         <span className="doc-entity-separator">|</span>
