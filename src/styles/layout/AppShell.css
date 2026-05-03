@@ -3,6 +3,7 @@
   position: relative;
   isolation: isolate;
   display: grid;
+  gap: 0;
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-columns: var(--shell-rail-width) minmax(0, 1fr) var(--shell-rail-width);
   grid-template-areas:
@@ -136,7 +137,7 @@
   pointer-events: none;
   transition:
     transform var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
-    opacity var(--motion-fast);
+    opacity var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .left-workspace-panel.open {
@@ -167,7 +168,7 @@
   pointer-events: none;
   transition:
     transform var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1),
-    opacity var(--motion-fast);
+    opacity var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .inspector-panel-shell.open {
@@ -219,6 +220,8 @@
   border: none;
   background: transparent;
   padding: clamp(1rem, 2vw, 2rem);
+  font-family: var(--font-serif);
+  line-height: 1.9;
   container-type: inline-size;
   container-name: editor-panel;
   contain: layout paint style;
@@ -248,45 +251,73 @@
 }
 
 /* ─── Floating AI FAB ─── */
+@keyframes fab-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-primary) 32%, transparent); }
+  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent-primary) 0%, transparent); }
+}
+
 .ai-fab-button {
   position: fixed;
-  right: calc(var(--shell-rail-width) + 0.5rem);
-  bottom: 1rem;
+  right: calc(var(--shell-rail-width) + 0.75rem);
+  bottom: 1.25rem;
   z-index: 76;
-  min-height: 2.5rem;
-  padding: 0 0.85rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent-primary) 24%, var(--border-subtle));
-  background: color-mix(in srgb, var(--surface-elevated) 85%, var(--accent-primary) 15%);
-  color: var(--text-primary);
-  font-weight: 600;
-  font-size: var(--font-size-0);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 35%, transparent);
+  background: color-mix(in srgb, var(--surface-elevated) 18%, transparent);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0.4;
   transition:
+    opacity var(--motion-slow),
     background-color var(--motion-fast),
     color var(--motion-fast),
-    border-color var(--motion-fast);
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
+}
+
+.ai-fab-button:hover {
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--accent-primary) 36%, var(--border-subtle));
+}
+
+.ai-fab-button.has-suggestion {
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--accent-primary) 55%, var(--border-subtle));
+  background: color-mix(in srgb, var(--accent-primary) 10%, var(--surface-elevated));
+  color: var(--accent-primary);
+  animation: fab-pulse 2.4s ease-in-out infinite;
 }
 
 .ai-fab-button.active {
+  opacity: 1;
   background: color-mix(in srgb, var(--accent-primary) 56%, var(--surface-elevated));
   color: var(--on-accent);
+  border-color: var(--accent-primary);
+  animation: none;
 }
 
 .ai-fab-panel {
   position: fixed;
   right: calc(var(--shell-rail-width) + 0.5rem);
-  bottom: 4rem;
+  bottom: 4.5rem;
   z-index: 75;
   width: min(23rem, calc(100vw - 5rem));
   padding: 0.75rem;
   border-radius: var(--radius-lg);
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
-  background: color-mix(in srgb, var(--surface-glass) 94%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 40%, transparent);
+  background: color-mix(in srgb, var(--surface-glass) 52%, transparent);
   box-shadow: var(--shadow-popover);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .ai-fab-panel-head {
@@ -319,14 +350,14 @@
   }
 
   .ai-fab-button {
-    right: 0.6rem;
-    bottom: 0.6rem;
+    right: 0.75rem;
+    bottom: 0.75rem;
   }
 
   .ai-fab-panel {
-    right: 0.6rem;
-    bottom: 3.9rem;
-    width: min(22rem, calc(100vw - 1.2rem));
+    right: 0.75rem;
+    bottom: 4rem;
+    width: min(22rem, calc(100vw - 1.5rem));
   }
 
   .left-workspace-panel {
@@ -383,4 +414,57 @@
 .panel-resize-handle:active::after {
   opacity: 1;
   background: var(--accent-primary);
+}
+
+/* ─── Zen Santuario: SpectralOpacity ───────────────────────────────────────
+   When the user is actively writing (is-writing class on app-shell), the
+   lateral panels fade to near-invisible. They reveal on hover at the edges,
+   preserving pointer-events so the user can interact without leaving Zen mode.
+   ───────────────────────────────────────────────────────────────────────── */
+.app-shell.is-writing .left-workspace-panel.open {
+  opacity: var(--zen-panel-opacity, 0.02);
+  transition:
+    opacity var(--motion-slow) cubic-bezier(0.22, 1, 0.36, 1),
+    transform var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: auto;
+}
+
+.app-shell.is-writing .left-workspace-panel.open:hover {
+  opacity: var(--zen-opacity-active);
+  transition: opacity 180ms ease;
+}
+
+.app-shell.is-writing .inspector-panel-shell.open {
+  opacity: var(--zen-panel-opacity, 0.02);
+  transition:
+    opacity var(--motion-slow) cubic-bezier(0.22, 1, 0.36, 1),
+    transform var(--motion-base) cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: auto;
+}
+
+.app-shell.is-writing .inspector-panel-shell.open:hover {
+  opacity: var(--zen-opacity-active);
+  transition: opacity 180ms ease;
+}
+
+/* Icon rails also fade when writing, reveal on hover */
+.app-shell.is-writing .icon-rail {
+  opacity: var(--zen-panel-opacity, 0.02);
+  transition: opacity var(--motion-slow) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-shell.is-writing .icon-rail:hover {
+  opacity: var(--zen-opacity-active);
+  transition: opacity 180ms ease;
+}
+
+/* Header fades too; restored when mouse enters the header zone */
+.app-shell.is-writing .workspace-header-shell:not(.is-hidden) {
+  opacity: var(--zen-panel-opacity, 0.02);
+  transition: opacity var(--motion-slow) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-shell.is-writing .workspace-header-shell:not(.is-hidden):hover {
+  opacity: var(--zen-opacity-active);
+  transition: opacity 180ms ease;
 }

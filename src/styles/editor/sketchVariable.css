@@ -1,0 +1,60 @@
+/* ────────────────────────────────────────────────────────────
+   SketchVariable — Atom
+   Organic "sketch marker / rotulador" for entity references.
+   Relies on tokens: --sketch-marker, --sketch-wobble,
+                     --sketch-underline-color, --sketch-opacity,
+                     --reference-accent, --reference-accent-hover
+   ──────────────────────────────────────────────────────────── */
+
+.sketch-variable {
+  /* Layout */
+  display: inline;
+  position: relative;
+  padding: 0.04em 0.28em;
+
+  /* Typography */
+  color: var(--reference-accent);
+  font-style: italic;
+  font-family: var(--font-editor, var(--font-serif));
+
+  /* Organic parallelogram highlight via clip-path on a pseudo-element.
+     Using background on the element directly would clip the text, so
+     we paint the fill behind via ::before with a transparent border trick. */
+  background: var(--sketch-marker);
+  clip-path: var(--sketch-wobble);
+
+  /* Wavy underline — the "rotulador" trace.
+     Color = reference-accent at 40% opacity, never competing with prose. */
+  text-decoration: underline wavy color-mix(in srgb, var(--reference-accent) 40%, transparent);
+  text-decoration-thickness: 0.07em;
+  text-underline-offset: 0.22em;
+
+  /* Idle state: slightly faded so long references don't compete with prose */
+  opacity: var(--sketch-opacity);
+
+  cursor: pointer;
+  transition:
+    opacity var(--motion-base, 220ms ease),
+    color var(--motion-fast, 140ms ease),
+    background var(--motion-fast, 140ms ease);
+}
+
+.sketch-variable:hover,
+.sketch-variable:focus-visible {
+  opacity: 1;
+  color: var(--reference-accent-hover);
+  background: color-mix(in srgb, var(--reference-accent) 20%, transparent);
+  outline: none;
+}
+
+/* ── Dark mode overrides ── */
+:root[data-theme="dark"] .sketch-variable {
+  text-decoration-color: color-mix(in srgb, var(--sketch-underline-color) 90%, transparent);
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .sketch-variable {
+    transition: none !important;
+  }
+}

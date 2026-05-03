@@ -14,9 +14,11 @@
   background: color-mix(in srgb, var(--surface-glass) 92%, transparent);
   border: 1px solid color-mix(in srgb, var(--entity-pill-accent) 20%, var(--border-subtle));
   box-shadow: var(--shadow-popover);
-  transform: translateY(4px);
+  transform: translateY(4px) rotate(0deg);
+  transform-origin: 30% -8%;
   opacity: 0;
-  animation: entity-hover-enter 150ms ease forwards;
+  /* Polaroid feel: settle into a slight tilt as if placed on a desk */
+  animation: entity-hover-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   transition:
     transform var(--motion-fast),
     opacity var(--motion-fast);
@@ -66,11 +68,12 @@
 
 @keyframes entity-hover-enter {
   from {
-    transform: translateY(4px);
+    transform: translateY(6px) rotate(0.8deg);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    /* Final resting angle: like a Polaroid photo casually placed on a desk */
+    transform: translateY(0) rotate(-1.8deg);
     opacity: 1;
   }
 }

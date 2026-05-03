@@ -1,64 +1,209 @@
+/* ─────────────────────────────────────────────────────────────────
+   El Portal de Entrada — Onboarding
+   Estética: Japandi · Glassmorphism [11 + 48]
+   "Al entrar por primera vez, el ruido es cero."
+   ───────────────────────────────────────────────────────────────── */
+
+/* ─── Shell: El Vacío Inicial ─── */
 .onboarding-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 1.1fr minmax(360px, 460px);
-  gap: 1.5rem;
-  padding: 2rem;
+  place-items: center;
+  padding: clamp(2rem, 5vh, 4rem) var(--space-5);
+  background:
+    radial-gradient(ellipse at 20% 10%, color-mix(in srgb, var(--accent-primary) 6%, transparent), transparent 52%),
+    radial-gradient(ellipse at 80% 90%, color-mix(in srgb, var(--accent-primary) 4%, transparent), transparent 48%),
+    var(--surface-base);
+  animation: portal-breathe-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes portal-breathe-in {
+  from { opacity: 0; transform: scale(1.01); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ─── Hero Panel: La Primera Palabra ─── */
 .hero-panel {
-  padding: 2.25rem;
+  width: min(760px, 92vw);
+  padding: clamp(2rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3rem);
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-5);
   align-content: center;
+  text-align: center;
+  animation: portal-rise 480ms 80ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes portal-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Eyebrow label */
+.hero-panel .eyebrow {
+  display: inline-block;
+  font-size: var(--font-size--1);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+  opacity: 0.85;
+}
+
+/* Headline */
 .hero-panel h1 {
-  font-size: clamp(2.4rem, 4vw, 4.8rem);
-}
-
-.hero-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.hero-feature {
-  display: grid;
-  gap: 0.35rem;
-  padding: 1rem 1.1rem;
-  border-radius: var(--radius-xl);
-  background: rgba(20, 31, 53, 0.9);
-  border: 1px solid rgba(96, 165, 250, 0.15);
-}
-
-.hero-feature span {
-  color: var(--text-secondary);
-}
-
-.onboarding-card {
-  padding: 2rem;
-  display: grid;
-  gap: 1rem;
-  align-content: center;
-}
-
-.section-title {
-  display: grid;
-  gap: 0.25rem;
-}
-
-.section-title h2 {
+  font-family: var(--font-serif);
+  font-size: clamp(2.2rem, 4vw, 4rem);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--text-heading);
+  letter-spacing: -0.025em;
   margin: 0;
 }
 
+/* Body copy */
+.hero-panel p {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-1);
+  line-height: 1.8;
+  color: var(--text-secondary);
+  max-width: 56ch;
+  margin: 0 auto;
+}
+
+/* Hero preview card */
+.hero-panel > div:has(span[style*="3rem"]) {
+  padding: 1.5rem;
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--surface-elevated) 85%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--border-strong) 50%, transparent);
+  box-shadow: var(--shadow-card);
+  display: grid;
+  gap: 0.5rem;
+  place-items: center;
+}
+
+/* ─── Hero Feature Grid ─── */
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+  text-align: left;
+}
+
+.hero-feature {
+  padding: 1.1rem 1.25rem;
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--surface-elevated) 90%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
+  box-shadow: var(--shadow-card);
+  display: grid;
+  gap: 0.4rem;
+  transition:
+    box-shadow 200ms ease,
+    border-color 200ms ease,
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero-feature:hover {
+  border-color: color-mix(in srgb, var(--accent-primary) 20%, var(--border-subtle));
+  box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--accent-primary) 12%, transparent);
+  transform: translateY(-2px);
+}
+
+.hero-feature strong {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-0);
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.hero-feature span {
+  font-size: var(--font-size--1);
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+/* ─── Onboarding Form Card: La Sala Privada ─── */
+.onboarding-card {
+  width: min(520px, 92vw);
+  padding: clamp(2rem, 4vw, 3rem);
+  border-radius: var(--radius-2xl);
+  background: color-mix(in srgb, var(--surface-elevated) 90%, transparent);
+  backdrop-filter: blur(24px) saturate(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  border: 1px solid color-mix(in srgb, var(--border-strong) 50%, transparent);
+  box-shadow:
+    0 2px 0 0 color-mix(in srgb, #ffffff 40%, transparent) inset,
+    0 24px 60px -8px rgba(0, 0, 0, 0.10),
+    0 4px 16px -4px rgba(0, 0, 0, 0.06);
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  animation: portal-rise 400ms 100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ─── Section Title ─── */
+.section-title {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.section-title h2 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+  font-weight: 400;
+  line-height: 1.25;
+  color: var(--text-heading);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+/* ─── Inline Grid ─── */
 .inline-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: var(--space-3);
 }
 
+/* ─── Form Hint ─── */
 .form-hint {
+  font-size: var(--font-size--1);
+  line-height: 1.6;
   color: var(--text-muted);
-  font-size: 0.88rem;
+  font-style: italic;
 }
+
+/* ─── Inset Config Block ─── */
+.onboarding-card > div:has(select) {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--surface-canvas) 60%, transparent);
+}
+
+/* ─── Dark Mode ─── */
+:root[data-theme="dark"] .onboarding-shell {
+  background:
+    radial-gradient(ellipse at 20% 10%, color-mix(in srgb, var(--accent-primary) 8%, transparent), transparent 52%),
+    radial-gradient(ellipse at 80% 90%, color-mix(in srgb, var(--text-muted) 5%, transparent), transparent 48%),
+    var(--surface-base);
+}
+
+:root[data-theme="dark"] .hero-feature {
+  background: color-mix(in srgb, var(--surface-elevated) 85%, transparent);
+  border-color: color-mix(in srgb, var(--accent-primary) 10%, var(--border-subtle));
+}
+
+:root[data-theme="dark"] .onboarding-card {
+  background: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
+  border-color: color-mix(in srgb, var(--accent-primary) 12%, var(--border-subtle));
+  box-shadow:
+    0 2px 0 0 color-mix(in srgb, #ffffff 4%, transparent) inset,
+    0 0 0 1px color-mix(in srgb, var(--accent-primary) 8%, transparent),
+    0 24px 60px -8px rgba(0, 0, 0, 0.5);
+}
+

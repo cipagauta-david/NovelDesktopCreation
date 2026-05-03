@@ -49,6 +49,7 @@ type EditorPanelProps = {
   onAddField: () => void
   onUpdateField: (fieldId: string, key: 'key' | 'value', value: string) => void
   onRemoveField: (fieldId: string) => void
+  onSaveAsTemplate: () => void
   onApplyTemplate: () => void
   onDuplicate: () => void
   onArchive: () => void
@@ -76,6 +77,7 @@ export function EditorPanel({
   onAddField,
   onUpdateField,
   onRemoveField,
+  onSaveAsTemplate,
   onApplyTemplate,
   onDuplicate,
   onArchive,
@@ -357,6 +359,7 @@ export function EditorPanel({
         zenMode={zenMode}
         onDraftChange={onDraftChange}
         onApplyTemplate={onApplyTemplate}
+        onSaveAsTemplate={onSaveAsTemplate}
         onDuplicate={onDuplicate}
         onArchive={onArchive}
         onDelete={onDelete}
@@ -388,6 +391,7 @@ export function EditorPanel({
                onAddField={onAddField}
                onUpdateField={onUpdateField}
                onRemoveField={onRemoveField}
+               onSaveAsTemplate={onSaveAsTemplate}
              />
           )}
           {detailsTab === 'assets' && (

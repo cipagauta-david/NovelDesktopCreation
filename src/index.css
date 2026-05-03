@@ -10,6 +10,7 @@
 @theme {
   --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, sans-serif;
   --font-serif: "Crimson Pro Variable", "Crimson Pro", Georgia, serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
   --font-display: "Inter Variable", "Inter", system-ui, sans-serif;
   --color-primary: var(--accent-primary);
 }
@@ -26,7 +27,7 @@
   --space-6: 2rem;
 
   --radius-sm: 0.375rem;
-  --radius-md: 0.625rem;
+  --radius-md: 0.8rem;
   --radius-lg: 0.875rem;
   --radius-xl: 1.25rem;
   --radius-2xl: 1.5rem;
@@ -39,27 +40,33 @@
   --font-size-1: clamp(0.95rem, 0.88rem + 0.25vw, 1rem);
   --font-size-2: clamp(1.05rem, 0.95rem + 0.35vw, 1.15rem);
 
-  --font-editor: var(--font-serif);
+  --font-editor: "Crimson Pro Variable", "Crimson Pro", Georgia, serif;
+  --editor-font-size: var(--font-size-2);
+  --editor-line-height: 1.9;
 
   --control-height-sm: 2.5rem;
   --control-height-md: 2.75rem;
   --control-height-lg: 3rem;
 
-  /* ── Zen Cream Palette ── */
-  --surface-base: #F9F8F6;
-  --surface-elevated: #FDFCFA;
-  --surface-canvas: #F4F1EC;
+  /* ── Zen Cream Palette (Rice Paper) ── */
+  --surface-base: #FBF9F4;
+  --surface-elevated: #FEFCF8;
+  --surface-canvas: #F6F2EB;
 
-  --text-primary: #1E2530;
+  --text-primary: #1A1D23;
   --text-secondary: #4A5568;
   --text-muted: #6B7A8D;
 
-  --border-subtle: rgba(15, 23, 42, 0.08);
-  --border-strong: rgba(15, 23, 42, 0.16);
+  --border-subtle: color-mix(in srgb, #1B2840 6%, var(--surface-base));
+  --border-strong: color-mix(in srgb, #1B2840 13%, var(--surface-base));
 
   --accent-primary: #1A7A9B;
   --accent-hover: #14627D;
   --on-accent: #EEF7FA;
+  --sketch-marker: color-mix(in srgb, var(--accent-primary) 25%, transparent);
+  --sketch-wobble: polygon(2% 0%, 100% 2%, 98% 100%, 0% 95%);
+  --sketch-underline-color: color-mix(in srgb, var(--accent-primary) 40%, var(--surface-canvas));
+  --sketch-opacity: 0.72;
 
   --status-success: #1F8C61;
   --status-warning: #B45309;
@@ -105,6 +112,7 @@
   /* ── Spectral (immersive writing) tokens ── */
   --zen-opacity-idle: 0.18;
   --zen-opacity-active: 1;
+  --zen-panel-opacity: 0.02;
 
   --motion-fast: 140ms ease;
   --motion-base: 220ms ease;
@@ -234,9 +242,19 @@
   --select-color: var(--text-primary);
   --select-border: var(--border-subtle);
 
+  /* ── Editor tokens (dark) ── */
+  --editor-line-height: 1.9;
+
+  /* ── Sketch tokens (dark) ── */
+  --sketch-marker: color-mix(in srgb, var(--accent-primary) 18%, transparent);
+  --sketch-wobble: polygon(1% 0%, 100% 2%, 99% 100%, 0% 96%);
+  --sketch-underline-color: color-mix(in srgb, var(--accent-primary) 45%, var(--surface-canvas));
+  --sketch-opacity: 0.65;
+
   /* ── Spectral tokens ── */
   --zen-opacity-idle: 0.15;
   --zen-opacity-active: 1;
+  --zen-panel-opacity: 0.02;
 
   /* ── Panel tabs tokens (dark) ── */
   --panel-tabs-bg: var(--bg-surface);
@@ -375,15 +393,27 @@ textarea {
 select {
   appearance: none;
   -webkit-appearance: none;
-  border: 1px solid var(--select-border);
-  border-radius: var(--radius-md);
-  background-color: var(--select-bg);
+  border: none;
+  border-bottom: 2px solid var(--text-muted);
+  border-radius: 0;
+  background-color: transparent;
   color: var(--select-color);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7A8D' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 0.75rem;
-  padding-right: 2rem;
+  padding-right: 0;
+  padding-bottom: 0.5rem;
+  font-size: var(--font-size-1);
+  line-height: 1.5;
+  transition: border-color var(--motion-fast), color var(--motion-fast);
+  cursor: pointer;
+}
+
+select:hover {
+  border-bottom-color: var(--text-secondary);
+}
+
+select:focus-visible {
+  border-bottom-color: var(--accent-primary);
+  outline: none;
+  box-shadow: 0 2px 0 var(--accent-primary);
 }
 
 button {
@@ -570,6 +600,466 @@ label {
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+}
+
+/* ── FASE 2: ATOMOS VISUALES ── */
+
+/* Tarea 2.1: Marcador de entidad (efecto de subrayado manual) */
+.entity-marker {
+  position: relative;
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--sketch-marker) 15%,
+    var(--sketch-marker) 85%,
+    transparent 100%
+  );
+  background-size: 100% 0.3em;
+  background-repeat: no-repeat;
+  background-position: 0 0.9em;
+  padding-bottom: 0.15rem;
+  transition: all var(--motion-fast);
+}
+
+/* Variación: Highlight (resaltado visual fuerte) */
+.entity-marker--highlight {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent-primary) 35%, transparent) 15%,
+    color-mix(in srgb, var(--accent-primary) 35%, transparent) 85%,
+    transparent 100%
+  );
+  background-size: 100% 0.35em;
+  background-position: 0 0.85em;
+}
+
+/* Variación: Subtle (marcado sutil para contexto secundario) */
+.entity-marker--subtle {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(15, 23, 42, 0.04) 15%,
+    rgba(15, 23, 42, 0.04) 85%,
+    transparent 100%
+  );
+  background-size: 100% 0.25em;
+  background-position: 0 0.95em;
+}
+
+/* Marcador de referencia externa (acentuado) */
+.entity-marker--reference {
+  font-weight: 500;
+}
+
+.entity-marker--reference::before {
+  content: "↗";
+  position: absolute;
+  right: -0.4em;
+  top: -0.2em;
+  font-size: 0.6em;
+  color: var(--accent-primary);
+  opacity: 0.6;
+}
+
+/* Grupo de marcadores con efecto de proximidad */
+.entity-marker-group {
+  display: inline-flex;
+  gap: 0.2em;
+  align-items: baseline;
+}
+
+.entity-marker-group .entity-marker {
+  margin: 0 0.1em;
+}
+
+/* Hover state para group */
+.entity-marker-group:hover .entity-marker {
+  opacity: 0.95;
+}
+
+.entity-marker-group:hover .entity-marker--reference::before {
+  opacity: 1;
+}
+
+/* Tarea 2.2: Efecto Wobble (bordes irregulares tipo Conceptual Sketch) */
+/* Base de wobble: aplicar a botones interactivos y chips */
+.btn-wobble,
+.chip-wobble,
+[role="button"].wobble,
+.tag-wobble,
+.badge-wobble {
+  clip-path: polygon(2% 0%, 100% 2%, 98% 100%, 0% 95%);
+  transition: all var(--motion-base);
+}
+
+.btn-wobble:hover,
+.chip-wobble:hover,
+[role="button"].wobble:hover,
+.tag-wobble:hover,
+.badge-wobble:hover {
+  clip-path: polygon(1% 1%, 99% 0%, 100% 99%, 1% 98%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+/* Aplicar wobble también a elementos genéricos chip/badge/tag */
+.chip,
+[role="button"].chip-like,
+.tag,
+.badge {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color var(--motion-fast), clip-path var(--motion-base);
+  clip-path: var(--sketch-wobble);
+}
+
+.chip:hover,
+[role="button"].chip-like:hover,
+.tag:hover,
+.badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  clip-path: polygon(1% 1%, 99% 0%, 100% 99%, 1% 98%);
+}
+
+/* ── FASE 3: EL ÁRBOL DE RELACIONES (Molecules & SVG) ── */
+
+/* Tarea 3.1: Estilo de nodos (efecto polaroid minimalista) */
+.node-polaroid {
+  position: relative;
+  border: 1px solid rgba(15, 23, 42, 0.05);
+  border-radius: var(--radius-md);
+  background: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+  transition: all var(--motion-base), transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+}
+
+.node-polaroid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, transparent 100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-base);
+}
+
+.node-polaroid:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+.node-polaroid:hover::before {
+  opacity: 1;
+}
+
+.node-polaroid.node-active {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 12%, transparent),
+              0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+/* Tarea 3.2: Animación de conexión (líneas SVG que se dibujan) */
+@keyframes dash {
+  from {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    opacity: 0;
+  }
+  to {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-connection {
+  0%, 100% {
+    stroke-width: 2px;
+    opacity: 0.8;
+  }
+  50% {
+    stroke-width: 2.5px;
+    opacity: 1;
+  }
+}
+
+/* Estilos SVG para conexiones entre nodos */
+svg.tree-connections {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+svg line[data-animated="true"],
+svg path[data-animated="true"],
+.connection-line[data-animated="true"] {
+  animation: dash 1.2s ease-in-out forwards;
+  stroke: var(--border-subtle);
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+svg line[data-active="true"],
+svg path[data-active="true"],
+.connection-line[data-active="true"] {
+  animation: pulse-connection 2s ease-in-out infinite;
+  stroke: color-mix(in srgb, var(--accent-primary) 60%, transparent);
+  stroke-width: 2px;
+}
+
+/* Tarea 3.3: Opacidad jerárquica para nodos basada en distancia */
+.node-p-100 {
+  opacity: 1;
+  filter: none;
+  z-index: 10;
+}
+
+.node-p-75 {
+  opacity: 0.85;
+  filter: brightness(1.02);
+  z-index: 8;
+}
+
+.node-p-50 {
+  opacity: 0.6;
+  filter: brightness(1.05);
+  z-index: 6;
+}
+
+.node-p-35 {
+  opacity: 0.45;
+  filter: brightness(1.08);
+  pointer-events: none;
+  z-index: 4;
+}
+
+.node-p-20 {
+  opacity: 0.25;
+  filter: brightness(1.12);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Estados especiales para nodos */
+.node-root {
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+  border-color: var(--accent-primary);
+}
+
+.node-leaf {
+  border-style: dashed;
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.node-branch-count {
+  display: inline-block;
+  font-size: var(--font-size--2);
+  color: var(--text-muted);
+  background: rgba(15, 23, 42, 0.03);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  margin-left: var(--space-1);
+}
+
+/* ── FASE 3 ADICIONAL: Contexto visual para árbol ── */
+
+/* Contenedor principal del árbol */
+.tree-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Línea conectora vertical entre padres e hijos */
+.tree-level {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding-left: var(--space-5);
+  border-left: 1px dashed rgba(15, 23, 42, 0.08);
+}
+
+.tree-level.collapsed {
+  display: none;
+}
+
+/* Punto de conexión visual */
+.tree-connector-dot {
+  position: absolute;
+  left: -6.5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 2px solid var(--border-subtle);
+  transition: all var(--motion-base);
+}
+
+.tree-level:has(.node-active) .tree-connector-dot {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-primary) 16%, transparent);
+}
+
+/* ── FASE 5: BRIDGE DE IMPLEMENTACIÓN (shadcn/ui) ── */
+
+/* Tarea 5.1: Customización de Popovers */
+[role="dialog"][data-state="open"],
+.popover-content,
+[data-component="popover"] {
+  background: var(--surface-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popover);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Asegurar que shadcn Popover hereda los tokens correctamente */
+.popover-trigger {
+  transition: all var(--motion-fast);
+}
+
+.popover-trigger:hover {
+  color: var(--text-primary);
+}
+
+/* Tarea 5.2: Selects orgánicos adicionales (variantes) */
+/* Si hay selects dentro de formularios u otros contextos */
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-bottom-color: var(--border-subtle);
+}
+
+/* Select con estado de error */
+select:invalid,
+select[aria-invalid="true"] {
+  border-bottom-color: var(--status-danger);
+  color: var(--status-danger);
+}
+
+/* Estilo para selectores de opciones (cuando está expandido) */
+select option {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  padding: var(--space-2) var(--space-3);
+}
+
+select option:checked {
+  background: linear-gradient(
+    var(--accent-primary),
+    var(--accent-primary)
+  );
+  color: var(--on-accent);
+}
+
+/* Tarea 2.3: EntityDot (círculo SVG con trazo variable) */
+.entity-dot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all var(--motion-fast);
+  border-radius: 50%;
+}
+
+.entity-dot:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* Variación: Sketch (trazo irregular, hand-drawn) */
+.entity-dot--hand-drawn {
+  filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.04));
+}
+
+.entity-dot--hand-drawn:hover {
+  filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.08));
+  transform: scale(1.1);
+}
+
+/* Variación: Técnico (ancho variable) */
+.entity-dot--technical {
+  filter: drop-shadow(0 0.5px 1px rgba(15, 23, 42, 0.06));
+}
+
+.entity-dot--technical:hover {
+  filter: drop-shadow(0 1px 3px rgba(15, 23, 42, 0.1));
+  transform: scale(1.15);
+}
+
+/* Variación: Sketch multi-capa */
+.entity-dot--sketch {
+  filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.05));
+}
+
+.entity-dot--sketch:hover {
+  filter: drop-shadow(0 2px 5px rgba(15, 23, 42, 0.1));
+  transform: scale(1.12);
+}
+
+/* Variación: Solid (clásico) */
+.entity-dot--solid {
+  filter: drop-shadow(0 0.5px 1px rgba(15, 23, 42, 0.04));
+}
+
+.entity-dot--solid:hover {
+  filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.08));
+  transform: scale(1.1);
+}
+
+/* Estado: Activo */
+.entity-dot--active {
+  filter: drop-shadow(0 0 0 3px color-mix(in srgb, var(--accent-primary) 20%, transparent));
+}
+
+.entity-dot--active:hover {
+  filter: drop-shadow(0 0 0 4px color-mix(in srgb, var(--accent-primary) 25%, transparent));
+  transform: scale(1.2);
+}
+
+/* Animación: Pulse (cuando está activo o esperando interacción) */
+.entity-dot--animate {
+  animation: entity-dot-pulse 2s ease-in-out infinite;
+}
+
+@keyframes entity-dot-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 0 0 color-mix(in srgb, var(--accent-primary) 30%, transparent));
+  }
+  50% {
+    filter: drop-shadow(0 0 0 4px color-mix(in srgb, var(--accent-primary) 0%, transparent));
+  }
+}
+
+/* Grupo de dots */
+.entity-dot-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.entity-dot-group .entity-dot {
+  position: relative;
+}
+
+/* Efecto cascade en group (cada dot se amplifica al hover del grupo) */
+.entity-dot-group:hover .entity-dot:not(:hover) {
+  opacity: 0.7;
 }
 
 @layer base {

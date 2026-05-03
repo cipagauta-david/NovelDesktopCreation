@@ -16,6 +16,7 @@ type EditorHeaderProps = {
   zenMode: boolean
   onDraftChange: (next: DraftState) => void
   onApplyTemplate: () => void
+  onSaveAsTemplate: () => void
   onDuplicate: () => void
   onArchive: () => void
   onDelete: () => void
@@ -34,6 +35,7 @@ export const EditorHeader = memo(function EditorHeader({
   zenMode,
   onDraftChange,
   onApplyTemplate,
+  onSaveAsTemplate,
   onDuplicate,
   onArchive,
   onDelete,
@@ -45,11 +47,12 @@ export const EditorHeader = memo(function EditorHeader({
   const menuItems = useMemo(
     () => [
       { label: 'Aplicar template seleccionado', onSelect: onApplyTemplate },
+      { label: 'Convertir en plantilla', onSelect: onSaveAsTemplate },
       { label: 'Duplicar entidad', onSelect: onDuplicate },
       { label: 'Archivar entidad', onSelect: onArchive },
       { label: 'Eliminar entidad', onSelect: onDelete, destructive: true },
     ],
-    [onApplyTemplate, onDuplicate, onArchive, onDelete]
+    [onApplyTemplate, onSaveAsTemplate, onDuplicate, onArchive, onDelete]
   )
 
   return (

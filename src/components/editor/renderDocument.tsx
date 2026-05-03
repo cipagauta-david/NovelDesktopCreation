@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import type { RenderDocumentOptions } from '../../types/editor'
 import { getReferenceTokens } from '../../utils/references'
+import { SketchVariable } from './SketchVariable'
 import '../../styles/editor/renderDocument.css';
 
 
@@ -18,19 +19,7 @@ export function renderInlineContent(text: string) {
       return <span key={index}>{chunk}</span>
     }
 
-    return (
-      <span
-        key={index}
-        className="editor-inline-pill entity-reference"
-        contentEditable={false}
-        spellCheck={false}
-      >
-        <span className="editor-inline-pill-icon" aria-hidden="true">
-          ✦
-        </span>
-        <span>{token.label}</span>
-      </span>
-    )
+    return <SketchVariable key={index} token={token} />
   })
 }
 

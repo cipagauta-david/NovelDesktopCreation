@@ -34,6 +34,36 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
 }
 
+/** Builds an organic quadratic Bézier path between two SVG points.
+ *  The control point is offset perpendicularly with a deterministic sign
+ *  based on the edge IDs — no two edges arc in the same direction. */
+function getBezierPath(
+  x1: number, y1: number,
+  x2: number, y2: number,
+  sourceId: string, targetId: string,
+): string {
+  const dx = x2 - x1
+  const dy = y2 - y1
+  const len = Math.sqrt(dx * dx + dy * dy)
+  if (len < 2) return `M ${x1} ${y1} L ${x2} ${y2}`
+  const nx = -dy / len
+  const ny =  dx / len
+  const sign = (sourceId.charCodeAt(0) + targetId.charCodeAt(0)) % 2 === 0 ? 1 : -1
+  const wobble = Math.min(len * 0.11, 24) * sign
+  const cpx = (x1 + x2) / 2 + nx * wobble
+  const cpy = (y1 + y2) / 2 + ny * wobble
+  return `M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${cpx.toFixed(1)} ${cpy.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`
+}
+
+type HoveredNodeInfo = {
+  id: string
+  title: string
+  tabName: string
+  color: string
+  x: number
+  y: number
+}
+
 export const GraphPanel = memo(function GraphPanel({
   graphModel,
   collections,
@@ -51,6 +81,7 @@ export const GraphPanel = memo(function GraphPanel({
   const [nodeOverrides, setNodeOverrides] = useState<Record<string, { x: number; y: number }>>({})
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null)
   const [relationSourceId, setRelationSourceId] = useState<string | null>(null)
+  const [hoveredNode, setHoveredNode] = useState<HoveredNodeInfo | null>(null)
   const [simulationPaused, setSimulationPaused] = useState(false)
   const [orbitAroundCenter, setOrbitAroundCenter] = useState(false)
   const [centerViewRequestId, setCenterViewRequestId] = useState(0)
@@ -166,6 +197,30 @@ export const GraphPanel = memo(function GraphPanel({
     [activeEntityId, graphViewModel.filteredEdges],
   )
 
+  /** Tarea 4.2: BFS desde el nodo activo — distancia a cada nodo del grafo */
+  const nodeDistanceMap = useMemo<Map<string, number> | null>(() => {
+    if (!activeEntityId) return null
+    const dist = new Map<string, number>()
+    dist.set(activeEntityId, 0)
+    const queue: string[] = [activeEntityId]
+    let head = 0
+    while (head < queue.length) {
+      const current = queue[head++]
+      const currentDist = dist.get(current)!
+      for (const edge of graphViewModel.filteredEdges) {
+        const neighbor =
+          edge.source === current ? edge.target
+          : edge.target === current ? edge.source
+          : null
+        if (neighbor && !dist.has(neighbor)) {
+          dist.set(neighbor, currentDist + 1)
+          queue.push(neighbor)
+        }
+      }
+    }
+    return dist
+  }, [activeEntityId, graphViewModel.filteredEdges])
+
   const useCanvasRenderer = !useSimulationRenderer && graphViewModel.renderedNodes.length >= CANVAS_NODE_THRESHOLD
   const activeRendererKind = useD3PixiRenderer ? 'd3-pixi' : useCanvasRenderer ? 'native-canvas' : 'native-svg'
 
@@ -199,6 +254,23 @@ export const GraphPanel = memo(function GraphPanel({
       return isActive ? baseRadius + 4 : baseRadius
     },
     [graphViewModel.degreeByNodeId],
+  )
+
+  /** Tarea 4.2: Devuelve la clase CSS de proximidad según distancia BFS al nodo activo */
+  const getNodeProximityClass = useCallback(
+    (nodeId: string, isHighlighted: boolean): string => {
+      if (!activeEntityId) return ''
+      if (isHighlighted) return 'node-p-100'
+      if (!nodeDistanceMap) return ''
+      const dist = nodeDistanceMap.get(nodeId)
+      if (dist === undefined) return 'node-p-20'
+      if (dist <= 0) return 'node-p-100'
+      if (dist === 1) return 'node-p-75'
+      if (dist === 2) return 'node-p-50'
+      if (dist === 3) return 'node-p-35'
+      return 'node-p-20'
+    },
+    [activeEntityId, nodeDistanceMap],
   )
 
   const getSvgCoordinates = useCallback((event: PointerEvent<SVGSVGElement>) => {
@@ -356,10 +428,26 @@ export const GraphPanel = memo(function GraphPanel({
 
       const isRelated = !activeEntityId || edge.source === activeEntityId || edge.target === activeEntityId
       context.strokeStyle = isRelated ? hexToRgba(palette.edgeRelated, 1) : hexToRgba(palette.edgeMuted, 0.3)
-      context.lineWidth = isRelated ? 2.1 : 1
+      context.lineWidth = isRelated ? 2.0 : 0.9
+      context.lineCap = 'round'
+
+      // Organic quadratic Bézier — same algorithm as SVG renderer
+      const dx = target.x - source.x
+      const dy = target.y - source.y
+      const edgeLen = Math.sqrt(dx * dx + dy * dy)
       context.beginPath()
       context.moveTo(source.x, source.y)
-      context.lineTo(target.x, target.y)
+      if (edgeLen > 2) {
+        const nx = -dy / edgeLen
+        const ny =  dx / edgeLen
+        const sign = (edge.source.charCodeAt(0) + edge.target.charCodeAt(0)) % 2 === 0 ? 1 : -1
+        const wobble = Math.min(edgeLen * 0.11, 24) * sign
+        const cpx = (source.x + target.x) / 2 + nx * wobble
+        const cpy = (source.y + target.y) / 2 + ny * wobble
+        context.quadraticCurveTo(cpx, cpy, target.x, target.y)
+      } else {
+        context.lineTo(target.x, target.y)
+      }
       context.stroke()
     }
 
@@ -367,8 +455,16 @@ export const GraphPanel = memo(function GraphPanel({
       const isActive = node.id === activeEntityId
       const isConnected = connectedNodeIds?.has(node.id) ?? true
       const isHighlighted = graphViewModel.highlightedNodeId === node.id
-      const dimmed = !isActive && !isConnected && Boolean(activeEntityId)
-      const alpha = dimmed ? 0.22 : 1
+      // Tarea 4.2: alpha basado en distancia BFS para el renderer canvas
+      const bfsDist = nodeDistanceMap?.get(node.id)
+      const alpha = !activeEntityId
+        ? 1
+        : isActive || isHighlighted ? 1
+        : bfsDist === undefined ? 0.22
+        : bfsDist === 1 ? 0.85
+        : bfsDist === 2 ? 0.60
+        : bfsDist === 3 ? 0.45
+        : 0.22
       const collectionColor = resolveCollectionColor(node.tabId, node.tabColor)
       const radius = getNodeRadius(node.id, isActive)
 
@@ -433,6 +529,7 @@ export const GraphPanel = memo(function GraphPanel({
     graphViewModel.highlightedNodeId,
     graphViewModel.nodeById,
     graphViewModel.renderedNodes,
+    nodeDistanceMap,
     useCanvasRenderer,
   ])
 
@@ -650,6 +747,29 @@ export const GraphPanel = memo(function GraphPanel({
               setDraggingNodeId(null)
             }}
           >
+            <defs>
+              {graphViewModel.filteredEdges.map((edge) => {
+                const source = graphViewModel.nodeById.get(edge.source)
+                const target = graphViewModel.nodeById.get(edge.target)
+                if (!source || !target) return null
+                const srcColor = resolveCollectionColor(source.tabId, source.tabColor)
+                const tgtColor = resolveCollectionColor(target.tabId, target.tabColor)
+                if (srcColor === tgtColor) return null
+                return (
+                  <linearGradient
+                    key={`grad-${edge.source}-${edge.target}`}
+                    id={`edge-grad-${edge.source}-${edge.target}`}
+                    gradientUnits="userSpaceOnUse"
+                    x1={source.x} y1={source.y}
+                    x2={target.x} y2={target.y}
+                  >
+                    <stop offset="0%"   stopColor={srcColor} stopOpacity={0.9} />
+                    <stop offset="100%" stopColor={tgtColor} stopOpacity={0.9} />
+                  </linearGradient>
+                )
+              })}
+            </defs>
+
             {graphViewModel.filteredEdges.map((edge) => {
               const source = graphViewModel.nodeById.get(edge.source)
               const target = graphViewModel.nodeById.get(edge.target)
@@ -657,15 +777,20 @@ export const GraphPanel = memo(function GraphPanel({
                 return null
               }
               const isRelated = !activeEntityId || edge.source === activeEntityId || edge.target === activeEntityId
+              const srcColor = resolveCollectionColor(source.tabId, source.tabColor)
+              const tgtColor = resolveCollectionColor(target.tabId, target.tabColor)
+              const hasGradient = srcColor !== tgtColor
+              const strokeColor = isRelated
+                ? (hasGradient ? `url(#edge-grad-${edge.source}-${edge.target})` : srcColor)
+                : 'var(--border-subtle)'
               return (
-                <line
+                <path
                   key={`${edge.source}-${edge.target}`}
-                  x1={source.x}
-                  y1={source.y}
-                  x2={target.x}
-                  y2={target.y}
-                  stroke={isRelated ? 'var(--border-focus)' : 'var(--border-subtle)'}
-                  strokeWidth={isRelated ? '2.2' : '1.1'}
+                  className="graph-edge-bezier"
+                  d={getBezierPath(source.x, source.y, target.x, target.y, edge.source, edge.target)}
+                  stroke={strokeColor}
+                  strokeWidth={isRelated ? '2' : '1'}
+                  strokeOpacity={isRelated ? 0.85 : 0.35}
                 />
               )
             })}
@@ -680,10 +805,26 @@ export const GraphPanel = memo(function GraphPanel({
               return (
                 <g
                   key={node.id}
-                  className={isActive ? 'graph-node active' : isConnected ? 'graph-node related' : 'graph-node'}
-                  opacity={isActive || isConnected || isHighlighted ? 1 : activeEntityId ? 0.22 : 1}
+                  className={[
+                    isActive ? 'graph-node active' : isConnected ? 'graph-node related' : 'graph-node',
+                    getNodeProximityClass(node.id, isHighlighted),
+                  ].filter(Boolean).join(' ')}
                   onClick={() => handleNodeSelection(node)}
                   onPointerDown={() => setDraggingNodeId(node.id)}
+                  onMouseEnter={(e) => {
+                    const shell = graphShellRef.current
+                    if (!shell) return
+                    const shellRect = shell.getBoundingClientRect()
+                    setHoveredNode({
+                      id: node.id,
+                      title: node.title,
+                      tabName: node.tabName,
+                      color: collectionColor,
+                      x: e.clientX - shellRect.left,
+                      y: e.clientY - shellRect.top,
+                    })
+                  }}
+                  onMouseLeave={() => setHoveredNode(null)}
                 >
                   {(isActive || isConnected || isHighlighted) && (
                     <circle
@@ -732,6 +873,24 @@ export const GraphPanel = memo(function GraphPanel({
               )
             })}
           </svg>
+        )}
+
+        {/* ── Polaroid popover: entity card on node hover ── */}
+        {hoveredNode && !draggingNodeId && (
+          <div
+            className="graph-node-polaroid"
+            style={{ left: hoveredNode.x, top: hoveredNode.y }}
+            aria-hidden="true"
+          >
+            <div
+              className="graph-node-polaroid-image"
+              style={{
+                background: `linear-gradient(135deg, ${hexToRgba(hoveredNode.color, 0.72)}, ${hexToRgba(hoveredNode.color, 0.30)})`,
+              }}
+            />
+            <p className="graph-node-polaroid-title">{hoveredNode.title}</p>
+            <p className="graph-node-polaroid-meta">{hoveredNode.tabName}</p>
+          </div>
         )}
 
         <GraphFloatingToolbar

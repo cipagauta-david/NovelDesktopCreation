@@ -46,6 +46,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   const [searchPaletteOpen, setSearchPaletteOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [spectralMode, setSpectralMode] = useState(false)
+  const [isWriting, setIsWriting] = useState(false)
   const [renameProjectOpen, setRenameProjectOpen] = useState(false)
   const [renameTabOpen, setRenameTabOpen] = useState(false)
   const [syncConfigOpen, setSyncConfigOpen] = useState(false)
@@ -64,6 +65,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   const [syncToken, setSyncToken] = useState('')
   const [nextProviderKey, setNextProviderKey] = useState('')
   const spectralTimerRef = useRef<number | null>(null)
+  const writingTimerRef = useRef<number | null>(null)
   const godMode = workspace.workspaceView === 'graph'
   const hasLeftPanel = !zenMode && (workspace.panels.sidebar || workspace.panels.entities)
   const hasInspectorPanel = !zenMode && workspace.panels.inspector
@@ -129,6 +131,16 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
     }, 220)
   }, [])
 
+  const handleWritingActivity = useCallback(() => {
+    setIsWriting(true)
+    if (writingTimerRef.current != null) {
+      window.clearTimeout(writingTimerRef.current)
+    }
+    writingTimerRef.current = window.setTimeout(() => {
+      setIsWriting(false)
+    }, 2500)
+  }, [])
+
   // Restore UI when mouse moves anywhere in the shell
   useEffect(() => {
     function handleMouseMove() {
@@ -150,12 +162,20 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
     }
   }, [])
 
+  useEffect(() => () => {
+    if (writingTimerRef.current != null) {
+      window.clearTimeout(writingTimerRef.current)
+    }
+  }, [])
+
   useEffect(() => {
     document.documentElement.setAttribute('data-focus-mode', zenMode ? 'true' : 'false')
     return () => {
       document.documentElement.setAttribute('data-focus-mode', 'false')
     }
   }, [zenMode])
+
+  const hasSuggestion = workspace.streamStatus === 'streaming' || Boolean(workspace.pendingProposal)
 
   if (!workspace.onboardingReady) return <OnboardingScreen onSubmit={workspace.completeOnboarding} />
 
@@ -200,6 +220,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
         zenMode ? 'is-focus-mode' : '',
         godMode ? 'god-mode' : '',
         spectralMode ? 'is-spectral' : '',
+        isWriting ? 'is-writing' : '',
       ].filter(Boolean).join(' ')}
     >
     <div className={[zenMode ? 'workspace-header-shell is-hidden' : 'workspace-header-shell', spectralMode ? 'is-spectral' : ''].filter(Boolean).join(' ')}>
@@ -357,8 +378,8 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
             zenMode ? 'main-column focus-mode' : 'main-column',
             godMode ? 'god-mode' : '',
             spectralMode ? 'is-spectral' : '',
-          ].filter(Boolean).join(' ')} onScroll={handleMainColumnScroll}>
-            {workspace.workspaceView === 'graph' ? <GraphPanel graphModel={workspace.graphModel} collections={workspace.activeProject?.tabs ?? []} activeEntityId={workspace.activeEntity?.id} onSelectEntity={handleGraphSelectEntity} onNodePositionChange={workspace.updateGraphNodePosition} onUpdateCollectionColor={workspace.updateTabColor} onCreateRelation={(sourceEntityId, targetEntityId) => workspace.addRelation(sourceEntityId, targetEntityId, 'relates_to')} /> : workspace.activeEntity && workspace.activeDraft ? <EditorPanel entity={workspace.activeEntity} draft={workspace.activeDraft} templates={workspace.activeTemplates} allEntities={workspace.activeProject?.entities ?? []} editorViewRef={workspace.editorViewRef} referenceSuggestionActive={Boolean(workspace.referenceSuggestion)} suggestionOptions={workspace.suggestionOptions} saveStatus={workspace.saveStatus} streamStatus={workspace.streamStatus} zenMode={zenMode} onOpenEntity={workspace.selectEntity} onDraftChange={workspace.setDraft} onHandleEditorChange={workspace.handleEditorChange} onInsertReference={workspace.insertReference} onAttachImages={workspace.attachImages} onAddField={workspace.addField} onUpdateField={workspace.updateField} onRemoveField={workspace.removeField} onApplyTemplate={workspace.applyActiveTemplate} onDuplicate={workspace.duplicateActiveEntity} onArchive={workspace.archiveActiveEntity} onDelete={workspace.deleteActiveEntity} onGenerateAiProposal={workspace.generateAiProposal} onToggleZenMode={() => setZenMode(c => !c)} /> : <div className="panel surface-panel empty-state">Vacio</div>}
+          ].filter(Boolean).join(' ')} onScroll={handleMainColumnScroll} onKeyDown={handleWritingActivity}>
+            {workspace.workspaceView === 'graph' ? <GraphPanel graphModel={workspace.graphModel} collections={workspace.activeProject?.tabs ?? []} activeEntityId={workspace.activeEntity?.id} onSelectEntity={handleGraphSelectEntity} onNodePositionChange={workspace.updateGraphNodePosition} onUpdateCollectionColor={workspace.updateTabColor} onCreateRelation={(sourceEntityId, targetEntityId) => workspace.addRelation(sourceEntityId, targetEntityId, 'relates_to')} /> : workspace.activeEntity && workspace.activeDraft ? <EditorPanel entity={workspace.activeEntity} draft={workspace.activeDraft} templates={workspace.activeTemplates} allEntities={workspace.activeProject?.entities ?? []} editorViewRef={workspace.editorViewRef} referenceSuggestionActive={Boolean(workspace.referenceSuggestion)} suggestionOptions={workspace.suggestionOptions} saveStatus={workspace.saveStatus} streamStatus={workspace.streamStatus} zenMode={zenMode} onOpenEntity={workspace.selectEntity} onDraftChange={workspace.setDraft} onHandleEditorChange={workspace.handleEditorChange} onInsertReference={workspace.insertReference} onAttachImages={workspace.attachImages} onAddField={workspace.addField} onUpdateField={workspace.updateField} onRemoveField={workspace.removeField} onSaveAsTemplate={workspace.saveCurrentAsTemplate} onApplyTemplate={workspace.applyActiveTemplate} onDuplicate={workspace.duplicateActiveEntity} onArchive={workspace.archiveActiveEntity} onDelete={workspace.deleteActiveEntity} onGenerateAiProposal={workspace.generateAiProposal} onToggleZenMode={() => setZenMode(c => !c)} /> : <div className="panel surface-panel empty-state">Vacio</div>}
           </div>
 
 
@@ -401,11 +422,15 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
       )}
       <button
         type="button"
-        className={assistantFabOpen ? 'ai-fab-button active' : 'ai-fab-button'}
+        className={[
+          'ai-fab-button',
+          assistantFabOpen ? 'active' : '',
+          hasSuggestion ? 'has-suggestion' : '',
+        ].filter(Boolean).join(' ')}
         onClick={() => setAssistantFabOpen((current) => !current)}
         aria-label="Abrir asistente IA"
       >
-        💬 IA
+        ✦
       </button>
       {workspace.toast && <div className="toast">{workspace.toast}</div>}
       <StackedDialog open={renameProjectOpen} onOpenChange={setRenameProjectOpen} title="Renombrar proyecto">

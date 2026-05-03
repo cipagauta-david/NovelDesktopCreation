@@ -84,10 +84,24 @@
   min-height: 96px;
 }
 
+/* Ficha bibliográfica: bordes suaves, sombra de contacto, sin rellenos flotantes */
 .template-card {
   padding: 0.85rem 0.95rem;
-  border-radius: var(--radius-xl);
-  border: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
+  background: var(--surface-canvas, var(--bg-surface-raised));
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--shadow-color, #000) 4%, transparent),
+    0 2px 4px color-mix(in srgb, var(--shadow-color, #000) 3%, transparent);
+  transition: box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.template-card:hover {
+  box-shadow:
+    0 2px 4px color-mix(in srgb, var(--shadow-color, #000) 6%, transparent),
+    0 4px 12px color-mix(in srgb, var(--shadow-color, #000) 5%, transparent);
+  transform: translateY(-1px);
 }
 
 .template-list-compact {
@@ -96,7 +110,7 @@
 
 .template-list-compact .template-card {
   padding: 0.65rem 0.8rem;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   background: var(--bg-surface-raised);
 }
 

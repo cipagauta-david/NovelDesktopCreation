@@ -10,6 +10,7 @@ import {
   CommandGroup,
 } from '@/components/ui/command'
 import type { SearchResult } from '../../types/workspace'
+import '../../styles/overlays/CommandPalette.css'
 
 interface CommandPaletteProps {
   searchQuery: string
@@ -94,6 +95,11 @@ export function CommandPalette({ searchQuery, searchResults, onSearchChange, onS
           </CommandGroup>
         )}
       </CommandList>
+      <div className="command-palette-footer" aria-hidden="true">
+        <span><kbd>↑</kbd><kbd>↓</kbd> navegar</span>
+        <span><kbd>↵</kbd> abrir</span>
+        <span><kbd>esc</kbd> cerrar</span>
+      </div>
     </CommandDialog>
   )
 }

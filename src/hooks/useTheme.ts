@@ -37,8 +37,17 @@ function readStoredTheme(): ThemePreference {
 function applyThemeToDocument(resolvedTheme: ResolvedTheme) {
   if (typeof document === 'undefined') return
   const root = document.documentElement
+  root.setAttribute('data-theme-transitioning', 'true')
   root.classList.toggle('dark', resolvedTheme === 'dark')
   root.setAttribute('data-theme', resolvedTheme)
+  // Remove transitioning flag after animation completes
+  const timer = window.setTimeout(() => {
+    root.removeAttribute('data-theme-transitioning')
+  }, 380)
+  // Safety: clear on next call via closure (avoids stale timers)
+  ;(applyThemeToDocument as { _timer?: number })._timer !== undefined &&
+    window.clearTimeout((applyThemeToDocument as { _timer?: number })._timer!);
+  (applyThemeToDocument as { _timer?: number })._timer = timer
 }
 
 const bootThemePreference = readStoredTheme()
