@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
 
 import '../../styles/common/DockPanelScaffold.css'
 
@@ -26,33 +27,22 @@ export function DockPanelScaffold({
   children,
 }: DockPanelScaffoldProps) {
   const collapseArrow = side === 'left' ? '‹' : '›'
-  const classes = [
+  const classes = cn(
     'dock-panel',
     side === 'left' ? 'dock-panel-left' : 'dock-panel-right',
-    footer ? 'dock-panel-has-footer' : '',
+    footer && 'dock-panel-has-footer',
     className,
-  ].filter(Boolean).join(' ')
+  )
 
   return (
     <aside className={classes}>
       <div className="dock-panel-sticky-head">
         {showHeader ? (
-          <div className={['panel-dock-header', side === 'right' ? 'panel-dock-header-right' : ''].filter(Boolean).join(' ')}>
-            {side === 'left' ? (
-              <>
-                <span className="eyebrow">{eyebrow}</span>
-                <button type="button" className="panel-dock-toggle" aria-label={collapseLabel} onClick={onCollapse}>
-                  {collapseArrow}
-                </button>
-              </>
-            ) : (
-              <>
-                <button type="button" className="panel-dock-toggle" aria-label={collapseLabel} onClick={onCollapse}>
-                  {collapseArrow}
-                </button>
-                <span className="eyebrow">{eyebrow}</span>
-              </>
-            )}
+          <div className={cn('panel-dock-header', side === 'right' && 'panel-dock-header-right')}>
+            <span className="eyebrow">{eyebrow}</span>
+            <button type="button" className="panel-dock-toggle" aria-label={collapseLabel} onClick={onCollapse}>
+              {collapseArrow}
+            </button>
           </div>
         ) : null}
 

@@ -1,9 +1,10 @@
 import { useId, useState, type ReactNode } from 'react'
+import { ChevronUp, ChevronDown } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
-type SectionCardProps = {
-  title: ReactNode
+export type SectionCardProps = {
+  title: string
   meta?: ReactNode
   actions?: ReactNode
   children: ReactNode
@@ -11,6 +12,8 @@ type SectionCardProps = {
   open?: boolean
   onOpenChange?: (open: boolean) => void
   collapsible?: boolean
+  collapseLabel?: string
+  expandLabel?: string
   className?: string
   bodyClassName?: string
 }
@@ -24,8 +27,10 @@ export function SectionCard({
   open,
   onOpenChange,
   collapsible = true,
-  className = '',
-  bodyClassName = '',
+  collapseLabel = `Collapse ${title}`,
+  expandLabel = `Expand ${title}`,
+  className,
+  bodyClassName,
 }: SectionCardProps) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen)
   const bodyId = useId()
@@ -56,10 +61,13 @@ export function SectionCard({
                 className="section-toggle"
                 aria-expanded={isOpen}
                 aria-controls={bodyId}
-                aria-label={isOpen ? `Contraer ${String(title)}` : `Expandir ${String(title)}`}
+                aria-label={isOpen ? collapseLabel : expandLabel}
                 onClick={() => setOpen(!isOpen)}
               >
-                {isOpen ? '⌃' : '⌄'}
+                {isOpen
+                  ? <ChevronUp size={12} aria-hidden />
+                  : <ChevronDown size={12} aria-hidden />
+                }
               </button>
             )}
           </div>

@@ -68,11 +68,12 @@
 .panel-dock-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
 }
 
 .panel-dock-header-right {
-  justify-content: flex-end;
+  flex-direction: row-reverse;
 }
 
 .dock-panel-tab-select-wrap {

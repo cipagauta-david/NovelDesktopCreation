@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,27 +16,30 @@ type ActionItem = {
 
 type ActionMenuProps = {
   label: string
-  icon?: string
+  /** Accepts any renderable content: string, icon component, etc. */
+  icon?: ReactNode
   items: ActionItem[]
+  className?: string
 }
 
-export function ActionMenu({ label, icon = '⋯', items }: ActionMenuProps) {
+const destructiveCls = 'text-destructive focus:text-destructive focus:bg-destructive/10'
+
+export function ActionMenu({ label, icon = '⋯', items, className }: ActionMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="icon-button"
+        className={cn('icon-button bg-[var(--bg-surface-raised)]', className)}
         aria-label={label}
-        style={{ background: 'var(--bg-surface-raised)' }}
       >
         {icon}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {items.map((item) => (
+        {items.map((item, i) => (
           <DropdownMenuItem
-            key={item.label}
+            key={`${item.label}-${i}`}
             disabled={item.disabled}
             onSelect={item.onSelect}
-            className={item.destructive ? 'text-destructive focus:text-destructive focus:bg-destructive/10' : ''}
+            className={item.destructive ? destructiveCls : undefined}
           >
             {item.label}
           </DropdownMenuItem>

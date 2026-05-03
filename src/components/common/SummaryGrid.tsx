@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
 
-type SummaryGridItem = {
-  label: ReactNode
+export type SummaryGridItem = {
+  label: string
   value: ReactNode
 }
 
@@ -10,17 +11,15 @@ type SummaryGridProps = {
   className?: string
 }
 
-export function SummaryGrid({ items, className = '' }: SummaryGridProps) {
-  const classes = ['meta-summary-list', className].filter(Boolean).join(' ')
-
+export function SummaryGrid({ items, className }: SummaryGridProps) {
   return (
-    <div className={classes}>
-      {items.map((item, index) => (
-        <div key={index} className="meta-summary-item">
-          <span>{item.label}</span>
-          <strong>{item.value}</strong>
+    <dl className={cn('meta-summary-list', className)}>
+      {items.map((item, i) => (
+        <div key={`${item.label}-${i}`} className="meta-summary-item">
+          <dt>{item.label}</dt>
+          <dd>{item.value}</dd>
         </div>
       ))}
-    </div>
+    </dl>
   )
 }

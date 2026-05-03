@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
 
 type EmptyMiniStateProps = {
   children: ReactNode
@@ -6,5 +7,9 @@ type EmptyMiniStateProps = {
 }
 
 export function EmptyMiniState({ children, className }: EmptyMiniStateProps) {
-  return <div className={['empty-mini-state', className].filter(Boolean).join(' ')}>{children}</div>
+  return (
+    <div role="status" aria-live="polite" className={cn('empty-mini-state', className)}>
+      {children}
+    </div>
+  )
 }
