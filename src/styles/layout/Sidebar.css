@@ -104,6 +104,66 @@
   transform: translateY(-1px);
 }
 
+/* ── Plantillas reutilizables: negativo / forma vacía ─────────────────── */
+/*
+ * Aplicar .template-ghost para indicar que es una plantilla base (no instancia).
+ * Aspecto de "molde vacío": bordes punteados, cuadrícula tenue, sin fondo sólido.
+ */
+.template-ghost {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      color-mix(in srgb, var(--border-subtle) 18%, transparent) 3px,
+      color-mix(in srgb, var(--border-subtle) 18%, transparent) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 3px,
+      color-mix(in srgb, var(--border-subtle) 18%, transparent) 3px,
+      color-mix(in srgb, var(--border-subtle) 18%, transparent) 4px
+    ),
+    transparent;
+  border-style: dashed;
+  border-width: 1.5px;
+  border-color: color-mix(in srgb, var(--border-subtle) 70%, var(--accent-primary) 10%);
+  box-shadow: none;
+  color: color-mix(in srgb, var(--text-primary) 75%, transparent);
+}
+
+.template-ghost strong {
+  color: color-mix(in srgb, var(--text-heading) 70%, transparent);
+  font-style: italic;
+}
+
+.template-ghost .template-row-icon {
+  opacity: 0.45;
+}
+
+.template-ghost:hover {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      color-mix(in srgb, var(--border-subtle) 22%, transparent) 3px,
+      color-mix(in srgb, var(--border-subtle) 22%, transparent) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 3px,
+      color-mix(in srgb, var(--border-subtle) 22%, transparent) 3px,
+      color-mix(in srgb, var(--border-subtle) 22%, transparent) 4px
+    ),
+    color-mix(in srgb, var(--accent-primary) 3%, transparent);
+  border-color: color-mix(in srgb, var(--accent-primary) 40%, var(--border-subtle));
+  box-shadow: none;
+  transform: none;
+}
+
 .template-list-compact {
   gap: 0.55rem;
 }

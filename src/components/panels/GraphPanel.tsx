@@ -62,6 +62,7 @@ type HoveredNodeInfo = {
   color: string
   x: number
   y: number
+  rotation: number
 }
 
 export const GraphPanel = memo(function GraphPanel({
@@ -256,19 +257,17 @@ export const GraphPanel = memo(function GraphPanel({
     [graphViewModel.degreeByNodeId],
   )
 
-  /** Tarea 4.2: Devuelve la clase CSS de proximidad según distancia BFS al nodo activo */
+  /** Tarea 3.2: Devuelve la clase CSS de profundidad (3 niveles) para jerarquía de opacidad */
   const getNodeProximityClass = useCallback(
     (nodeId: string, isHighlighted: boolean): string => {
       if (!activeEntityId) return ''
-      if (isHighlighted) return 'node-p-100'
+      if (isHighlighted) return 'node-depth-0'
       if (!nodeDistanceMap) return ''
       const dist = nodeDistanceMap.get(nodeId)
-      if (dist === undefined) return 'node-p-20'
-      if (dist <= 0) return 'node-p-100'
-      if (dist === 1) return 'node-p-75'
-      if (dist === 2) return 'node-p-50'
-      if (dist === 3) return 'node-p-35'
-      return 'node-p-20'
+      if (dist === undefined) return 'node-depth-2'
+      if (dist <= 0) return 'node-depth-0'
+      if (dist === 1) return 'node-depth-1'
+      return 'node-depth-2'
     },
     [activeEntityId, nodeDistanceMap],
   )
@@ -822,6 +821,7 @@ export const GraphPanel = memo(function GraphPanel({
                       color: collectionColor,
                       x: e.clientX - shellRect.left,
                       y: e.clientY - shellRect.top,
+                      rotation: Math.random() * 4 - 2,
                     })
                   }}
                   onMouseLeave={() => setHoveredNode(null)}
@@ -879,7 +879,11 @@ export const GraphPanel = memo(function GraphPanel({
         {hoveredNode && !draggingNodeId && (
           <div
             className="graph-node-polaroid"
-            style={{ left: hoveredNode.x, top: hoveredNode.y }}
+            style={{
+              left: hoveredNode.x,
+              top: hoveredNode.y,
+              '--polaroid-rotation': `${hoveredNode.rotation.toFixed(2)}deg`,
+            } as React.CSSProperties}
             aria-hidden="true"
           >
             <div

@@ -149,7 +149,7 @@ export const Sidebar = memo(function Sidebar({
       >
         <div className="template-list template-list-compact">
           {activeTemplates.map((template) => (
-            <article key={template.id} className="template-card template-row">
+            <article key={template.id} className="template-card template-ghost template-row">
               <span className="template-row-icon" aria-hidden="true">◦</span>
               <div>
                 <strong>{template.name}</strong>

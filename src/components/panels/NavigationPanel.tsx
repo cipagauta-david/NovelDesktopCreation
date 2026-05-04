@@ -5,6 +5,7 @@ import { DockPanelScaffold } from '../common/DockPanelScaffold'
 import { Sidebar } from '../layout/Sidebar'
 import { TabBar } from '../layout/TabBar'
 import { EntityList } from './EntityList'
+import { getNodeCategory } from './graph/category'
 import '../../styles/panels/NavigationPanel.css'
 
 type NavigationPanelProps = {
@@ -171,6 +172,7 @@ export const NavigationPanel = memo(function NavigationPanel({
               <EntityList
                 title={activeTab?.name ?? 'Entidades'}
                 count={entities.length}
+                category={getNodeCategory(activeTab?.name ?? '')}
                 entities={entities}
                 archivedEntities={archivedEntities}
                 activeEntityId={activeEntityId}

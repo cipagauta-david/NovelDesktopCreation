@@ -7,6 +7,41 @@
   overflow: hidden;
 }
 
+/* ── Tipografía diferenciada por categoría de módulo ──────────────────── */
+
+/* Capítulos: mayúsculas estructurales, serif condensado — voz narrativa */
+.entity-column[data-category="chapters"] .section-card-header h3 {
+  font-family: var(--font-serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-style: normal;
+  font-variation-settings: "wght" 650, "opsz" 10;
+}
+
+/* Personajes: serif itálica, más personal — voz íntima del autor */
+.entity-column[data-category="characters"] .section-card-header h3 {
+  font-family: var(--font-serif);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-style: italic;
+  font-variation-settings: "wght" 450, "opsz" 14;
+}
+
+/* Mundo: serif pequeño en versalitas — geografía y lógica del universo */
+.entity-column[data-category="world"] .section-card-header h3 {
+  font-family: var(--font-serif);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-variant-caps: all-small-caps;
+  font-variation-settings: "wght" 500;
+}
+
 .entity-composer {
   padding-bottom: 0.2rem;
   flex-shrink: 0;

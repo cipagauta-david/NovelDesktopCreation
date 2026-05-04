@@ -63,10 +63,19 @@
   --accent-primary: #1A7A9B;
   --accent-hover: #14627D;
   --on-accent: #EEF7FA;
-  --sketch-marker: color-mix(in srgb, var(--accent-primary) 25%, transparent);
+  /* Chroma limitada al 20% vía relative color syntax: el marcador nunca "grita"
+     sin importar cuál sea el color de acento del usuario. */
+  --sketch-marker: oklch(from var(--accent-primary) l calc(c * 0.2) h / 0.28);
   --sketch-wobble: polygon(2% 0%, 100% 2%, 98% 100%, 0% 95%);
   --sketch-underline-color: color-mix(in srgb, var(--accent-primary) 40%, var(--surface-canvas));
   --sketch-opacity: 0.72;
+
+  /* ── Safe-Contrast: accent-as-background tokens (light) ──
+     Caps saturation at 50% and boosts lightness so any text
+     on these surfaces always passes WCAG AA without manual overrides. */
+  --accent-safe-bg:     oklch(from var(--accent-primary) calc(l * 1.22) calc(c * 0.5) h / 0.10);
+  --accent-safe-border: oklch(from var(--accent-primary) calc(l * 1.10) calc(c * 0.6) h / 0.32);
+  --accent-safe-text:   oklch(from var(--accent-primary) calc(l * 0.72) calc(c * 0.7) h);
 
   --status-success: #1F8C61;
   --status-warning: #B45309;
@@ -246,10 +255,19 @@
   --editor-line-height: 1.9;
 
   /* ── Sketch tokens (dark) ── */
-  --sketch-marker: color-mix(in srgb, var(--accent-primary) 18%, transparent);
+  /* En dark mode la luminosidad del acento se eleva ligeramente (×1.08)
+     antes de reducir chroma, para que el marcador sea visible en fondos oscuros. */
+  --sketch-marker: oklch(from var(--accent-primary) calc(l * 1.08) calc(c * 0.2) h / 0.22);
   --sketch-wobble: polygon(1% 0%, 100% 2%, 99% 100%, 0% 96%);
   --sketch-underline-color: color-mix(in srgb, var(--accent-primary) 45%, var(--surface-canvas));
   --sketch-opacity: 0.65;
+
+  /* ── Safe-Contrast tokens (dark) ──
+     Dark surfaces need a darker, less-saturated tint so text
+     (light on dark) maintains contrast. */
+  --accent-safe-bg:     oklch(from var(--accent-primary) calc(l * 0.55) calc(c * 0.5) h / 0.20);
+  --accent-safe-border: oklch(from var(--accent-primary) calc(l * 0.85) calc(c * 0.55) h / 0.40);
+  --accent-safe-text:   oklch(from var(--accent-primary) calc(l * 1.18) calc(c * 0.6) h);
 
   /* ── Spectral tokens ── */
   --zen-opacity-idle: 0.15;
@@ -338,7 +356,11 @@ body,
 body {
   margin: 0;
   overflow: hidden;
-  background: var(--bg-base);
+  /* Japandi rice-paper: two soft radial warm pools over the flat base */
+  background:
+    radial-gradient(ellipse at 68% 22%, color-mix(in srgb, #FEF5E4 60%, transparent) 0%, transparent 52%),
+    radial-gradient(ellipse at 18% 80%, color-mix(in srgb, #F0EAD8 55%, transparent) 0%, transparent 46%),
+    var(--bg-base);
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: var(--font-size-1);
@@ -1060,6 +1082,51 @@ select option:checked {
 /* Efecto cascade en group (cada dot se amplifica al hover del grupo) */
 .entity-dot-group:hover .entity-dot:not(:hover) {
   opacity: 0.7;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FASE 5 — MOTOR DE COLOR Y ACCESIBILIDAD
+   ══════════════════════════════════════════════════════════════ */
+
+/* 5.1 – Safe-Contrast roles
+   Any element that places the user's accent colour behind text
+   should use these semantic tokens.  They are derived via OKLCH
+   relative-colour from --accent-primary, so they auto-adjust
+   whenever the user rotates their accent without extra JS. */
+.entity-chip,
+.sketch-variable,
+.reference-chip,
+.collection-badge,
+[data-accent-bg] {
+  background: var(--accent-safe-bg);
+  border-color: var(--accent-safe-border);
+  color: var(--accent-safe-text);
+}
+
+/* 5.2 – Theme Fusion Veil
+   A 300 ms radial flash that "cleanses" the canvas between
+   entity / chapter switches.  Triggered by toggling the
+   .theme-fusion-veil element in React via JS. */
+@keyframes fusion-veil {
+  0%   { opacity: 0;   backdrop-filter: blur(0);    }
+  18%  { opacity: 1;   backdrop-filter: blur(1.5px); }
+  100% { opacity: 0;   backdrop-filter: blur(0);    }
+}
+
+.theme-fusion-veil {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  /* The veil tint inherits the current accent, desaturated and
+     very low-opacity — perceptible but never jarring. */
+  background: radial-gradient(
+    ellipse at 50% 38%,
+    oklch(from var(--accent-primary) calc(l * 1.08) calc(c * 0.28) h / 0.18) 0%,
+    transparent 62%
+  );
+  animation: fusion-veil 300ms ease-out forwards;
+  will-change: opacity;
 }
 
 @layer base {

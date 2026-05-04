@@ -30,6 +30,7 @@ import '../../styles/panels/EntityList.css';
 type EntityListProps = {
   title: string
   count: number
+  category?: 'chapters' | 'characters' | 'world' | 'other'
   entities: EntityRecord[]
   archivedEntities: EntityRecord[]
   activeEntityId?: string
@@ -47,6 +48,7 @@ type EntityListProps = {
 export const EntityList = memo(function EntityList({
   title,
   count,
+  category,
   entities,
   archivedEntities,
   activeEntityId,
@@ -114,7 +116,7 @@ export const EntityList = memo(function EntityList({
   }, [isSectionOpen, entities.length, rowVirtualizer])
 
   return (
-    <section className="entity-column">
+    <section className="entity-column" data-category={category}>
       <PanelSection
         title={title}
         meta={`${count} entidades`}

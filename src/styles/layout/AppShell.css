@@ -43,7 +43,10 @@
   padding: var(--space-3) 0;
   z-index: 30;
   opacity: var(--zen-opacity-active);
-  transition: opacity 300ms ease-in-out;
+  filter: blur(0);
+  transition:
+    opacity 300ms ease-in-out,
+    filter 300ms ease-in-out;
 }
 
 .icon-rail-left {
@@ -60,6 +63,7 @@
 
 .app-shell.is-spectral .icon-rail {
   opacity: var(--zen-opacity-idle);
+  filter: blur(0.5px);
 }
 
 .app-shell.is-focus-mode .icon-rail {
@@ -225,15 +229,15 @@
   container-type: inline-size;
   container-name: editor-panel;
   contain: layout paint style;
-  --editor-readable-width: 68ch;
-  --editor-zen-width: 64ch;
+  --editor-readable-width: 72ch;
+  --editor-zen-width: 66ch;
 }
 
 .main-column.with-both-side-panels,
 .main-column.with-single-side-panel,
 .main-column.with-no-side-panels {
-  --editor-readable-width: 68ch;
-  --editor-zen-width: 64ch;
+  --editor-readable-width: 72ch;
+  --editor-zen-width: 66ch;
 }
 
 .main-column.focus-mode {
@@ -450,12 +454,18 @@
 /* Icon rails also fade when writing, reveal on hover */
 .app-shell.is-writing .icon-rail {
   opacity: var(--zen-panel-opacity, 0.02);
-  transition: opacity var(--motion-slow) cubic-bezier(0.22, 1, 0.36, 1);
+  filter: blur(1.2px);
+  transition:
+    opacity var(--motion-slow) cubic-bezier(0.22, 1, 0.36, 1),
+    filter var(--motion-slow) cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .app-shell.is-writing .icon-rail:hover {
   opacity: var(--zen-opacity-active);
-  transition: opacity 180ms ease;
+  filter: blur(0);
+  transition:
+    opacity 180ms ease,
+    filter 180ms ease;
 }
 
 /* Header fades too; restored when mouse enters the header zone */

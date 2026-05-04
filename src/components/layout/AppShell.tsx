@@ -66,6 +66,9 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   const [nextProviderKey, setNextProviderKey] = useState('')
   const spectralTimerRef = useRef<number | null>(null)
   const writingTimerRef = useRef<number | null>(null)
+  const fusionVeilTimerRef = useRef<number | null>(null)
+  const prevEntityIdRef = useRef<string | undefined>(undefined)
+  const [fusionVeilActive, setFusionVeilActive] = useState(false)
   const godMode = workspace.workspaceView === 'graph'
   const hasLeftPanel = !zenMode && (workspace.panels.sidebar || workspace.panels.entities)
   const hasInspectorPanel = !zenMode && workspace.panels.inspector
@@ -165,6 +168,23 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   useEffect(() => () => {
     if (writingTimerRef.current != null) {
       window.clearTimeout(writingTimerRef.current)
+    }
+  }, [])
+
+  // Fusion Veil – fires on every active-entity switch
+  useEffect(() => {
+    const currentId = workspace.activeEntity?.id
+    if (prevEntityIdRef.current !== undefined && prevEntityIdRef.current !== currentId) {
+      setFusionVeilActive(true)
+      if (fusionVeilTimerRef.current != null) window.clearTimeout(fusionVeilTimerRef.current)
+      fusionVeilTimerRef.current = window.setTimeout(() => setFusionVeilActive(false), 320)
+    }
+    prevEntityIdRef.current = currentId
+  }, [workspace.activeEntity?.id])
+
+  useEffect(() => () => {
+    if (fusionVeilTimerRef.current != null) {
+      window.clearTimeout(fusionVeilTimerRef.current)
     }
   }, [])
 
@@ -433,6 +453,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
         ✦
       </button>
       {workspace.toast && <div className="toast">{workspace.toast}</div>}
+      {fusionVeilActive && <div className="theme-fusion-veil" aria-hidden="true" />}
       <StackedDialog open={renameProjectOpen} onOpenChange={setRenameProjectOpen} title="Renombrar proyecto">
         <Field label={<span className="visually-hidden">Nombre del proyecto</span>}>
           <input value={renameProjectValue} onChange={(event) => setRenameProjectValue(event.target.value)} placeholder="Nombre del proyecto" />

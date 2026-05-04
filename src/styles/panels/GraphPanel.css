@@ -315,6 +315,76 @@
 }
 
 /* ════════════════════════════════════════════
+   TAREA 3.1 — ÁRBOL DE RELACIONES: TRAZO CARBONCILLO
+   Variante de conexión que simula un trazo intermitente,
+   como si estuviera dibujado a mano con carboncillo.
+   ════════════════════════════════════════════ */
+
+.tree-bezier-connection {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* Patrón orgánico: segmentos cortos con huecos irregulares — carboncillo */
+  stroke-dasharray: 7 3 2 4 5 2;
+  stroke-dashoffset: 0;
+  animation:
+    charcoal-draw 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    charcoal-drift 8s linear infinite;
+  transition:
+    stroke 200ms ease,
+    stroke-opacity 200ms ease;
+}
+
+/* Dibuja la línea desde el nodo raíz hacia afuera */
+@keyframes charcoal-draw {
+  from {
+    stroke-dashoffset: 220;
+    stroke-opacity: 0;
+  }
+  to {
+    stroke-dashoffset: 0;
+    stroke-opacity: 1;
+  }
+}
+
+/* Deriva lentísima del patrón: efecto "tiza que respira" */
+@keyframes charcoal-drift {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -23; }
+}
+
+/* ════════════════════════════════════════════
+   TAREA 3.2 — JERARQUÍA DE OPACIDAD POR PROFUNDIDAD
+   Cada nivel de distancia desde el nodo activo
+   se desvanece progresivamente como niebla.
+   ════════════════════════════════════════════ */
+
+/* Nodo raíz / activo: máxima presencia, borde reforzado */
+.graph-canvas .node-depth-0 {
+  opacity: 1;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, currentColor 30%, transparent));
+}
+
+.graph-canvas .node-depth-0 .graph-node-circle {
+  stroke-width: 3 !important;
+}
+
+/* Vecinos directos: 70% de presencia */
+.graph-canvas .node-depth-1 {
+  opacity: 0.70;
+  filter: none;
+  transition: opacity 220ms ease;
+}
+
+/* Nodos distantes: se disuelven en la niebla (30%) */
+.graph-canvas .node-depth-2 {
+  opacity: 0.30;
+  filter: none;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+/* ════════════════════════════════════════════
    POLAROID POPOVER
    ════════════════════════════════════════════ */
 
@@ -323,7 +393,8 @@
   z-index: 30;
   pointer-events: none;
   /* Anchor: bottom-center of the card sits 18px above the cursor */
-  transform: translate(-50%, calc(-100% - 18px)) rotate(-1.8deg);
+  /* --polaroid-rotation se inyecta via JS con un valor aleatorio entre -2deg y 2deg */
+  transform: translate(-50%, calc(-100% - 18px)) rotate(var(--polaroid-rotation, -1.8deg));
   background: #FEFEFE;
   padding: 7px 7px 26px 7px;
   border-radius: 2px;
@@ -347,11 +418,11 @@
 @keyframes polaroid-emerge {
   from {
     opacity: 0;
-    transform: translate(-50%, calc(-100% - 8px)) rotate(-1.8deg) scale(0.86);
+    transform: translate(-50%, calc(-100% - 8px)) rotate(var(--polaroid-rotation, -1.8deg)) scale(0.86);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, calc(-100% - 18px)) rotate(-1.8deg) scale(1);
+    transform: translate(-50%, calc(-100% - 18px)) rotate(var(--polaroid-rotation, -1.8deg)) scale(1);
   }
 }
 
