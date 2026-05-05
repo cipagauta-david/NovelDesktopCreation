@@ -1,0 +1,221 @@
+- App.tsx (File: src/App.tsx)
+  - AppContent [local/unknown]
+  - AppShell.tsx (File: src/components/layout/AppShell.tsx)
+    - AppWorker [local/unknown]
+    - Button.tsx (File: src/components/ui/Button.tsx)
+      - Comp [local/unknown]
+    - CommandPalette.tsx (File: src/components/overlays/CommandPalette.tsx)
+      - CommandDialog [local/unknown]
+      - CommandEmpty [local/unknown]
+      - CommandGroup [local/unknown]
+      - CommandInput [local/unknown]
+      - CommandItem [local/unknown]
+      - CommandList [local/unknown]
+      - HTMLDivElement [local/unknown]
+    - dialog.tsx (File: src/components/ui/dialog.tsx)
+      - Button [local/unknown]
+      - DialogOverlay [local/unknown]
+      - DialogPortal [local/unknown]
+      - DialogPrimitive [local/unknown]
+      - HugeiconsIcon [local/unknown]
+    - dialog.tsx (File: src/components/ui/dialog.tsx)
+      - Button [local/unknown]
+      - DialogOverlay [local/unknown]
+      - DialogPortal [local/unknown]
+      - DialogPrimitive [local/unknown]
+      - HugeiconsIcon [local/unknown]
+    - dialog.tsx (File: src/components/ui/dialog.tsx)
+      - Button [local/unknown]
+      - DialogOverlay [local/unknown]
+      - DialogPortal [local/unknown]
+      - DialogPrimitive [local/unknown]
+      - HugeiconsIcon [local/unknown]
+    - dialog.tsx (File: src/components/ui/dialog.tsx)
+      - Button [local/unknown]
+      - DialogOverlay [local/unknown]
+      - DialogPortal [local/unknown]
+      - DialogPrimitive [local/unknown]
+      - HugeiconsIcon [local/unknown]
+    - EditorPanel.tsx (File: src/components/panels/EditorPanel.tsx)
+      - CSSProperties [local/unknown]
+      - CodeMirror [local/unknown]
+      - EditorAssets.tsx (File: src/components/editor/panel/EditorAssets.tsx)
+        - EmptyMiniState.tsx (File: src/components/common/EmptyMiniState.tsx)
+        - HTMLInputElement [local/unknown]
+        - SectionCard.tsx (File: src/components/common/SectionCard.tsx)
+          - Card [local/unknown]
+          - CardContent [local/unknown]
+          - CardHeader [local/unknown]
+          - CardTitle [local/unknown]
+          - ChevronDown [local/unknown]
+          - ChevronUp [local/unknown]
+      - EditorDocumentSection.tsx (File: src/components/editor/panel/EditorDocumentSection.tsx)
+        - EditorSuggestions.tsx (File: src/components/editor/panel/EditorSuggestions.tsx)
+          - HTMLDivElement [local/unknown]
+        - EntityHover.tsx (File: src/components/editor/panel/EntityHover.tsx)
+        - HTMLDivElement [local/unknown]
+        - HTMLElement [local/unknown]
+      - EditorHeader.tsx (File: src/components/editor/panel/EditorHeader.tsx)
+        - ActionMenu.tsx (File: src/components/common/ActionMenu.tsx)
+          - DropdownMenu [local/unknown]
+          - DropdownMenuContent [local/unknown]
+          - DropdownMenuItem [local/unknown]
+          - DropdownMenuTrigger [local/unknown]
+        - ActionRow.tsx (File: src/components/common/ActionRow.tsx)
+        - Button.tsx (File: src/components/ui/Button.tsx)
+          - Comp [local/unknown]
+      - EditorMetadata.tsx (File: src/components/editor/panel/EditorMetadata.tsx)
+        - Field.tsx (File: src/components/common/Field.tsx)
+        - SectionCard.tsx (File: src/components/common/SectionCard.tsx)
+          - Card [local/unknown]
+          - CardContent [local/unknown]
+          - CardHeader [local/unknown]
+          - CardTitle [local/unknown]
+          - ChevronDown [local/unknown]
+          - ChevronUp [local/unknown]
+      - EditorProperties.tsx (File: src/components/editor/panel/EditorProperties.tsx)
+        - Button.tsx (File: src/components/ui/Button.tsx)
+          - Comp [local/unknown]
+        - SectionCard.tsx (File: src/components/common/SectionCard.tsx)
+          - Card [local/unknown]
+          - CardContent [local/unknown]
+          - CardHeader [local/unknown]
+          - CardTitle [local/unknown]
+          - ChevronDown [local/unknown]
+          - ChevronUp [local/unknown]
+      - EditorView [local/unknown]
+      - EntityHoverPayload [local/unknown]
+      - HTMLDivElement [local/unknown]
+      - HTMLElement [local/unknown]
+      - Map [local/unknown]
+    - Field.tsx (File: src/components/common/Field.tsx)
+    - FormStack.tsx (File: src/components/common/FormStack.tsx)
+    - GraphPanel.tsx (File: src/components/panels/GraphPanel.tsx)
+      - D3PixiRenderer.tsx (File: src/components/panels/graph/adapters/D3PixiRenderer.tsx)
+        - HTMLCanvasElement [local/unknown]
+        - Map [local/unknown]
+        - TreeNode [local/unknown]
+      - GraphFloatingToolbar.tsx (File: src/components/panels/graph/components/GraphFloatingToolbar.tsx)
+      - GraphHud.tsx (File: src/components/panels/graph/GraphHud.tsx)
+      - GraphPanelHeader.tsx (File: src/components/panels/graph/components/GraphPanelHeader.tsx)
+      - GraphViewSettings [local/unknown]
+      - HTMLCanvasElement [local/unknown]
+      - HTMLDivElement [local/unknown]
+      - HoveredNodeInfo [local/unknown]
+      - Map [local/unknown]
+      - Record [local/unknown]
+      - SVGSVGElement [local/unknown]
+    - HTMLFormElement [local/unknown]
+    - InspectorAssistantComposer.tsx (File: src/components/inspector/InspectorAssistantComposer.tsx)
+      - Button.tsx (File: src/components/ui/Button.tsx)
+        - Comp [local/unknown]
+      - HTMLFormElement [local/unknown]
+      - HTMLTextAreaElement [local/unknown]
+    - InspectorPanel.tsx (File: src/components/panels/InspectorPanel.tsx)
+      - DockPanelScaffold.tsx (File: src/components/common/DockPanelScaffold.tsx)
+      - InspectorContextTab.tsx (File: src/components/inspector/panelTabs/InspectorContextTab.tsx)
+        - ActionRow.tsx (File: src/components/common/ActionRow.tsx)
+        - Button.tsx (File: src/components/ui/Button.tsx)
+          - Comp [local/unknown]
+        - EmptyMiniState.tsx (File: src/components/common/EmptyMiniState.tsx)
+        - HistoryList.tsx (File: src/components/common/HistoryList.tsx)
+          - TItem [local/unknown]
+        - PanelSection.tsx (File: src/components/common/PanelSection.tsx)
+        - Skeleton [local/unknown]
+        - Spinner [local/unknown]
+      - InspectorHistoryTab.tsx (File: src/components/inspector/panelTabs/InspectorHistoryTab.tsx)
+        - EmptyMiniState.tsx (File: src/components/common/EmptyMiniState.tsx)
+        - InspectorHistory.tsx (File: src/components/inspector/InspectorHistory.tsx)
+          - HTMLDivElement [local/unknown]
+          - HistoryList.tsx (File: src/components/common/HistoryList.tsx)
+            - TItem [local/unknown]
+        - PanelSection.tsx (File: src/components/common/PanelSection.tsx)
+      - InspectorMetaTab.tsx (File: src/components/inspector/panelTabs/InspectorMetaTab.tsx)
+        - Button.tsx (File: src/components/ui/Button.tsx)
+          - Comp [local/unknown]
+        - EmptyMiniState.tsx (File: src/components/common/EmptyMiniState.tsx)
+        - Field.tsx (File: src/components/common/Field.tsx)
+        - FormStack.tsx (File: src/components/common/FormStack.tsx)
+        - HistoryList.tsx (File: src/components/common/HistoryList.tsx)
+          - TItem [local/unknown]
+        - PanelSection.tsx (File: src/components/common/PanelSection.tsx)
+        - SummaryGrid.tsx (File: src/components/common/SummaryGrid.tsx)
+      - InspectorMetricsTab.tsx (File: src/components/inspector/panelTabs/InspectorMetricsTab.tsx)
+        - ActionRow.tsx (File: src/components/common/ActionRow.tsx)
+        - Button.tsx (File: src/components/ui/Button.tsx)
+          - Comp [local/unknown]
+        - HistoryList.tsx (File: src/components/common/HistoryList.tsx)
+          - TItem [local/unknown]
+        - InspectorMetricsDashboard.tsx (File: src/components/inspector/InspectorMetricsDashboard.tsx)
+          - EmptyMiniState.tsx (File: src/components/common/EmptyMiniState.tsx)
+          - Progress [local/unknown]
+          - Provider [local/unknown]
+        - PanelSection.tsx (File: src/components/common/PanelSection.tsx)
+        - SummaryGrid.tsx (File: src/components/common/SummaryGrid.tsx)
+    - NavigationPanel.tsx (File: src/components/panels/NavigationPanel.tsx)
+      - DockPanelScaffold.tsx (File: src/components/common/DockPanelScaffold.tsx)
+      - EntityList.tsx (File: src/components/panels/EntityList.tsx)
+        - Button.tsx (File: src/components/ui/Button.tsx)
+          - Comp [local/unknown]
+        - DndContext [local/unknown]
+        - EmptyMiniState.tsx (File: src/components/common/EmptyMiniState.tsx)
+        - EntityComposer.tsx (File: src/components/panels/entityList/EntityComposer.tsx)
+          - Button.tsx (File: src/components/ui/Button.tsx)
+            - Comp [local/unknown]
+          - Field.tsx (File: src/components/common/Field.tsx)
+          - FormStack.tsx (File: src/components/common/FormStack.tsx)
+        - HTMLDivElement [local/unknown]
+        - PanelSection.tsx (File: src/components/common/PanelSection.tsx)
+        - SortableContext [local/unknown]
+        - SortableEntityCard.tsx (File: src/components/panels/entityList/SortableEntityCard.tsx)
+          - ActionMenu.tsx (File: src/components/common/ActionMenu.tsx)
+            - DropdownMenu [local/unknown]
+            - DropdownMenuContent [local/unknown]
+            - DropdownMenuItem [local/unknown]
+            - DropdownMenuTrigger [local/unknown]
+      - Sidebar.tsx (File: src/components/layout/Sidebar.tsx)
+        - ActionMenu.tsx (File: src/components/common/ActionMenu.tsx)
+          - DropdownMenu [local/unknown]
+          - DropdownMenuContent [local/unknown]
+          - DropdownMenuItem [local/unknown]
+          - DropdownMenuTrigger [local/unknown]
+        - Button.tsx (File: src/components/ui/Button.tsx)
+          - Comp [local/unknown]
+        - Field.tsx (File: src/components/common/Field.tsx)
+        - FormStack.tsx (File: src/components/common/FormStack.tsx)
+        - PanelSection.tsx (File: src/components/common/PanelSection.tsx)
+      - TabBar.tsx (File: src/components/layout/TabBar.tsx)
+        - ActionMenu.tsx (File: src/components/common/ActionMenu.tsx)
+          - DropdownMenu [local/unknown]
+          - DropdownMenuContent [local/unknown]
+          - DropdownMenuItem [local/unknown]
+          - DropdownMenuTrigger [local/unknown]
+        - Button.tsx (File: src/components/ui/Button.tsx)
+          - Comp [local/unknown]
+        - Field.tsx (File: src/components/common/Field.tsx)
+    - OnboardingScreen.tsx (File: src/components/onboarding/OnboardingScreen.tsx)
+      - Button.tsx (File: src/components/ui/Button.tsx)
+        - Comp [local/unknown]
+      - Field.tsx (File: src/components/common/Field.tsx)
+      - Provider [local/unknown]
+    - usePanelWidths.tsx (File: src/hooks/workspace/usePanelWidths.tsx)
+      - PanelWidths [local/unknown]
+    - ShortcutsOverlay.tsx (File: src/components/overlays/ShortcutsOverlay.tsx)
+      - Dialog [local/unknown]
+      - DialogContent [local/unknown]
+      - DialogHeader [local/unknown]
+      - DialogTitle [local/unknown]
+    - StackedDialog [local/unknown]
+    - WorkspaceHeader.tsx (File: src/components/layout/WorkspaceHeader.tsx)
+  - ErrorBoundary.tsx (File: src/components/ErrorBoundary.tsx)
+    - Props [local/unknown]
+  - OnboardingScreen.tsx (File: src/components/onboarding/OnboardingScreen.tsx)
+    - Button.tsx (File: src/components/ui/Button.tsx)
+      - Comp [local/unknown]
+    - Field.tsx (File: src/components/common/Field.tsx)
+    - Provider [local/unknown]
+  - PersistedState [local/unknown]
+  - useTheme.ts (File: src/hooks/useTheme.ts)
+    - ResolvedTheme [local/unknown]
+    - ThemeContextValue [local/unknown]
+    - ThemePreference [local/unknown]

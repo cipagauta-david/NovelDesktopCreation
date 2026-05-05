@@ -32,7 +32,11 @@ export function useEntityReferenceManagement({
   function insertReference(entity: EntityRecord) {
     if (!activeDraft || !editorViewRef.current || !referenceSuggestion) return
     const replacement = buildStructuredReference(entity.id, entity.title)
-    const nextContent = `${activeDraft.content.slice(0, referenceSuggestion.start)}${replacement}${activeDraft.content.slice(referenceSuggestion.end)}`
+    // V0ID_NOTE: closeBrackets auto-inserts `}}` when the user types `{{`, placing the
+    // cursor between them. referenceSuggestion.end stops before those auto-inserted `}}`,
+    // so we must consume them here or the result is `{{entity:id|label}}}}`.
+    const trailingClosing = activeDraft.content.slice(referenceSuggestion.end).startsWith('}}') ? 2 : 0
+    const nextContent = `${activeDraft.content.slice(0, referenceSuggestion.start)}${replacement}${activeDraft.content.slice(referenceSuggestion.end + trailingClosing)}`
     setDraft({ ...activeDraft, content: nextContent })
     setReferenceSuggestion(null)
 

@@ -9,6 +9,7 @@ import {
   type DragEvent,
   type RefObject,
 } from 'react'
+import { EditorSelection } from '@codemirror/state'
 import { markdown } from '@codemirror/lang-markdown'
 import { EditorView, type ViewUpdate } from '@codemirror/view'
 import CodeMirror from '@uiw/react-codemirror'
@@ -97,6 +98,14 @@ export function EditorPanel({
   const [detailsPanelOpen, setDetailsPanelOpen] = useState(false)
   const [detailsTab, setDetailsTab] = useState<'meta' | 'props' | 'assets'>('meta')
   const writingLaneRef = useRef<HTMLDivElement | null>(null)
+  // V0ID_NOTE: savedCursorsRef is a Map<entityId, cursorPos> that survives re-renders
+  // without triggering them. activeEntityIdRef mirrors draft.entityId as a mutable ref
+  // so handleCursorActivity can read it without taking it as a useCallback dep — taking
+  // draft.entityId as a dep would create a new callback on every entity switch, breaking
+  // the entire commonEditorProps/editorSurface memoization chain.
+  const savedCursorsRef = useRef<Map<string, number>>(new Map())
+  const activeEntityIdRef = useRef(draft.entityId)
+  activeEntityIdRef.current = draft.entityId
   const entityById = useMemo(() => new Map(allEntities.map((entry) => [entry.id, entry])), [allEntities])
 
   const ghostTextProvider = useMemo(() => createNarrativeGhostTextProvider(draft.title), [draft.title])
@@ -155,9 +164,36 @@ export function EditorPanel({
 
   // V0ID_NOTE: useCallback prevents handleCursorActivity from being a new reference on
   // every render — it's a dep of commonEditorProps callbacks, so instability cascades.
+  // We read activeEntityIdRef.current (not draft.entityId) so the dep array stays []
+  // and the callback reference never changes across entity switches.
   const handleCursorActivity = useCallback((selectionEnd: number | null) => {
-    setCursorPosition(Math.max(selectionEnd ?? 0, 0))
+    const pos = Math.max(selectionEnd ?? 0, 0)
+    setCursorPosition(pos)
+    savedCursorsRef.current.set(activeEntityIdRef.current, pos)
   }, [])
+
+  // Restore the last-known cursor position whenever we switch to a different entity.
+  // The rAF cancel ref prevents a fast-switch race where rAF from entity A fires after
+  // entity B is already loaded, teleporting B's cursor to A's saved position.
+  const restoreRafRef = useRef(0)
+  useEffect(() => {
+    if (restoreRafRef.current) {
+      cancelAnimationFrame(restoreRafRef.current)
+    }
+    const targetEntityId = draft.entityId
+    const savedPos = savedCursorsRef.current.get(targetEntityId)
+    if (savedPos == null) return
+    restoreRafRef.current = requestAnimationFrame(() => {
+      restoreRafRef.current = 0
+      // Guard: abort if the entity changed again before this frame ran.
+      if (activeEntityIdRef.current !== targetEntityId) return
+      const view = editorViewRef.current
+      if (!view) return
+      const clampedPos = Math.min(savedPos, view.state.doc.length)
+      view.dispatch({ selection: EditorSelection.cursor(clampedPos) })
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft.entityId])
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
