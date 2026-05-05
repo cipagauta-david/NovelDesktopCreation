@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import type { LlmStreamStatus, Project, WorkspaceView } from '../../types/workspace'
 import { useTheme } from '../../hooks/useTheme'
 import '../../styles/layout/WorkspaceHeader.css';
@@ -21,7 +22,7 @@ type WorkspaceHeaderProps = {
   onToggleInspector: () => void
 }
 
-export function WorkspaceHeader({
+export const WorkspaceHeader = memo(function WorkspaceHeader({
   project,
   activeNodeLabel,
   activeNodeMeta,
@@ -111,4 +112,4 @@ export function WorkspaceHeader({
       </div>
     </header>
   )
-}
+})

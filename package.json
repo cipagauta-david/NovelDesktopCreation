@@ -12,12 +12,12 @@
     "css:organize": "node scripts/extract_and_centralize_css.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed",
-    "test:e2e:ci": "playwright test --reporter=dot",
+    "test:e2e": "playwright test --workers=4",
+    "test:e2e:headed": "playwright test --headed --workers=4",
+    "test:e2e:ci": "playwright test --reporter=dot --workers=4",
     "test": "npm run lint && npm run test:e2e:ci",
-    "test:report": "playwright test --reporter=html && playwright show-report",
-    "test:inspect": "playwright test --debug"
+    "test:report": "playwright test --reporter=html && playwright show-report --workers=4",
+    "test:inspect": "playwright test --debug --workers=4"
   },
   "main": "desktop/main.cjs",
   "build": {

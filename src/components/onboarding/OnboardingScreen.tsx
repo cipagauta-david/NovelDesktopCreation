@@ -24,7 +24,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
   if (view === 'landing') {
     return (
       <main className="onboarding-shell">
-        <section className="hero-panel" style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+        <section className="hero-panel">
           <div className="eyebrow">La nueva forma de crear universos</div>
           <h1>Escribe con una IA que respeta tu visión.</h1>
           <p>
@@ -32,17 +32,17 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
             Organiza entidades, descubre conexiones ocultas y da vida a tus historias sin perder tu voz.
           </p>
           
-          <div style={{ margin: '2rem 0', padding: '1rem', border: '1px solid var(--border-subtle)', borderRadius: '8px', background: 'var(--surface-sunken)' }}>
-            <span style={{ fontSize: '3rem' }}>🌌</span>
+          <div className="hero-preview">
+            <span className="hero-preview-emoji">🌌</span>
             <p><strong>Vista Previa del Espacio de Trabajo</strong></p>
-            <small style={{ color: 'var(--text-secondary)' }}>Interfaz orientada a escritores creativos, libre de distracciones.</small>
+            <small>Interfaz orientada a escritores creativos, libre de distracciones.</small>
           </div>
 
-          <Button className="primary-button" variant="primary" type="button" onClick={() => setView('onboarding')} style={{ fontSize: '1.25rem', padding: '0.75rem 2rem' }}>
+          <Button className="primary-button hero-cta" variant="default" type="button" onClick={() => setView('onboarding')}>
             Empieza a diseñar tu mundo
           </Button>
 
-          <div className="hero-grid" style={{ marginTop: '3rem', textAlign: 'left' }}>
+          <div className="hero-grid">
             <article className="hero-feature">
               <strong>IA bajo control radical</strong>
               <span>Tú decides cuándo pedir ideas y cuándo confirmar sugerencias. La IA nunca impone, solo propone.</span>
@@ -71,7 +71,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
         }}
       >
         <div className="section-title">
-          <button type="button" onClick={() => setView('landing')} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}>← Volver</button>
+          <button type="button" className="onboarding-back-btn" onClick={() => setView('landing')}>← Volver</button>
           <br /><br />
           <h2>¿Cómo quieres configurar tu espacio?</h2>
         </div>
@@ -84,30 +84,29 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
           />
         </Field>
 
-        <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="onboarding-actions">
           <Button 
             className="primary-button" 
-            variant="primary" 
+            variant="default" 
             type="button" 
             onClick={() => onSubmit({ authorName, provider: 'Local/Ollama', model: 'demo', apiKey: '' })}
           >
             Probar sin API key — Modo demo
           </Button>
           
-          <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>o</div>
+          <div className="onboarding-divider">o</div>
           
           <Button 
             variant="ghost" 
             type="button" 
             onClick={() => setShowAdvanced(!showAdvanced)}
-            style={{ border: '1px solid var(--border-subtle)' }}
           >
             {showAdvanced ? 'Ocultar configuración de IA propia' : 'Conectar mi propia IA (API Key)'}
           </Button>
         </div>
 
         {showAdvanced && (
-          <div style={{ marginTop: '2rem', padding: '1rem', border: '1px solid var(--border-subtle)', borderRadius: '8px' }}>
+          <div className="advanced-config">
             <div className="inline-grid">
               <Field label="Proveedor IA">
                 <select
@@ -147,18 +146,18 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
               />
             </Field>
 
-            <label style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.9rem' }}>
+            <label className="privacy-consent">
               <input 
                 type="checkbox" 
                 checked={acceptedPrivacy} 
                 onChange={(e) => setAcceptedPrivacy(e.target.checked)} 
               />
-              Entiendo que mi API key se guardará localmente. <a href="#" style={{ color: 'var(--text-accent)' }}>Ver Política de Privacidad</a>.
+              Entiendo que mi API key se guardará localmente. <a href="#" className="privacy-link">Ver Política de Privacidad</a>.
             </label>
 
             <Button 
               className="primary-button" 
-              variant="primary" 
+              variant="default" 
               type="submit"
               disabled={!acceptedPrivacy || !apiKey}
             >

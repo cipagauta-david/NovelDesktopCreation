@@ -71,7 +71,8 @@
 }
 
 /* Hero preview card */
-.hero-panel > div:has(span[style*="3rem"]) {
+.hero-preview {
+  margin: 2rem 0;
   padding: 1.5rem;
   border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--surface-elevated) 85%, transparent);
@@ -84,12 +85,27 @@
   place-items: center;
 }
 
+.hero-preview-emoji {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.hero-preview small {
+  color: var(--text-secondary);
+}
+
+.hero-cta {
+  font-size: 1.25rem;
+  padding: 0.75rem 2rem;
+}
+
 /* ─── Hero Feature Grid ─── */
 .hero-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--space-3);
   text-align: left;
+  margin-top: 3rem;
 }
 
 .hero-feature {
@@ -178,11 +194,52 @@
 }
 
 /* ─── Inset Config Block ─── */
-.onboarding-card > div:has(select) {
+.advanced-config {
+  margin-top: 2rem;
   padding: 1rem 1.25rem;
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-subtle);
   background: color-mix(in srgb, var(--surface-canvas) 60%, transparent);
+}
+
+/* ─── Onboarding Form Actions ─── */
+.onboarding-actions {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.onboarding-divider {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+/* ─── Back Button ─── */
+.onboarding-back-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+}
+
+.onboarding-back-btn:hover {
+  color: var(--text-primary);
+}
+
+/* ─── Privacy Consent ─── */
+.privacy-consent {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  font-size: var(--font-size--1);
+}
+
+.privacy-link {
+  color: var(--text-accent);
 }
 
 /* ─── Dark Mode ─── */

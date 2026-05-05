@@ -2,8 +2,6 @@
   - AppContent [local/unknown]
   - AppShell.tsx (File: src/components/layout/AppShell.tsx)
     - AppWorker [local/unknown]
-    - Button.tsx (File: src/components/ui/Button.tsx)
-      - Comp [local/unknown]
     - CommandPalette.tsx (File: src/components/overlays/CommandPalette.tsx)
       - CommandDialog [local/unknown]
       - CommandEmpty [local/unknown]
@@ -12,30 +10,6 @@
       - CommandItem [local/unknown]
       - CommandList [local/unknown]
       - HTMLDivElement [local/unknown]
-    - dialog.tsx (File: src/components/ui/dialog.tsx)
-      - Button [local/unknown]
-      - DialogOverlay [local/unknown]
-      - DialogPortal [local/unknown]
-      - DialogPrimitive [local/unknown]
-      - HugeiconsIcon [local/unknown]
-    - dialog.tsx (File: src/components/ui/dialog.tsx)
-      - Button [local/unknown]
-      - DialogOverlay [local/unknown]
-      - DialogPortal [local/unknown]
-      - DialogPrimitive [local/unknown]
-      - HugeiconsIcon [local/unknown]
-    - dialog.tsx (File: src/components/ui/dialog.tsx)
-      - Button [local/unknown]
-      - DialogOverlay [local/unknown]
-      - DialogPortal [local/unknown]
-      - DialogPrimitive [local/unknown]
-      - HugeiconsIcon [local/unknown]
-    - dialog.tsx (File: src/components/ui/dialog.tsx)
-      - Button [local/unknown]
-      - DialogOverlay [local/unknown]
-      - DialogPortal [local/unknown]
-      - DialogPrimitive [local/unknown]
-      - HugeiconsIcon [local/unknown]
     - EditorPanel.tsx (File: src/components/panels/EditorPanel.tsx)
       - CSSProperties [local/unknown]
       - CodeMirror [local/unknown]
@@ -88,8 +62,13 @@
       - HTMLDivElement [local/unknown]
       - HTMLElement [local/unknown]
       - Map [local/unknown]
-    - Field.tsx (File: src/components/common/Field.tsx)
-    - FormStack.tsx (File: src/components/common/FormStack.tsx)
+    - FloatingAssistantFab.tsx (File: src/components/layout/FloatingAssistantFab.tsx)
+      - HTMLFormElement [local/unknown]
+      - InspectorAssistantComposer.tsx (File: src/components/inspector/InspectorAssistantComposer.tsx)
+        - Button.tsx (File: src/components/ui/Button.tsx)
+          - Comp [local/unknown]
+        - HTMLFormElement [local/unknown]
+        - HTMLTextAreaElement [local/unknown]
     - GraphPanel.tsx (File: src/components/panels/GraphPanel.tsx)
       - D3PixiRenderer.tsx (File: src/components/panels/graph/adapters/D3PixiRenderer.tsx)
         - HTMLCanvasElement [local/unknown]
@@ -105,12 +84,6 @@
       - Map [local/unknown]
       - Record [local/unknown]
       - SVGSVGElement [local/unknown]
-    - HTMLFormElement [local/unknown]
-    - InspectorAssistantComposer.tsx (File: src/components/inspector/InspectorAssistantComposer.tsx)
-      - Button.tsx (File: src/components/ui/Button.tsx)
-        - Comp [local/unknown]
-      - HTMLFormElement [local/unknown]
-      - HTMLTextAreaElement [local/unknown]
     - InspectorPanel.tsx (File: src/components/panels/InspectorPanel.tsx)
       - DockPanelScaffold.tsx (File: src/components/common/DockPanelScaffold.tsx)
       - InspectorContextTab.tsx (File: src/components/inspector/panelTabs/InspectorContextTab.tsx)
@@ -152,6 +125,36 @@
           - Provider [local/unknown]
         - PanelSection.tsx (File: src/components/common/PanelSection.tsx)
         - SummaryGrid.tsx (File: src/components/common/SummaryGrid.tsx)
+    - InvalidateKeyConfirmDialog.tsx (File: src/components/dialogs/InvalidateKeyConfirmDialog.tsx)
+      - Button.tsx (File: src/components/ui/Button.tsx)
+        - Comp [local/unknown]
+      - StackedDialog.tsx (File: src/components/dialogs/StackedDialog.tsx)
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - FormStack.tsx (File: src/components/common/FormStack.tsx)
+    - IconRail.tsx (File: src/components/layout/IconRail.tsx)
     - NavigationPanel.tsx (File: src/components/panels/NavigationPanel.tsx)
       - DockPanelScaffold.tsx (File: src/components/common/DockPanelScaffold.tsx)
       - EntityList.tsx (File: src/components/panels/EntityList.tsx)
@@ -193,28 +196,173 @@
         - Button.tsx (File: src/components/ui/Button.tsx)
           - Comp [local/unknown]
         - Field.tsx (File: src/components/common/Field.tsx)
-    - OnboardingScreen.tsx (File: src/components/onboarding/OnboardingScreen.tsx)
+    - PanelOverlayBackdrop.tsx (File: src/components/layout/PanelOverlayBackdrop.tsx)
+    - RenameProjectDialog.tsx (File: src/components/dialogs/RenameProjectDialog.tsx)
       - Button.tsx (File: src/components/ui/Button.tsx)
         - Comp [local/unknown]
       - Field.tsx (File: src/components/common/Field.tsx)
-      - Provider [local/unknown]
-    - usePanelWidths.tsx (File: src/hooks/workspace/usePanelWidths.tsx)
-      - PanelWidths [local/unknown]
+      - StackedDialog.tsx (File: src/components/dialogs/StackedDialog.tsx)
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - FormStack.tsx (File: src/components/common/FormStack.tsx)
+    - RenameTabDialog.tsx (File: src/components/dialogs/RenameTabDialog.tsx)
+      - Button.tsx (File: src/components/ui/Button.tsx)
+        - Comp [local/unknown]
+      - Field.tsx (File: src/components/common/Field.tsx)
+      - StackedDialog.tsx (File: src/components/dialogs/StackedDialog.tsx)
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - FormStack.tsx (File: src/components/common/FormStack.tsx)
+    - ResizeHandle.tsx (File: src/components/common/ResizeHandle.tsx)
+    - IconRail.tsx (File: src/components/layout/IconRail.tsx)
+    - RotateKeyDialog.tsx (File: src/components/dialogs/RotateKeyDialog.tsx)
+      - Button.tsx (File: src/components/ui/Button.tsx)
+        - Comp [local/unknown]
+      - Field.tsx (File: src/components/common/Field.tsx)
+      - StackedDialog.tsx (File: src/components/dialogs/StackedDialog.tsx)
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - FormStack.tsx (File: src/components/common/FormStack.tsx)
+    - SettingsDialog.tsx (File: src/components/dialogs/SettingsDialog.tsx)
+      - Button.tsx (File: src/components/ui/Button.tsx)
+        - Comp [local/unknown]
+      - dialog.tsx (File: src/components/ui/dialog.tsx)
+        - Button [local/unknown]
+        - DialogOverlay [local/unknown]
+        - DialogPortal [local/unknown]
+        - DialogPrimitive [local/unknown]
+        - HugeiconsIcon [local/unknown]
+      - dialog.tsx (File: src/components/ui/dialog.tsx)
+        - Button [local/unknown]
+        - DialogOverlay [local/unknown]
+        - DialogPortal [local/unknown]
+        - DialogPrimitive [local/unknown]
+        - HugeiconsIcon [local/unknown]
+      - dialog.tsx (File: src/components/ui/dialog.tsx)
+        - Button [local/unknown]
+        - DialogOverlay [local/unknown]
+        - DialogPortal [local/unknown]
+        - DialogPrimitive [local/unknown]
+        - HugeiconsIcon [local/unknown]
+      - dialog.tsx (File: src/components/ui/dialog.tsx)
+        - Button [local/unknown]
+        - DialogOverlay [local/unknown]
+        - DialogPortal [local/unknown]
+        - DialogPrimitive [local/unknown]
+        - HugeiconsIcon [local/unknown]
+      - Field.tsx (File: src/components/common/Field.tsx)
+      - FormStack.tsx (File: src/components/common/FormStack.tsx)
+      - SettingsTab [local/unknown]
     - ShortcutsOverlay.tsx (File: src/components/overlays/ShortcutsOverlay.tsx)
       - Dialog [local/unknown]
       - DialogContent [local/unknown]
       - DialogHeader [local/unknown]
       - DialogTitle [local/unknown]
-    - StackedDialog [local/unknown]
+    - SyncConfigDialog.tsx (File: src/components/dialogs/SyncConfigDialog.tsx)
+      - Button.tsx (File: src/components/ui/Button.tsx)
+        - Comp [local/unknown]
+      - Field.tsx (File: src/components/common/Field.tsx)
+      - StackedDialog.tsx (File: src/components/dialogs/StackedDialog.tsx)
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - dialog.tsx (File: src/components/ui/dialog.tsx)
+          - Button [local/unknown]
+          - DialogOverlay [local/unknown]
+          - DialogPortal [local/unknown]
+          - DialogPrimitive [local/unknown]
+          - HugeiconsIcon [local/unknown]
+        - FormStack.tsx (File: src/components/common/FormStack.tsx)
     - WorkspaceHeader.tsx (File: src/components/layout/WorkspaceHeader.tsx)
   - ErrorBoundary.tsx (File: src/components/ErrorBoundary.tsx)
     - Props [local/unknown]
-  - OnboardingScreen.tsx (File: src/components/onboarding/OnboardingScreen.tsx)
-    - Button.tsx (File: src/components/ui/Button.tsx)
-      - Comp [local/unknown]
-    - Field.tsx (File: src/components/common/Field.tsx)
-    - Provider [local/unknown]
-  - PersistedState [local/unknown]
+  - OnboardingGate.tsx (File: src/components/onboarding/OnboardingGate.tsx)
+    - OnboardingScreen.tsx (File: src/components/onboarding/OnboardingScreen.tsx)
+      - Button.tsx (File: src/components/ui/Button.tsx)
+        - Comp [local/unknown]
+      - Field.tsx (File: src/components/common/Field.tsx)
+      - Provider [local/unknown]
   - useTheme.ts (File: src/hooks/useTheme.ts)
     - ResolvedTheme [local/unknown]
     - ThemeContextValue [local/unknown]

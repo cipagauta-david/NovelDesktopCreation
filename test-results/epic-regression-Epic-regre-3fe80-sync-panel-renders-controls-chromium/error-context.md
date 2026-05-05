@@ -1,0 +1,133 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - banner [ref=e6]:
+    - generic [ref=e7]:
+      - generic "Crónicas del Umbral" [ref=e8]
+      - generic [ref=e9]: ›
+      - generic "Capítulo 1 — La grieta de ceniza" [ref=e10]
+      - generic [ref=e11]: Crónicas del Umbral
+    - tablist "Modo de vista" [ref=e13]:
+      - button "✎ Escribir" [ref=e14] [cursor=pointer]:
+        - text: ✎
+        - generic [ref=e15]: Escribir
+      - button "◎ Mapa" [ref=e16] [cursor=pointer]:
+        - text: ◎
+        - generic [ref=e17]: Mapa
+    - generic [ref=e18]:
+      - button "Buscar" [ref=e19] [cursor=pointer]:
+        - generic [ref=e20]: Buscar…
+        - generic [ref=e21]: ⌘K
+      - button "Modo noche" [ref=e22] [cursor=pointer]:
+        - generic [ref=e23]: ☽
+      - generic "Crónicas del Umbral · demo" [ref=e24]:
+        - generic [ref=e26]: demo
+  - navigation "Paneles izquierda" [ref=e27]:
+    - button "Proyecto" [ref=e28] [cursor=pointer]: ⌂
+    - button "Colecciones" [ref=e29] [cursor=pointer]: ☷
+    - button "Configuración" [ref=e30] [cursor=pointer]: ⚙
+  - navigation "Paneles derecha" [ref=e31]:
+    - button "Contexto" [active] [ref=e32] [cursor=pointer]: ◧
+    - button "Metadatos" [ref=e33] [cursor=pointer]: ◨
+    - button "Historial" [ref=e34] [cursor=pointer]: ⟲
+    - button "Métricas" [ref=e35] [cursor=pointer]: ◫
+  - generic [ref=e37]:
+    - button "Cerrar paneles" [ref=e38] [cursor=pointer]
+    - complementary
+    - region "Editor principal" [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - generic [ref=e43]: Entidad activa
+          - generic [ref=e44]:
+            - textbox "Título de la entidad" [ref=e45]: Capítulo 1 — La grieta de ceniza
+            - generic "Editor en modo inmersivo" [ref=e46]: ◉ Texto limpio
+          - generic [ref=e47]:
+            - generic [ref=e48]: rev 3
+            - generic [ref=e49]: •
+            - generic [ref=e50]: May 5, 2026, 11:40 AM
+            - generic [ref=e51]: •
+            - generic [ref=e52]: Listo
+            - generic "Usa doble llave para enlazar entidades" [ref=e53]: "Usa {{}} para enlazar"
+        - generic [ref=e54]:
+          - button "Sugerencia IA" [ref=e55] [cursor=pointer]
+          - button "Modo foco" [ref=e56] [cursor=pointer]
+          - button "Mostrar detalles" [ref=e57] [cursor=pointer]
+          - button "Opciones de entidad" [ref=e58] [cursor=pointer]: ⋯
+      - region "Documento" [ref=e60]:
+        - generic [ref=e61]:
+          - generic [ref=e62]: La generacion de inteligencia artificial esta detenida.
+          - generic "Editor narrativo inmersivo" [ref=e63]:
+            - textbox [ref=e66]:
+              - generic [ref=e67]: "## Gancho"
+              - generic [ref=e68]: Ariadna detecta que el pulso del Velo cambió durante la guardia nocturna.
+              - generic [ref=e70]: Escena clave
+              - generic [ref=e71]:
+                - text: La alarma nace en
+                - generic [ref=e72] [cursor=pointer]: ✦Puerto Ceniza
+                - text: ", mientras"
+                - generic [ref=e73] [cursor=pointer]: ✦Ariadna Vale
+                - text: decide romper protocolo.
+              - generic [ref=e75]: Consecuencia
+              - generic [ref=e76]:
+                - text: La decisión obliga a revisar
+                - generic [ref=e77] [cursor=pointer]: ✦Principio de Resonancia
+                - text: .
+      - complementary "Inspector de la entidad":
+        - generic:
+          - button "Metadatos"
+          - button "Propiedades"
+          - button "Archivos"
+        - region:
+          - generic:
+            - generic:
+              - generic:
+                - generic: Metadatos
+                - generic: Plantilla, etiquetas y claves de contexto
+              - generic:
+                - button "Expand Metadatos":
+                  - img
+    - complementary [ref=e78]:
+      - separator "Ajustar ancho del panel derecho" [ref=e79]
+      - complementary [ref=e80]:
+        - tablist "Secciones del inspector" [ref=e82]:
+          - tab "◧" [selected] [ref=e83] [cursor=pointer]
+          - tab "◨" [ref=e84] [cursor=pointer]
+          - tab "⟲" [ref=e85] [cursor=pointer]
+          - tab "◫" [ref=e86] [cursor=pointer]
+        - generic [ref=e87]:
+          - region [ref=e88]:
+            - generic [ref=e90]:
+              - generic [ref=e91]:
+                - generic [ref=e92]: Instrucciones de la coleccion
+                - generic [ref=e94]: 📚 Capítulos
+              - button "Expand Instrucciones de la coleccion" [ref=e96] [cursor=pointer]:
+                - img [ref=e97]
+          - region [ref=e99]:
+            - generic [ref=e101]:
+              - generic [ref=e102]:
+                - generic [ref=e103]: Referencias en este documento
+                - generic [ref=e104]: 3 enlazadas
+              - button "Collapse Referencias en este documento" [expanded] [ref=e106] [cursor=pointer]:
+                - img [ref=e107]
+            - generic [ref=e110]:
+              - article [ref=e111]:
+                - strong [ref=e112]: Puerto Ceniza
+                - paragraph [ref=e113]: Ciudad portuaria construida sobre muelles de obsidiana. Cada calle vibra cuando el Velo sufre presión. Su red de túneles conecta con La Rupt
+                - generic "Información del enlace" [ref=e114]:
+                  - generic [ref=e115]: Función
+                  - generic [ref=e116]: Riesgo
+              - article [ref=e117]:
+                - strong [ref=e118]: Ariadna Vale
+                - paragraph [ref=e119]: Inspectora de grietas rituales. Confía más en patrones que en autoridades. Trabaja entre Puerto Ceniza y los archivos de La Ruptura del Nort
+                - generic "Información del enlace" [ref=e120]:
+                  - generic [ref=e121]: Rol narrativo
+                  - generic [ref=e122]: Deseo
+                  - generic [ref=e123]: Miedo
+              - article [ref=e124]:
+                - strong [ref=e125]: Principio de Resonancia
+                - paragraph [ref=e126]: Toda grieta responde a una emoción dominante sostenida en el tiempo. Si se altera ese patrón, el Velo cambia de forma. Aplicación directa en
+                - generic "Información del enlace" [ref=e127]:
+                  - generic [ref=e128]: Coste
+  - button "Abrir asistente IA" [ref=e129] [cursor=pointer]: ✦
+```

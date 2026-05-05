@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback, useEffect } from 'react'
 
 import { providerModels } from '../data/constants'
-import type { AppSettings, DraftState, OnboardingPayload, PanelKey, PanelVisibility, PersistedGraphLayouts, PersistedState, WorkspaceView } from '../types/workspace'
+import type { DraftState, PanelKey, PanelVisibility, PersistedGraphLayouts, PersistedState, WorkspaceView } from '../types/workspace'
 import { usePanelWidths } from './workspace/usePanelWidths'
 import { draftStateFromEntity } from '../utils/workspace'
 
@@ -19,7 +19,6 @@ import type { AppWorker } from '../data/worker'
 import {
   deleteProviderApiKey,
   rotateProviderApiKey,
-  saveProviderApiKey,
   saveWorkspaceSyncToken,
   deleteWorkspaceSyncToken,
   readProviderVaultMetadata,
@@ -124,21 +123,6 @@ export function useWorkspace(
     return () => window.clearTimeout(id)
   }, [toast, setToast])
 
-  const completeOnboarding = useCallback((payload: OnboardingPayload) => {
-    const settings: AppSettings = {
-      authorName: payload.authorName || 'Autor(a)',
-      provider: payload.provider,
-      model: payload.model,
-      apiKeyHint: payload.apiKey ? `••••${payload.apiKey.slice(-4)}` : 'Modo local',
-    }
-
-    void saveProviderApiKey(payload.provider, payload.apiKey).catch((error) => {
-      console.error('[Vault] No se pudo guardar API key', error)
-    })
-    setData((c) => ({ ...c, settings }))
-    setToast('Workspace configurado. Todo listo para escribir.')
-  }, [setData, setToast])
-
   const clearWorkspace = useCallback(async () => {
     await worker.resetWorkspace()
     await clearSyncStoragePersistence()
@@ -208,8 +192,23 @@ export function useWorkspace(
 
   const configureRemoteSync = useCallback(async (input: { endpoint: string; workspaceId: string; token?: string }) => {
     if (!activeProject) return
-    const endpoint = input.endpoint
-    if (!endpoint.trim()) return
+    const endpoint = input.endpoint.trim()
+    if (!endpoint) return
+
+    // Security: validate URL structure and enforce HTTPS-only to prevent
+    // HTTP downgrade attacks and trivially malformed SSRF vectors.
+    let parsedEndpoint: URL
+    try {
+      parsedEndpoint = new URL(endpoint)
+    } catch {
+      setToast('Endpoint inválido: introduce una URL completa (ej. https://api.example.com).')
+      return
+    }
+    if (parsedEndpoint.protocol !== 'https:') {
+      setToast('El endpoint debe usar HTTPS.')
+      return
+    }
+
     const workspaceId = input.workspaceId || activeProject.id
     const token = input.token ?? ''
 
@@ -220,7 +219,7 @@ export function useWorkspace(
     setData((current) => ({
       ...current,
       syncRemoteConfig: {
-        endpoint: endpoint.trim(),
+        endpoint: parsedEndpoint.href,
         workspaceId: workspaceId.trim() || activeProject.id,
         authTokenHint: token.trim() ? `••••${token.trim().slice(-4)}` : (current.syncRemoteConfig?.authTokenHint ?? 'sin token'),
         contractVersion: '2026-03-sync-v2',
@@ -271,7 +270,7 @@ export function useWorkspace(
     newTabName: tabManagement.newTabName, setNewTabName: tabManagement.setNewTabName,
     newEntityTemplateId: entityManagement.newEntityTemplateId, setNewEntityTemplateId: entityManagement.setNewEntityTemplateId,
     activeProject, activeTab, activeEntity, activeDraft, activeTemplates: activeProject?.templates ?? [], activeTabEntities: tabEntities, archivedTabEntities, selectedNewEntityTemplateId: entityManagement.selectedNewEntityTemplateId,
-    searchResults, graphModel: graphManagement.graphModel, suggestionOptions, referenceSuggestion, pendingProposal: aiManagement.pendingProposal, panels, editorViewRef: entityManagement.editorViewRef, onboardingReady: Boolean(data.settings), completeOnboarding,
+    searchResults, graphModel: graphManagement.graphModel, suggestionOptions, referenceSuggestion, pendingProposal: aiManagement.pendingProposal, panels, editorViewRef: entityManagement.editorViewRef,
     // AI streaming
     streamStatus: aiManagement.streamStatus, streamingText: aiManagement.streamingText, llmTraces: aiManagement.llmTraces, stopGeneration: aiManagement.stopGeneration,
     selectProject: projectManagement.selectProject, renameActiveProject: projectManagement.renameActiveProject, deleteActiveProject: projectManagement.deleteActiveProject, createProject: projectManagement.createProject, clearWorkspace,
