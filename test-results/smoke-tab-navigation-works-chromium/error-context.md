@@ -1,101 +1,25 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e4]:
-  - banner [ref=e6]:
-    - generic [ref=e7]:
-      - generic "Crónicas del Umbral" [ref=e8]
-      - generic [ref=e9]: ›
-      - generic "Capítulo 1 — La grieta de ceniza" [ref=e10]
-      - generic [ref=e11]: Crónicas del Umbral
-    - tablist "Modo de vista" [ref=e13]:
-      - button "✎ Escribir" [ref=e14] [cursor=pointer]:
-        - text: ✎
-        - generic [ref=e15]: Escribir
-      - button "◎ Mapa" [ref=e16] [cursor=pointer]:
-        - text: ◎
-        - generic [ref=e17]: Mapa
-    - generic [ref=e18]:
-      - button "Buscar" [ref=e19] [cursor=pointer]:
-        - generic [ref=e20]: Buscar…
-        - generic [ref=e21]: ⌘K
-      - button "Modo noche" [ref=e22] [cursor=pointer]:
-        - generic [ref=e23]: ☽
-      - generic "Crónicas del Umbral · llama3.2" [ref=e24]:
-        - generic [ref=e26]: llama3.2
-  - navigation "Paneles izquierda" [ref=e27]:
-    - button "Proyecto" [ref=e28] [cursor=pointer]: ⌂
-    - button "Colecciones" [ref=e29] [cursor=pointer]: ☷
-    - button "Configuración" [ref=e30] [cursor=pointer]: ⚙
-  - navigation "Paneles derecha" [ref=e31]:
-    - button "Contexto" [ref=e32] [cursor=pointer]: ◧
-    - button "Metadatos" [ref=e33] [cursor=pointer]: ◨
-    - button "Historial" [ref=e34] [cursor=pointer]: ⟲
-    - button "Métricas" [ref=e35] [cursor=pointer]: ◫
-  - generic [ref=e37]:
-    - complementary
-    - region "Editor principal" [ref=e39]:
-      - generic [ref=e40]:
-        - generic [ref=e41]:
-          - generic [ref=e42]: Entidad activa
-          - generic [ref=e43]:
-            - textbox "Título de la entidad" [ref=e44]: Capítulo 1 — La grieta de ceniza
-            - generic "Editor en modo inmersivo" [ref=e45]: ◉ Texto limpio
-          - generic [ref=e46]:
-            - generic [ref=e47]: rev 3
-            - generic [ref=e48]: •
-            - generic [ref=e49]: Mar 22, 2026, 1:26 PM
-            - generic [ref=e50]: •
-            - generic [ref=e51]: Listo
-            - generic "Usa doble llave para enlazar entidades" [ref=e52]: "Usa {{}} para enlazar"
-        - generic [ref=e53]:
-          - button "Sugerencia IA" [ref=e54] [cursor=pointer]
-          - button "Modo foco" [ref=e55] [cursor=pointer]
-          - button "Mostrar detalles" [ref=e56] [cursor=pointer]
-          - button "Opciones de entidad" [ref=e58] [cursor=pointer]: ⋯
-      - region "Documento" [ref=e60]:
-        - generic [ref=e61]:
-          - generic [ref=e62]: La generacion de inteligencia artificial esta detenida.
-          - generic "Editor narrativo inmersivo" [ref=e63]:
-            - textbox [ref=e66]:
-              - generic [ref=e67]: "## Gancho"
-              - generic [ref=e68]: Ariadna detecta que el pulso del Velo cambió durante la guardia nocturna.
-              - generic [ref=e70]: Escena clave
-              - generic [ref=e71]:
-                - text: La alarma nace en
-                - generic [ref=e72] [cursor=pointer]: ✦Puerto Ceniza
-                - text: ", mientras"
-                - generic [ref=e73] [cursor=pointer]: ✦Ariadna Vale
-                - text: decide romper protocolo.
-              - generic [ref=e75]: Consecuencia
-              - generic [ref=e76]:
-                - text: La decisión obliga a revisar
-                - generic [ref=e77] [cursor=pointer]: ✦Principio de Resonancia
-                - text: .
-      - complementary "Detalles de entidad":
-        - generic:
-          - generic:
-            - generic:
-              - heading "Metadatos" [level=3]
-              - generic: Plantilla, etiquetas y claves de contexto
-            - generic:
-              - button "Expandir Metadatos": ⌄
-        - generic:
-          - generic:
-            - generic:
-              - heading "Propiedades" [level=3]
-              - generic: 2 propiedades · 0 assets
-            - generic:
-              - button "Añadir propiedad"
-              - button "Expandir Propiedades": ⌄
-        - generic:
-          - generic:
-            - generic:
-              - heading "Assets visuales" [level=3]
-              - generic: 0 imágenes
-            - generic:
-              - generic "Subir imágenes": + Imagen
-              - button "Expandir Assets visuales": ⌄
-    - complementary
-  - button "Abrir asistente IA" [ref=e78] [cursor=pointer]: 💬 IA
+- main [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]: La nueva forma de crear universos
+    - heading "Escribe con una IA que respeta tu visión." [level=1] [ref=e7]
+    - paragraph [ref=e8]: El único espacio de trabajo creativo donde las sugerencias de la IA están 100% bajo tu control. Organiza entidades, descubre conexiones ocultas y da vida a tus historias sin perder tu voz.
+    - generic [ref=e9]:
+      - generic [ref=e10]: 🌌
+      - paragraph [ref=e11]:
+        - strong [ref=e12]: Vista Previa del Espacio de Trabajo
+      - generic [ref=e13]: Interfaz orientada a escritores creativos, libre de distracciones.
+    - button "Empieza a diseñar tu mundo" [ref=e14] [cursor=pointer]
+    - generic [ref=e15]:
+      - article [ref=e16]:
+        - strong [ref=e17]: IA bajo control radical
+        - generic [ref=e18]: Tú decides cuándo pedir ideas y cuándo confirmar sugerencias. La IA nunca impone, solo propone.
+      - article [ref=e19]:
+        - strong [ref=e20]: Escenas vivas y conectadas
+        - generic [ref=e21]: Observa cómo evolucionan tus personajes con un sistema de referencias visual que evita que pierdas el hilo narrativo.
+      - article [ref=e22]:
+        - strong [ref=e23]: Adiós al síndrome del lienzo en blanco
+        - generic [ref=e24]: Gira tu historia con desarrollos de conflictos y propuestas narrativas instantáneas.
 ```
