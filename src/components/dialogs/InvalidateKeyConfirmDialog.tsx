@@ -13,14 +13,12 @@ export function InvalidateKeyConfirmDialog({ open, onOpenChange, onConfirm }: In
       <p>Esta acción elimina la key del vault del proveedor activo.</p>
       <Button
         type="button"
-        variant="ghost"
-        className="ghost-button"
+        className="ghost-button btn--ghost"
         onClick={() => onOpenChange(false)}
       >Cancelar</Button>
       <Button
         type="button"
-        variant="primary"
-        className="primary-button"
+        className="primary-button btn--default"
         onClick={() => { onConfirm(); onOpenChange(false) }}
       >Confirmar invalidación</Button>
     </StackedDialog>

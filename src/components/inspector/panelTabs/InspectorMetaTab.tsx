@@ -1,12 +1,11 @@
 import type { DraftState, EntityRecord, EntityTemplate, Project } from '../../../types/workspace'
 import { formatTimestamp } from '../../../utils/workspace'
 import { EmptyMiniState } from '../../common/EmptyMiniState'
-import { Field } from '../../common/Field'
-import { FormStack } from '../../common/FormStack'
 import { HistoryList } from '../../common/HistoryList'
 import { PanelSection } from '../../common/PanelSection'
 import { SummaryGrid } from '../../common/SummaryGrid'
 import { Button } from '../../ui/Button'
+import '../../../styles/common/BentoFields.css'
 
 type InspectorMetaTabProps = {
   activeEntity: EntityRecord | null
@@ -56,9 +55,10 @@ export function InspectorMetaTab({
           <SummaryGrid items={summaryItems} />
 
           <PanelSection title="Relaciones de dominio" meta={`${relations.length} salientes`} defaultOpen={false}>
-            <FormStack>
-              <Field label={<span className="visually-hidden">Entidad destino</span>}>
-                <select value={relationTargetId} onChange={(event) => onRelationTargetIdChange(event.target.value)}>
+            <div className="field-bento-grid">
+              <div className="field-bento-card">
+                <label className="field-key-label" htmlFor="relation-target-select">Entidad destino</label>
+                <select id="relation-target-select" className="field-select-input" value={relationTargetId} onChange={(event) => onRelationTargetIdChange(event.target.value)}>
                   <option value="">Selecciona entidad destino</option>
                   {(activeProject?.entities ?? [])
                     .filter((entity) => entity.id !== activeEntity.id && entity.status === 'active')
@@ -68,36 +68,44 @@ export function InspectorMetaTab({
                       </option>
                     ))}
                 </select>
-              </Field>
-              <Field label={<span className="visually-hidden">Tipo de relación</span>}>
+              </div>
+
+              <div className="field-bento-card">
+                <label className="field-key-label" htmlFor="relation-type-input">Tipo de relacion</label>
                 <input
+                  id="relation-type-input"
+                  className="field-value-input"
                   value={relationType}
                   onChange={(event) => onRelationTypeChange(event.target.value)}
                   placeholder="Tipo (ej. mentor_de)"
                 />
-              </Field>
-              <Field label={<span className="visually-hidden">Etiqueta de relación</span>}>
+              </div>
+
+              <div className="field-bento-card">
+                <label className="field-key-label" htmlFor="relation-label-input">Etiqueta</label>
                 <input
+                  id="relation-label-input"
+                  className="field-value-input"
                   value={relationLabel}
                   onChange={(event) => onRelationLabelChange(event.target.value)}
                   placeholder="Etiqueta opcional"
                 />
-              </Field>
-              <Button
-                type="button"
-                variant="primary"
-                className="primary-button"
-                onClick={() => {
-                  if (!relationTargetId.trim() || !relationType.trim()) {
-                    return
-                  }
-                  onAddRelation(activeEntity.id, relationTargetId, relationType, relationLabel)
-                  onRelationLabelChange('')
-                }}
-              >
-                Crear relacion
-              </Button>
-            </FormStack>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              className="primary-button btn--default"
+              onClick={() => {
+                if (!relationTargetId.trim() || !relationType.trim()) {
+                  return
+                }
+                onAddRelation(activeEntity.id, relationTargetId, relationType, relationLabel)
+                onRelationLabelChange('')
+              }}
+            >
+              Crear relacion
+            </Button>
 
             {relations.length > 0 ? (
               <HistoryList
@@ -114,8 +122,7 @@ export function InspectorMetaTab({
                       <p>{relation.label ?? 'Sin etiqueta'}</p>
                       <Button
                         type="button"
-                        variant="ghost"
-                        className="ghost-button compact-button"
+                        className="ghost-button compact-button btn--ghost"
                         onClick={() => onRemoveRelation(relation.id)}
                       >
                         Eliminar

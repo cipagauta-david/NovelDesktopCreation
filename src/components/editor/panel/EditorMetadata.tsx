@@ -1,8 +1,8 @@
 import { memo } from 'react'
 import type { DraftState, EntityTemplate } from '../../../types/workspace'
-import { Field } from '../../common/Field'
 import { SectionCard } from '../../common/SectionCard'
 import '../../../styles/editor/panel/EditorMetadata.css';
+import '../../../styles/common/BentoFields.css'
 
 
 
@@ -21,9 +21,12 @@ export const EditorMetadata = memo(function EditorMetadata({ draft, templates, o
       meta="Plantilla, etiquetas y claves de contexto"
       defaultOpen={false}
     >
-      <div className="form-grid compact-metadata-grid">
-        <Field label="Plantilla">
+      <div className="field-bento-grid compact-metadata-grid">
+        <div className="field-bento-card">
+          <label className="field-key-label" htmlFor="editor-metadata-template">Plantilla</label>
           <select
+            id="editor-metadata-template"
+            className="field-select-input"
             value={draft.templateId}
             onChange={(event) => onDraftChange({ ...draft, templateId: event.target.value })}
           >
@@ -33,21 +36,29 @@ export const EditorMetadata = memo(function EditorMetadata({ draft, templates, o
               </option>
             ))}
           </select>
-        </Field>
-        <Field label="Etiquetas">
+        </div>
+
+        <div className="field-bento-card">
+          <label className="field-key-label" htmlFor="editor-metadata-tags">Etiquetas</label>
           <input
+            id="editor-metadata-tags"
+            className="field-value-input"
             value={draft.tagsText}
             onChange={(event) => onDraftChange({ ...draft, tagsText: event.target.value })}
-            placeholder="misterio, política, magia"
+            placeholder="misterio, politica, magia"
           />
-        </Field>
-        <Field label="Alias">
+        </div>
+
+        <div className="field-bento-card">
+          <label className="field-key-label" htmlFor="editor-metadata-aliases">Alias</label>
           <input
+            id="editor-metadata-aliases"
+            className="field-value-input"
             value={draft.aliasesText}
             onChange={(event) => onDraftChange({ ...draft, aliasesText: event.target.value })}
-            placeholder="sobrenombres, títulos, abreviaturas"
+            placeholder="sobrenombres, titulos, abreviaturas"
           />
-        </Field>
+        </div>
       </div>
     </SectionCard>
   )

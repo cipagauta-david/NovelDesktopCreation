@@ -10,7 +10,7 @@ export const REFERENCE_TOKEN_PATTERN = /(\{\{entity:[^|}]+\|[^}]+\}\})/g
 
 const RAW_REFERENCE_PATTERN = /^\{\{entity:([^|}]+)\|([^}]+)\}\}$/
 
-export function renderInlineContent(text: string) {
+export function renderInlineContent(text: string, getReferenceAccent?: (entityId: string) => string | undefined) {
   // V0ID_NOTE: index is sufficient as key — this array is derived from a deterministic split
   // and never reordered. Using the full chunk string as a key wastes string comparison budget.
   return text.split(REFERENCE_TOKEN_PATTERN).map((chunk, index) => {
@@ -19,7 +19,7 @@ export function renderInlineContent(text: string) {
       return <span key={index}>{chunk}</span>
     }
 
-    return <SketchVariable key={index} token={token} />
+    return <SketchVariable key={index} token={token} accentColor={getReferenceAccent?.(token.entityId)} />
   })
 }
 
@@ -44,7 +44,7 @@ function renderRawInlineContent(line: string) {
 }
 
 export function renderDocument(content: string, options: RenderDocumentOptions = {}): ReactNode {
-  const { activeBlockRange = null, showRawActiveBlock = false } = options
+  const { activeBlockRange = null, showRawActiveBlock = false, getReferenceAccent } = options
 
   if (!content) {
     return <span className="editor-placeholder">Escribe aquí la entidad. Usa {'{{}}'} para referencias cruzadas.</span>
@@ -73,7 +73,7 @@ export function renderDocument(content: string, options: RenderDocumentOptions =
     if (trimmed.startsWith('### ')) {
       return (
         <div key={`line-${index}`} className="doc-block doc-heading doc-heading-3">
-          {renderInlineContent(line.replace(/^\s*###\s+/, ''))}
+          {renderInlineContent(line.replace(/^\s*###\s+/, ''), getReferenceAccent)}
         </div>
       )
     }
@@ -81,7 +81,7 @@ export function renderDocument(content: string, options: RenderDocumentOptions =
     if (trimmed.startsWith('## ')) {
       return (
         <div key={`line-${index}`} className="doc-block doc-heading doc-heading-2">
-          {renderInlineContent(line.replace(/^\s*##\s+/, ''))}
+          {renderInlineContent(line.replace(/^\s*##\s+/, ''), getReferenceAccent)}
         </div>
       )
     }
@@ -89,7 +89,7 @@ export function renderDocument(content: string, options: RenderDocumentOptions =
     if (trimmed.startsWith('# ')) {
       return (
         <div key={`line-${index}`} className="doc-block doc-heading doc-heading-1">
-          {renderInlineContent(line.replace(/^\s*#\s+/, ''))}
+          {renderInlineContent(line.replace(/^\s*#\s+/, ''), getReferenceAccent)}
         </div>
       )
     }
@@ -98,14 +98,14 @@ export function renderDocument(content: string, options: RenderDocumentOptions =
       return (
         <div key={`line-${index}`} className="doc-block doc-list-item">
           <span className="doc-list-bullet">•</span>
-          <span>{renderInlineContent(line.replace(/^\s*[-*]\s+/, ''))}</span>
+          <span>{renderInlineContent(line.replace(/^\s*[-*]\s+/, ''), getReferenceAccent)}</span>
         </div>
       )
     }
 
     return (
       <div key={`line-${index}`} className="doc-block doc-paragraph">
-        {renderInlineContent(line)}
+        {renderInlineContent(line, getReferenceAccent)}
       </div>
     )
   })

@@ -35,13 +35,13 @@ export function InspectorAssistantComposer({ value, streamStatus, onChange, onSu
   return (
     <form ref={formRef} className="assistant-composer" onSubmit={onSubmit}>
       <div className="assistant-composer-modes" style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-        <Button type="button" variant="ghost" size="sm" onClick={() => setMode('Sugerir nuevas referencias y variables de fondo para esta escena:')}>
+        <Button type="button" className="btn--ghost btn--sm" onClick={() => setMode('Sugerir nuevas referencias y variables de fondo para esta escena:')}>
           Referencias
         </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={() => setMode('Proponer los próximos 3 pasos narrativos (Propuesta Narrativa):')}>
+        <Button type="button" className="btn--ghost btn--sm" onClick={() => setMode('Proponer los próximos 3 pasos narrativos (Propuesta Narrativa)')}>
           Propuesta
         </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={() => setMode('Desarrollar la Pregunta Dramática o conflicto central:')}>
+        <Button type="button" className="btn--ghost btn--sm" onClick={() => setMode('Desarrollar la Pregunta Dramática o conflicto central:')}>
           Conflicto
         </Button>
       </div>
@@ -61,8 +61,7 @@ export function InspectorAssistantComposer({ value, streamStatus, onChange, onSu
         />
         <Button
           type="submit"
-          variant="primary"
-          className="assistant-send-button"
+          className="assistant-send-button btn--default"
           disabled={!canSubmit}
           aria-label="Enviar a la IA"
           title="Enviar"
@@ -76,8 +75,7 @@ export function InspectorAssistantComposer({ value, streamStatus, onChange, onSu
         {isStreaming && (
           <Button
             type="button"
-            variant="ghost"
-            className="ghost-button destructive-text assistant-stop-button"
+            className="ghost-button destructive-text assistant-stop-button btn--ghost"
             onClick={onStopGeneration}
           >
             ■ Detener IA

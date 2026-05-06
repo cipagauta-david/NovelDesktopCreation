@@ -5,6 +5,7 @@ import type { OnboardingPayload, Provider } from '../../types/workspace'
 import { Field } from '../common/Field'
 import { Button } from '../ui/Button'
 import '../../styles/onboarding/OnboardingScreen.css';
+import '../../styles/common/BentoFields.css';
 
 
 
@@ -38,7 +39,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
             <small>Interfaz orientada a escritores creativos, libre de distracciones.</small>
           </div>
 
-          <Button className="primary-button hero-cta" variant="default" type="button" onClick={() => setView('onboarding')}>
+          <Button className="primary-button hero-cta btn--default" type="button" onClick={() => setView('onboarding')}>
             Empieza a diseñar tu mundo
           </Button>
 
@@ -86,8 +87,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
 
         <div className="onboarding-actions">
           <Button 
-            className="primary-button" 
-            variant="default" 
+            className="primary-button btn--default" 
             type="button" 
             onClick={() => onSubmit({ authorName, provider: 'Local/Ollama', model: 'demo', apiKey: '' })}
           >
@@ -97,7 +97,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
           <div className="onboarding-divider">o</div>
           
           <Button 
-            variant="ghost" 
+            className="btn--ghost" 
             type="button" 
             onClick={() => setShowAdvanced(!showAdvanced)}
           >
@@ -107,9 +107,12 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
 
         {showAdvanced && (
           <div className="advanced-config">
-            <div className="inline-grid">
-              <Field label="Proveedor IA">
+            <div className="field-bento-grid">
+              <div className="field-bento-card">
+                <label className="field-key-label" htmlFor="onboarding-provider">Proveedor IA</label>
                 <select
+                  id="onboarding-provider"
+                  className="field-select-input"
                   value={provider}
                   onChange={(event) => {
                     const nextProvider = event.target.value as Provider
@@ -123,28 +126,32 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
                     </option>
                   ))}
                 </select>
-              </Field>
+              </div>
 
-              <Field label="Modelo a utilizar">
-                <select value={model} onChange={(event) => setModel(event.target.value)}>
+              <div className="field-bento-card">
+                <label className="field-key-label" htmlFor="onboarding-model">Modelo a utilizar</label>
+                <select id="onboarding-model" className="field-select-input" value={model} onChange={(event) => setModel(event.target.value)}>
                   {providerModels[provider].map((modelOption) => (
                     <option key={modelOption} value={modelOption}>
                       {modelOption}
                     </option>
                   ))}
                 </select>
-              </Field>
-            </div>
+              </div>
 
-            <Field label="Tu API Key">
-              <input
-                value={apiKey}
-                onChange={(event) => setApiKey(event.target.value)}
-                placeholder="sk-or-v1-..."
-                type="password"
-                autoComplete="current-password"
-              />
-            </Field>
+              <div className="field-bento-card">
+                <label className="field-key-label" htmlFor="onboarding-api-key">Tu API Key</label>
+                <input
+                  id="onboarding-api-key"
+                  className="field-value-input"
+                  value={apiKey}
+                  onChange={(event) => setApiKey(event.target.value)}
+                  placeholder="sk-or-v1-..."
+                  type="password"
+                  autoComplete="current-password"
+                />
+              </div>
+            </div>
 
             <label className="privacy-consent">
               <input 
@@ -156,8 +163,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
             </label>
 
             <Button 
-              className="primary-button" 
-              variant="default" 
+              className="primary-button btn--default" 
               type="submit"
               disabled={!acceptedPrivacy || !apiKey}
             >

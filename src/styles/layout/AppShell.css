@@ -15,6 +15,29 @@
   background: var(--bg-base);
 }
 
+.app-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.3;
+  background-image: url('../../assets/paper-noise.svg');
+  background-repeat: repeat;
+  background-size: 360px 360px;
+  mix-blend-mode: multiply;
+}
+
+:root[data-theme="dark"] .app-shell::before {
+  opacity: 0.4;
+  mix-blend-mode: soft-light;
+}
+
+.app-shell > * {
+  position: relative;
+  z-index: 2;
+}
+
 /* ─── Header Shell ─── */
 .workspace-header-shell {
   grid-area: header;

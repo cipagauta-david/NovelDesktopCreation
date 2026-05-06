@@ -1,0 +1,165 @@
+/* Shared bento form pattern for grouped, high-scan inputs. */
+.field-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--space-3);
+  overflow: visible;
+  padding-top: calc(var(--space-2) + 0.45rem);
+}
+
+@keyframes card-wobble {
+  0%   { transform: rotate(var(--card-rot, 0.2deg)) translateY(0); }
+  28%  { transform: rotate(calc(var(--card-rot, 0.2deg) + 0.55deg)) translateY(-1.5px); }
+  56%  { transform: rotate(calc(var(--card-rot, 0.2deg) - 0.45deg)) translateY(-2px); }
+  78%  { transform: rotate(calc(var(--card-rot, 0.2deg) + 0.2deg)) translateY(-1px); }
+  100% { transform: rotate(0deg) translateY(-1px); }
+}
+
+.field-bento-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 0.55rem 0.65rem 0.6rem;
+  background: var(--surface-canvas, var(--bg-surface-raised));
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--surface-base, #fff) 60%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--shadow-color, #000) 4%, transparent),
+    0 0.5px 1.5px color-mix(in srgb, var(--shadow-color, #000) 3%, transparent);
+  transition:
+    border-color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  --card-rot: 0.2deg;
+  --tape-tilt: -6deg;
+  transform: rotate(var(--card-rot));
+  transform-origin: center center;
+  position: relative;
+}
+
+.field-bento-card::before {
+  content: "";
+  position: absolute;
+  top: -0.42rem;
+  left: 50%;
+  transform: translateX(-50%) rotate(calc((var(--card-rot) * -1.5) + var(--tape-tilt))) skewX(-10deg);
+  width: 2.85rem;
+  height: 0.63rem;
+  background: color-mix(in srgb, var(--accent-warm, #c4a882) 38%, transparent);
+  border-radius: 1px;
+  border: 1px solid color-mix(in srgb, var(--accent-warm, #c4a882) 24%, transparent);
+  pointer-events: none;
+  opacity: 0.65;
+}
+
+.field-bento-card:nth-child(2n) {
+  --card-rot: -0.2deg;
+  --tape-tilt: 6deg;
+  background: color-mix(in srgb, var(--surface-canvas, var(--bg-surface-raised)) 97%, var(--accent-warm, #c4a882));
+}
+
+.field-bento-card:nth-child(3n) {
+  --card-rot: 0.15deg;
+  --tape-tilt: -4deg;
+  background: color-mix(in srgb, var(--surface-canvas, var(--bg-surface-raised)) 95%, var(--accent-primary));
+}
+
+.field-bento-card:nth-child(4n) {
+  --card-rot: -0.15deg;
+}
+
+.field-bento-card:nth-child(5n) {
+  --card-rot: 0.25deg;
+}
+
+.field-bento-card:hover {
+  animation: card-wobble 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--surface-base, #fff) 70%, transparent),
+    0 2px 5px color-mix(in srgb, var(--shadow-color, #000) 5%, transparent),
+    0 1px 2px color-mix(in srgb, var(--shadow-color, #000) 4%, transparent);
+}
+
+.field-bento-card:focus-within {
+  transform: rotate(0deg);
+  border-color: color-mix(in srgb, var(--accent-primary) 40%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--surface-base, #fff) 60%, transparent),
+    0 0 0 2px color-mix(in srgb, var(--accent-primary) 10%, transparent),
+    0 2px 6px color-mix(in srgb, var(--shadow-color, #000) 4%, transparent);
+}
+
+.field-bento-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.field-key-input,
+.field-key-label {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted, var(--text-secondary));
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+}
+
+.field-key-input::placeholder {
+  color: color-mix(in srgb, var(--text-muted, var(--text-secondary)) 50%, transparent);
+  font-weight: 500;
+}
+
+.field-value-input,
+.field-select-input,
+.field-bento-card textarea {
+  width: 100%;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  font-family: var(--font-serif);
+}
+
+.field-select-input {
+  appearance: none;
+}
+
+.field-value-input::placeholder,
+.field-bento-card textarea::placeholder {
+  color: color-mix(in srgb, var(--text-secondary) 45%, transparent);
+  font-style: italic;
+}
+
+.field-remove-btn {
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  min-width: 0;
+  padding: 0;
+  font-size: 0.7rem;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  color: var(--text-muted, var(--text-secondary));
+}
+
+.field-bento-card:hover .field-remove-btn,
+.field-bento-card:focus-within .field-remove-btn {
+  opacity: 1;
+}
+
+@container editor-panel (max-width: 42rem) {
+  .field-bento-grid {
+    grid-template-columns: 1fr;
+  }
+}

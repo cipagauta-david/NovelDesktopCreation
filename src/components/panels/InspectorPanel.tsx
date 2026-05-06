@@ -148,6 +148,8 @@ export const InspectorPanel = memo(function InspectorPanel({
         {activePanelTab === 'context' && (
           <InspectorContextTab
             activeTab={activeTab}
+            collections={activeProject?.tabs ?? []}
+            activeTemplates={activeTemplates}
             pendingProposal={pendingProposal}
             streamStatus={streamStatus}
             streamingText={streamingText}

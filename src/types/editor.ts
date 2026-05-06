@@ -9,4 +9,5 @@ export type EditorMode = 'live' | 'split' | 'source'
 export type RenderDocumentOptions = {
   activeBlockRange?: { start: number; end: number } | null
   showRawActiveBlock?: boolean
+  getReferenceAccent?: (entityId: string) => string | undefined
 }

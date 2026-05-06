@@ -2,8 +2,10 @@
   --entity-pill-accent: var(--reference-accent);
   --hover-x: 0px;
   --hover-y: 0px;
+  --card-rot: -1.8deg;
+  --tape-tilt: -6deg;
   position: absolute;
-  left: min(var(--hover-x), calc(100% - 22rem));
+  left: var(--hover-x);
   top: var(--hover-y);
   z-index: 40;
   width: min(340px, calc(100% - 24px));
@@ -11,17 +13,31 @@
   gap: 0.45rem;
   padding: 0.82rem 0.9rem 0.75rem;
   border-radius: var(--radius-xl);
-  background: color-mix(in srgb, var(--surface-glass) 92%, transparent);
-  border: 1px solid color-mix(in srgb, var(--entity-pill-accent) 20%, var(--border-subtle));
+  background: var(--surface-elevated);
+  border: 1px solid color-mix(in srgb, var(--entity-pill-accent) 28%, var(--border-subtle));
   box-shadow: var(--shadow-popover);
-  transform: translateY(4px) rotate(0deg);
+  transform: translateY(4px) rotate(var(--card-rot));
   transform-origin: 30% -8%;
   opacity: 0;
-  /* Polaroid feel: settle into a slight tilt as if placed on a desk */
   animation: entity-hover-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   transition:
     transform var(--motion-fast),
     opacity var(--motion-fast);
+  pointer-events: none;
+}
+
+.entity-hover-popover::before {
+  content: '';
+  position: absolute;
+  top: -0.52rem;
+  left: 50%;
+  width: 2.85rem;
+  height: 0.63rem;
+  transform: translateX(-50%) rotate(calc((var(--card-rot) * -1.35) + var(--tape-tilt))) skewX(-10deg);
+  background: color-mix(in srgb, var(--entity-pill-accent) 38%, transparent);
+  border: 1px solid color-mix(in srgb, var(--entity-pill-accent) 24%, transparent);
+  border-radius: 1px;
+  opacity: 0.72;
   pointer-events: none;
 }
 
@@ -44,12 +60,77 @@
   line-height: 1.45;
 }
 
+.entity-hover-preview {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.entity-hover-preview .doc-block {
+  min-height: unset;
+}
+
+.entity-hover-preview .doc-paragraph,
+.entity-hover-preview .doc-list-item {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.entity-hover-preview .doc-heading-1,
+.entity-hover-preview .doc-heading-2,
+.entity-hover-preview .doc-heading-3 {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.3;
+}
+
+.entity-hover-preview .doc-heading-1::after {
+  margin-top: 0.35rem;
+}
+
+.entity-hover-preview .doc-list-item {
+  gap: 0.45rem;
+}
+
+.entity-hover-preview .sketch-variable {
+  padding: 0;
+  background: none;
+  clip-path: none;
+  opacity: 1;
+  font-style: normal;
+}
+
+.entity-hover-preview .sketch-variable::after {
+  content: none;
+}
+
+.entity-hover-preview .sketch-variable:hover,
+.entity-hover-preview .sketch-variable:focus-visible {
+  background: none;
+}
+
 .entity-hover-popover strong {
   color: var(--text-primary);
 }
 
 .entity-hover-popover .eyebrow {
   color: color-mix(in srgb, var(--entity-pill-accent) 50%, var(--text-muted));
+}
+
+.entity-hover-module {
+  --module-accent: var(--entity-pill-accent);
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 20px;
+  padding: 0.08rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--module-accent) 30%, var(--border-subtle));
+  background: color-mix(in srgb, var(--module-accent) 12%, transparent);
+  color: color-mix(in srgb, var(--module-accent) 78%, var(--text-primary));
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .entity-hover-popover small {
@@ -68,12 +149,11 @@
 
 @keyframes entity-hover-enter {
   from {
-    transform: translateY(6px) rotate(0.8deg);
+    transform: translateY(6px) rotate(calc(var(--card-rot) + 1.1deg));
     opacity: 0;
   }
   to {
-    /* Final resting angle: like a Polaroid photo casually placed on a desk */
-    transform: translateY(0) rotate(-1.8deg);
+    transform: translateY(0) rotate(var(--card-rot));
     opacity: 1;
   }
 }

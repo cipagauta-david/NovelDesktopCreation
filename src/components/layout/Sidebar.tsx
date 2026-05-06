@@ -65,8 +65,7 @@ export const Sidebar = memo(function Sidebar({
           <>
             <Button
               type="button"
-              variant="secondary"
-              className="secondary-button compact-button"
+              className="secondary-button compact-button btn--secondary"
               onClick={() => setShowProjectForm((current) => !current)}
             >
               {showProjectForm ? 'Cerrar' : 'Nuevo'}
@@ -130,7 +129,7 @@ export const Sidebar = memo(function Sidebar({
                 placeholder="Describe el mundo, tono o premisa que quieres construir"
               />
             </Field>
-            <Button className="primary-button" variant="primary" type="button" onClick={onCreateProject}>
+            <Button className="primary-button btn--default" type="button" onClick={onCreateProject}>
               Crear proyecto
             </Button>
           </FormStack>
@@ -142,7 +141,7 @@ export const Sidebar = memo(function Sidebar({
         meta={`${activeTemplates.length} disponibles`}
         defaultOpen={false}
         actions={
-          <Button type="button" variant="ghost" className="ghost-button compact-button" onClick={onSaveTemplate}>
+          <Button type="button" className="ghost-button compact-button btn--ghost" onClick={onSaveTemplate}>
             Guardar plantilla actual
           </Button>
         }

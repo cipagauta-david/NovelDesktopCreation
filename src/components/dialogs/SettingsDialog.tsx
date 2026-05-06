@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
-import { Field } from '../common/Field'
 import { Button } from '../ui/Button'
 import { FormStack } from '../common/FormStack'
+import '../../styles/common/BentoFields.css'
 
 type SettingsTab = 'account' | 'llm' | 'editor'
 
@@ -44,45 +44,55 @@ export function SettingsDialog({
       <DialogContent>
         <DialogHeader><DialogTitle>Centro de Mando</DialogTitle></DialogHeader>
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-          <Button type="button" variant={tab === 'llm' ? 'primary' : 'ghost'} size="sm" onClick={() => setTab('llm')}>Modelos LLM</Button>
-          <Button type="button" variant={tab === 'account' ? 'primary' : 'ghost'} size="sm" onClick={() => setTab('account')}>Cuenta</Button>
-          <Button type="button" variant={tab === 'editor' ? 'primary' : 'ghost'} size="sm" onClick={() => setTab('editor')}>Editor</Button>
+          <Button type="button" className={tab === 'llm' ? 'btn--default' : 'btn--ghost'} onClick={() => setTab('llm')}>Modelos LLM</Button>
+          <Button type="button" className={tab === 'account' ? 'btn--default' : 'btn--ghost'} onClick={() => setTab('account')}>Cuenta</Button>
+          <Button type="button" className={tab === 'editor' ? 'btn--default' : 'btn--ghost'} onClick={() => setTab('editor')}>Editor</Button>
         </div>
 
         {tab === 'llm' && (
           <FormStack>
-            <Field label="Modelo activo">
-              <input value={activeModel} readOnly placeholder="Modelo IA configurado" />
-            </Field>
-            <Field label="API Key del proveedor">
-              <input value={providerKey} onChange={(e) => setProviderKey(e.target.value)} placeholder="Introduce tu API key" />
-            </Field>
+            <div className="field-bento-grid">
+              <div className="field-bento-card">
+                <label className="field-key-label" htmlFor="settings-active-model">Modelo activo</label>
+                <input id="settings-active-model" className="field-value-input" value={activeModel} readOnly placeholder="Modelo IA configurado" />
+              </div>
+
+              <div className="field-bento-card">
+                <label className="field-key-label" htmlFor="settings-provider-key">API key del proveedor</label>
+                <input id="settings-provider-key" className="field-value-input" value={providerKey} onChange={(e) => setProviderKey(e.target.value)} placeholder="Introduce tu API key" />
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <Button type="button" variant="primary" className="primary-button" onClick={() => {
+              <Button type="button" className="primary-button btn--default" onClick={() => {
                 onRotateKey(providerKey)
                 setProviderKey('')
               }}>Guardar Key</Button>
-              <Button type="button" variant="ghost" className="ghost-button" onClick={onInvalidateKey}>Invalidar Key</Button>
+              <Button type="button" className="ghost-button btn--ghost" onClick={onInvalidateKey}>Invalidar Key</Button>
             </div>
           </FormStack>
         )}
 
         {tab === 'account' && (
           <FormStack>
-            <Field label="Proyecto activo">
-              <input value={activeProjectName} readOnly />
-            </Field>
-            <Field label="Sync remoto">
-              <input value={syncEndpoint} readOnly />
-            </Field>
-            <Button type="button" variant="secondary" onClick={onConfigureSync}>Configurar Sync</Button>
+            <div className="field-bento-grid">
+              <div className="field-bento-card">
+                <label className="field-key-label" htmlFor="settings-active-project">Proyecto activo</label>
+                <input id="settings-active-project" className="field-value-input" value={activeProjectName} readOnly />
+              </div>
+
+              <div className="field-bento-card">
+                <label className="field-key-label" htmlFor="settings-sync-endpoint">Sync remoto</label>
+                <input id="settings-sync-endpoint" className="field-value-input" value={syncEndpoint} readOnly />
+              </div>
+            </div>
+            <Button type="button" className="btn--secondary" onClick={onConfigureSync}>Configurar Sync</Button>
           </FormStack>
         )}
 
         {tab === 'editor' && (
           <FormStack>
             <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-0)' }}>Preferencias de edición. El tema se puede cambiar desde el icono de sol/luna en el header.</p>
-            <Button type="button" variant="secondary" onClick={() => { onActivateZenMode(); onOpenChange(false) }}>Activar Modo Foco</Button>
+            <Button type="button" className="btn--secondary" onClick={() => { onActivateZenMode(); onOpenChange(false) }}>Activar Modo Foco</Button>
           </FormStack>
         )}
       </DialogContent>

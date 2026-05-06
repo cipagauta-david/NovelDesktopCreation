@@ -75,7 +75,7 @@
 .writing-lane .cm-editor {
   border-radius: var(--radius-lg);
   border: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
-  background: color-mix(in srgb, var(--surface-panel) 97%, transparent);
+  background: color-mix(in srgb, var(--surface-panel) 40%, transparent);
 }
 
 .writing-lane .cm-content {

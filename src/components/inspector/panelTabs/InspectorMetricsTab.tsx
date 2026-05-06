@@ -62,13 +62,13 @@ export function InspectorMetricsTab({
 
       <PanelSection title="Sync remoto" meta={syncStatus} defaultOpen={false}>
         <ActionRow>
-          <Button type="button" variant="primary" className="primary-button" onClick={() => void onFlushRemoteSync()}>
+          <Button type="button" className="primary-button btn--default" onClick={() => void onFlushRemoteSync()}>
             Flush remoto
           </Button>
-          <Button type="button" variant="ghost" className="ghost-button" onClick={() => void onConfigureRemoteSync()}>
+          <Button type="button" className="ghost-button btn--ghost" onClick={() => void onConfigureRemoteSync()}>
             Configurar
           </Button>
-          <Button type="button" variant="ghost" className="ghost-button" onClick={() => void onClearRemoteSyncCredential()}>
+          <Button type="button" className="ghost-button btn--ghost" onClick={() => void onClearRemoteSyncCredential()}>
             Borrar token
           </Button>
         </ActionRow>
@@ -77,13 +77,13 @@ export function InspectorMetricsTab({
 
       <PanelSection title="Vault IA" meta="Operaciones" defaultOpen={false}>
         <ActionRow>
-          <Button type="button" variant="ghost" className="ghost-button" onClick={() => void onRotateProviderCredential()}>
+          <Button type="button" className="ghost-button btn--ghost" onClick={() => void onRotateProviderCredential()}>
             Rotar key
           </Button>
-          <Button type="button" variant="ghost" className="ghost-button" onClick={() => void onInvalidateProviderCredential()}>
+          <Button type="button" className="ghost-button btn--ghost" onClick={() => void onInvalidateProviderCredential()}>
             Invalidar key
           </Button>
-          <Button type="button" variant="ghost" className="ghost-button" onClick={() => void onRefreshVaultMetadata()}>
+          <Button type="button" className="ghost-button btn--ghost" onClick={() => void onRefreshVaultMetadata()}>
             Ver metadata
           </Button>
         </ActionRow>
@@ -114,8 +114,7 @@ export function InspectorMetricsTab({
               <small>{formatTimestamp(checkpoint.createdAt)}</small>
               <Button
                 type="button"
-                variant="ghost"
-                className="ghost-button compact-button"
+                className="ghost-button compact-button btn--ghost"
                 onClick={() => onRestoreCheckpoint(checkpoint.id)}
               >
                 Restaurar

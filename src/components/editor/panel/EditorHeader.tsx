@@ -88,14 +88,14 @@ export const EditorHeader = memo(function EditorHeader({
         </div>
       </div>
       <ActionRow>
-        <Button variant="ai" type="button" onClick={onGenerateAiProposal}>
+        <Button className="btn--ai" type="button" onClick={onGenerateAiProposal}>
           Sugerencia IA
         </Button>
-        <Button variant="ghost" type="button" onClick={onToggleZenMode}>
+        <Button className="btn--ghost" type="button" onClick={onToggleZenMode}>
           {zenMode ? 'Salir de foco' : 'Modo foco'}
         </Button>
         {!zenMode && (
-          <Button variant="ghost" type="button" onClick={onToggleDetails}>
+          <Button className="btn--ghost" type="button" onClick={onToggleDetails}>
             {detailsOpen ? 'Ocultar detalles' : 'Mostrar detalles'}
           </Button>
         )}

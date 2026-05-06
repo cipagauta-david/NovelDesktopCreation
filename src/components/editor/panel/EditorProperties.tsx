@@ -1,8 +1,10 @@
-import { memo } from 'react'
+import { memo, type CSSProperties } from 'react'
 import type { FieldValue } from '../../../types/workspace'
+import { getStableNumber } from '../../../utils/stableVisual'
 import { SectionCard } from '../../common/SectionCard'
 import { Button } from '../../ui/Button'
 import '../../../styles/editor/panel/EditorProperties.css';
+import '../../../styles/common/BentoFields.css';
 
 
 
@@ -37,10 +39,10 @@ export const EditorProperties = memo(function EditorProperties({
         defaultOpen={false}
         actions={
           <>
-            <Button type="button" variant="ghost" className="ghost-button compact-button" onClick={onAddField}>
+            <Button type="button" className="ghost-button compact-button btn--ghost" onClick={onAddField}>
               + Propiedad
             </Button>
-            <Button type="button" variant="ghost" className="ghost-button compact-button" onClick={onSaveAsTemplate} title="Guarda la estructura de campos como plantilla reutilizable">
+            <Button type="button" className="ghost-button compact-button btn--ghost" onClick={onSaveAsTemplate} title="Guarda la estructura de campos como plantilla reutilizable">
               ⬡ Plantilla
             </Button>
           </>
@@ -51,7 +53,14 @@ export const EditorProperties = memo(function EditorProperties({
         )}
         <div className="field-bento-grid">
           {fields.map((field) => (
-            <div key={field.id} className="field-bento-card">
+            <div
+              key={field.id}
+              className="field-bento-card"
+              style={{
+                '--card-rot': `${getStableNumber(`card-${field.id}`, -0.28, 0.28, 2)}deg`,
+                '--tape-tilt': `${getStableNumber(`tape-${field.id}`, -8, 8, 1)}deg`,
+              } as CSSProperties}
+            >
               <div className="field-bento-header">
                 <input
                   className="field-key-input"
@@ -60,7 +69,7 @@ export const EditorProperties = memo(function EditorProperties({
                   placeholder="Nombre del campo"
                   aria-label="Nombre de la propiedad"
                 />
-                <Button type="button" variant="ghost" size="icon" className="field-remove-btn" onClick={() => onRemoveField(field.id)} aria-label={`Eliminar campo ${field.key}`}>
+                <Button type="button" className="field-remove-btn btn--ghost btn--icon" onClick={() => onRemoveField(field.id)} aria-label={`Eliminar campo ${field.key}`}>
                   ✕
                 </Button>
               </div>

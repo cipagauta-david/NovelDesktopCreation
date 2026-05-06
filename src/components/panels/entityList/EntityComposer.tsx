@@ -29,7 +29,7 @@ export function EntityComposer({
           ))}
         </select>
       </Field>
-      <Button className="ghost-button create-entity-button" variant="ghost" type="button" onClick={onCreateEntity}>
+      <Button className="ghost-button create-entity-button btn--ghost" type="button" onClick={onCreateEntity}>
         Crear entidad
       </Button>
     </FormStack>

@@ -14,18 +14,25 @@ const REFERENCE_PATTERN = /\{\{entity:([^|}]+)\|([^}]+)\}\}/g
 class ReferenceWidget extends WidgetType {
   private entityId: string
   private label: string
+  private accentColor: string | null
 
   constructor(
     entityId: string,
     label: string,
+    accentColor?: string,
   ) {
     super()
     this.entityId = entityId
     this.label = label
+    this.accentColor = accentColor ?? null
   }
 
   override eq(other: ReferenceWidget) {
-    return other.entityId === this.entityId && other.label === this.label
+    return (
+      other.entityId === this.entityId
+      && other.label === this.label
+      && other.accentColor === this.accentColor
+    )
   }
 
   override toDOM() {
@@ -34,15 +41,14 @@ class ReferenceWidget extends WidgetType {
     element.dataset.entityId = this.entityId
     element.setAttribute('aria-hidden', 'true')
     element.setAttribute('title', `Entidad: ${this.label}\nCtrl+Click para abrir entidad`) // Tooltip básico nativo
-
-    const icon = document.createElement('span')
-    icon.className = 'cm-entity-pill-icon'
-    icon.textContent = '✦'
+    if (this.accentColor) {
+      element.style.setProperty('--entity-pill-accent', this.accentColor)
+    }
 
     const text = document.createElement('span')
     text.textContent = this.label
 
-    element.append(icon, text)
+    element.append(text)
     return element
   }
 
@@ -66,10 +72,13 @@ class BulletWidget extends WidgetType {
 }
 
 class GhostTextWidget extends WidgetType {
+  private readonly text: string
+
   // V0ID_NOTE: proper private readonly field replaces the Object.assign hack that
   // bypassed TypeScript's type system to work around WidgetType's constructor constraints.
-  constructor(private readonly text: string) {
+  constructor(text: string) {
     super()
+    this.text = text
   }
 
   override eq(other: GhostTextWidget) {
@@ -96,6 +105,7 @@ type LiveEditorInteractions = {
   onEntityInteract?: (entityId: string) => void
   onEntityHover?: (payload: EntityHoverPayload) => void
   onEntityHoverEnd?: () => void
+  getEntityAccent?: (entityId: string) => string | undefined
 }
 
 function selectionTouchesRange(view: EditorView, from: number, to: number) {
@@ -131,7 +141,7 @@ function buildSourceDecorations(view: EditorView): DecorationSet {
   return Decoration.set(decorations, true)
 }
 
-function buildLiveDecorations(view: EditorView): DecorationSet {
+function buildLiveDecorations(view: EditorView, getEntityAccent?: (entityId: string) => string | undefined): DecorationSet {
   const decorations = []
 
   for (const visibleRange of view.visibleRanges) {
@@ -172,8 +182,9 @@ function buildLiveDecorations(view: EditorView): DecorationSet {
         const tokenFrom = line.from + match.index
         const tokenTo = tokenFrom + match[0].length
         if (!selectionTouchesRange(view, tokenFrom, tokenTo)) {
+          const entityAccent = getEntityAccent?.(match[1])
           decorations.push(
-            Decoration.replace({ widget: new ReferenceWidget(match[1], match[2]) }).range(tokenFrom, tokenTo),
+            Decoration.replace({ widget: new ReferenceWidget(match[1], match[2], entityAccent) }).range(tokenFrom, tokenTo),
           )
         }
         match = REFERENCE_PATTERN.exec(line.text)
@@ -216,7 +227,7 @@ function getEntityPillFromTarget(target: EventTarget | null): HTMLElement | null
 }
 
 export function createLiveEditorExtensions(interactions: LiveEditorInteractions = {}): Extension[] {
-  const { onEntityInteract, onEntityHover, onEntityHoverEnd } = interactions
+  const { onEntityInteract, onEntityHover, onEntityHoverEnd, getEntityAccent } = interactions
 
   function handleEntityNavigationClick(event: MouseEvent) {
     if (event.button !== 0 || (!event.ctrlKey && !event.metaKey)) {
@@ -232,7 +243,7 @@ export function createLiveEditorExtensions(interactions: LiveEditorInteractions 
   }
 
   return [
-    createDynamicPlugin(buildLiveDecorations),
+    createDynamicPlugin((view) => buildLiveDecorations(view, getEntityAccent)),
     EditorView.domEventHandlers({
       mousedown(event) {
         return handleEntityNavigationClick(event)
@@ -262,11 +273,11 @@ export function createLiveEditorExtensions(interactions: LiveEditorInteractions 
     EditorView.theme({
       '.cm-entity-pill': {
         cursor: 'pointer',
-        transition: 'all 0.1s ease',
+        transition: 'background-size var(--motion-fast), color var(--motion-fast), opacity var(--motion-fast)',
       },
       '.cm-entity-pill:hover': {
-        outline: '1px solid var(--accent-light, #a0a0a0)',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        opacity: '1',
+        backgroundSize: '100% 0.42em',
       }
     })
   ]

@@ -27,6 +27,7 @@ import { EditorDocumentSection } from '../editor/panel/EditorDocumentSection'
 import { EditorHeader } from '../editor/panel/EditorHeader'
 import { EditorMetadata } from '../editor/panel/EditorMetadata'
 import { EditorProperties } from '../editor/panel/EditorProperties'
+import { resolveCollectionColor } from '../../utils/collectionColors'
 import '../../styles/panels/EditorPanel.css';
 
 
@@ -35,6 +36,7 @@ type EditorPanelProps = {
   entity: EntityRecord
   draft: DraftState
   templates: EntityTemplate[]
+  collections: Array<{ id: string; name: string; color?: string }>
   allEntities: EntityRecord[]
   editorViewRef: RefObject<EditorView | null>
   referenceSuggestionActive: boolean
@@ -63,6 +65,7 @@ export function EditorPanel({
   entity,
   draft,
   templates,
+  collections,
   allEntities,
   editorViewRef,
   referenceSuggestionActive,
@@ -123,6 +126,14 @@ export function EditorPanel({
     },
     [entityById, onOpenEntity],
   )
+  const getEntityAccent = useCallback((entityId: string) => {
+    const referenceEntity = entityById.get(entityId)
+    if (!referenceEntity) {
+      return undefined
+    }
+    const referenceCollection = collections.find((collection) => collection.id === referenceEntity.tabId)
+    return resolveCollectionColor(referenceCollection?.id ?? referenceEntity.tabId, referenceCollection?.color)
+  }, [collections, entityById])
   const liveEditorExtensions = useMemo(
     () => [
       markdown(),
@@ -132,10 +143,11 @@ export function EditorPanel({
         onEntityInteract: handleReferenceNavigation,
         onEntityHover: handleEntityHover,
         onEntityHoverEnd: hideEntityHover,
+        getEntityAccent,
       }),
       ...createGhostTextExtensions(ghostTextProvider),
     ],
-    [ghostTextProvider, handleEntityHover, hideEntityHover, handleReferenceNavigation],
+    [getEntityAccent, ghostTextProvider, handleEntityHover, hideEntityHover, handleReferenceNavigation],
   )
   const hoveredEntity = hoveredReference ? (entityById.get(hoveredReference.entityId) ?? null) : null
   const isAiStreaming = streamStatus === 'streaming'
@@ -220,8 +232,13 @@ export function EditorPanel({
     }
 
     const laneRect = lane.getBoundingClientRect()
+    const hoverCardWidth = Math.min(340, Math.max(180, laneRect.width - 24))
+    const entityCenterX = (hoverPayload.rect.left + hoverPayload.rect.right) / 2
     const top = Math.max(12, hoverPayload.rect.bottom - laneRect.top + 10)
-    const left = Math.max(12, Math.min(hoverPayload.rect.left - laneRect.left, laneRect.width - 320))
+    const left = Math.max(
+      12,
+      Math.min(entityCenterX - laneRect.left - hoverCardWidth / 2, laneRect.width - hoverCardWidth - 12),
+    )
     setHoveredReference((current) => {
       if (
         current?.entityId === hoverPayload.entityId &&
@@ -365,6 +382,9 @@ export function EditorPanel({
       editorSurface={editorSurface}
       referenceSuggestionActive={referenceSuggestionActive}
       suggestionOptions={suggestionOptions}
+      templates={templates}
+      collections={collections}
+      allEntities={allEntities}
       suggestionsStyle={suggestionsStyle}
       onInsertReference={onInsertReference}
       hoveredReference={hoveredReference}

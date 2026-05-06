@@ -23,8 +23,7 @@ export function RotateKeyDialog({ open, onOpenChange, onRotate }: RotateKeyDialo
       </Field>
       <Button
         type="button"
-        variant="primary"
-        className="primary-button"
+        className="primary-button btn--default"
         onClick={() => { onRotate(key); onOpenChange(false) }}
       >Rotar key</Button>
     </StackedDialog>

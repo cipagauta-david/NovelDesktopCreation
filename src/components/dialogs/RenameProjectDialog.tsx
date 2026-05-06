@@ -24,8 +24,7 @@ export function RenameProjectDialog({ open, onOpenChange, currentName, onRename 
       </Field>
       <Button
         type="button"
-        variant="primary"
-        className="primary-button"
+        className="primary-button btn--default"
         onClick={() => { onRename(value); onOpenChange(false) }}
       >Guardar</Button>
     </StackedDialog>

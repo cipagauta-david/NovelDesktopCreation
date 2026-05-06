@@ -1,12 +1,16 @@
+import type { CSSProperties } from 'react'
 import { Skeleton, Spinner } from '@nextui-org/react'
 import type {
   AiProposal,
   CollectionTab,
+  EntityTemplate,
   EntityRecord,
   LlmStreamStatus,
   LlmTraceEntry,
 } from '../../../types/workspace'
+import { resolveCollectionColor } from '../../../utils/collectionColors'
 import { buildSnippet } from '../../../utils/search'
+import { getStableNumber } from '../../../utils/stableVisual'
 import { formatTimestamp } from '../../../utils/workspace'
 import { ActionRow } from '../../common/ActionRow'
 import { EmptyMiniState } from '../../common/EmptyMiniState'
@@ -16,6 +20,8 @@ import { Button } from '../../ui/Button'
 
 type InspectorContextTabProps = {
   activeTab: CollectionTab | null
+  collections: CollectionTab[]
+  activeTemplates: EntityTemplate[]
   pendingProposal: AiProposal | null
   streamStatus: LlmStreamStatus
   streamingText: string
@@ -29,6 +35,8 @@ type InspectorContextTabProps = {
 
 export function InspectorContextTab({
   activeTab,
+  collections,
+  activeTemplates,
   pendingProposal,
   streamStatus,
   streamingText,
@@ -68,10 +76,10 @@ export function InspectorContextTab({
               </li>
             </ul>
             <ActionRow>
-              <Button className="primary-button" variant="primary" type="button" onClick={onConfirmProposal}>
+              <Button className="primary-button btn--default" type="button" onClick={onConfirmProposal}>
                 Confirmar
               </Button>
-              <Button type="button" variant="ghost" className="ghost-button" onClick={onDismissProposal}>
+              <Button type="button" className="ghost-button btn--ghost" onClick={onDismissProposal}>
                 Descartar
               </Button>
             </ActionRow>
@@ -99,7 +107,7 @@ export function InspectorContextTab({
                 <Skeleton className="rounded-full h-[0.7rem] w-[68%]" />
               </div>
             )}
-            <Button type="button" variant="ghost" className="ghost-button destructive-text" onClick={onStopGeneration}>
+            <Button type="button" className="ghost-button destructive-text btn--ghost" onClick={onStopGeneration}>
               ■ Detener generacion
             </Button>
           </div>
@@ -130,8 +138,25 @@ export function InspectorContextTab({
       <PanelSection title="Referencias en este documento" meta={`${referencedEntities.length} enlazadas`}>
         {referencedEntities.length > 0 ? (
           <div className="reference-card-list">
-            {referencedEntities.map((entity) => (
-              <article key={entity.id} className="reference-card-mini">
+            {referencedEntities.map((entity) => {
+              const moduleCollection = collections.find((collection) => collection.id === entity.tabId)
+              const moduleTemplate = activeTemplates.find((template) => template.id === entity.templateId)
+              const moduleName = moduleCollection?.name ?? moduleTemplate?.name.split(/[\s/]+/)[0] ?? 'Entidad'
+              const moduleColor = resolveCollectionColor(moduleCollection?.id ?? entity.tabId, moduleCollection?.color)
+
+              return (
+              <article
+                key={entity.id}
+                className="reference-card-mini"
+                style={{
+                  '--card-rot': `${getStableNumber(`ref-card-${entity.id}`, -0.24, 0.24, 2)}deg`,
+                  '--tape-tilt': `${getStableNumber(`ref-tape-${entity.id}`, -9, 9, 1)}deg`,
+                  '--reference-accent': moduleColor,
+                } as CSSProperties}
+              >
+                <div className="reference-module-row" aria-label="Modulo al que pertenece">
+                  <span className="reference-module-pill">{moduleName}</span>
+                </div>
                 <strong>{entity.title}</strong>
                 <p>{buildSnippet(entity, entity.title)}</p>
                 <div className="reference-badges" aria-label="Información del enlace">
@@ -143,7 +168,8 @@ export function InspectorContextTab({
                   {entity.fields.length === 0 && <span className="reference-badge">Sin propiedades</span>}
                 </div>
               </article>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <EmptyMiniState>Todavia no has enlazado referencias desde el texto actual.</EmptyMiniState>

@@ -1,7 +1,7 @@
 import { memo, useCallback, type CSSProperties, type DragEvent, type ReactNode, type RefObject } from 'react'
 
 import { cn } from '@/lib/utils'
-import type { EntityRecord } from '../../../types/workspace'
+import type { CollectionTab, EntityRecord, EntityTemplate } from '../../../types/workspace'
 import { EditorSuggestions } from './EditorSuggestions'
 import { EntityHover } from './EntityHover'
 
@@ -13,6 +13,9 @@ type EditorDocumentSectionProps = {
   editorSurface: ReactNode
   referenceSuggestionActive: boolean
   suggestionOptions: EntityRecord[]
+  templates: EntityTemplate[]
+  collections: CollectionTab[]
+  allEntities: EntityRecord[]
   suggestionsStyle?: CSSProperties
   onInsertReference: (entity: EntityRecord) => void
   hoveredReference: {
@@ -34,6 +37,9 @@ export const EditorDocumentSection = memo(function EditorDocumentSection({
   editorSurface,
   referenceSuggestionActive,
   suggestionOptions,
+  templates,
+  collections,
+  allEntities,
   suggestionsStyle,
   onInsertReference,
   hoveredReference,
@@ -105,7 +111,13 @@ export const EditorDocumentSection = memo(function EditorDocumentSection({
         onInsertReference={onInsertReference}
       />
 
-      <EntityHover position={hoveredReference} entity={hoveredEntity} />
+      <EntityHover
+        position={hoveredReference}
+        entity={hoveredEntity}
+        templates={templates}
+        collections={collections}
+        allEntities={allEntities}
+      />
     </section>
   )
 })

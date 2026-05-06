@@ -123,7 +123,7 @@ export const EntityList = memo(function EntityList({
         open={isSectionOpen}
         onOpenChange={setIsSectionOpen}
         actions={
-          <Button type="button" variant="ghost" className="ghost-button compact-button" onClick={() => setShowComposer((current) => !current)}>
+          <Button type="button" className="ghost-button compact-button btn--ghost" onClick={() => setShowComposer((current) => !current)}>
             {showComposer ? 'Cerrar' : 'Crear entidad'}
           </Button>
         }

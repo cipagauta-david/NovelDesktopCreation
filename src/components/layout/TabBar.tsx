@@ -126,8 +126,7 @@ export const TabBar = memo(function TabBar({
         )}
         <Button
           type="button"
-          variant="secondary"
-          className="secondary-button compact-button"
+          className="secondary-button compact-button btn--secondary"
           onClick={() => setShowComposer((current) => !current)}
         >
           {showComposer ? 'Cerrar' : 'Nueva colección'}
@@ -142,7 +141,7 @@ export const TabBar = memo(function TabBar({
                 placeholder="Nombre de la nueva colección"
               />
             </Field>
-            <Button type="button" variant="primary" className="primary-button" onClick={onCreateTab}>
+            <Button type="button" className="primary-button btn--default" onClick={onCreateTab}>
               Crear
             </Button>
           </div>
