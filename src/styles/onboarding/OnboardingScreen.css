@@ -4,13 +4,14 @@
   grid-template-columns: 1.1fr minmax(360px, 460px);
   gap: 1.5rem;
   padding: 2rem;
+  align-items: start;
 }
 
 .hero-panel {
   padding: 2.25rem;
   display: grid;
   gap: 1.5rem;
-  align-content: center;
+  align-content: start;
 }
 
 .hero-panel h1 {
@@ -40,7 +41,7 @@
   padding: 2rem;
   display: grid;
   gap: 1rem;
-  align-content: center;
+  align-content: start;
 }
 
 .section-title {
@@ -68,6 +69,7 @@
     grid-template-columns: 1fr;
     gap: 1rem;
     padding: 1rem;
+    min-height: auto;
   }
 
   .hero-panel {
