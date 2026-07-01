@@ -31,6 +31,7 @@ export function OnboardingGate({ initialData, onComplete, children }: Props) {
         provider: payload.provider,
         model: payload.model,
         apiKeyHint: payload.apiKey ? `••••${payload.apiKey.slice(-4)}` : 'Modo local',
+        streamEnabled: payload.streamEnabled ?? true,
       },
     })
   }

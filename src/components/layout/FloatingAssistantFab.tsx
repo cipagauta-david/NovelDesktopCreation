@@ -8,6 +8,7 @@ interface FloatingAssistantFabProps {
   isOpen: boolean
   hasSuggestion: boolean
   draft: string
+  streamingText: string
   streamStatus: LlmStreamStatus
   onToggle: () => void
   onClose: () => void
@@ -20,6 +21,7 @@ export const FloatingAssistantFab = memo(function FloatingAssistantFab({
   isOpen,
   hasSuggestion,
   draft,
+  streamingText,
   streamStatus,
   onToggle,
   onClose,
@@ -45,6 +47,7 @@ export const FloatingAssistantFab = memo(function FloatingAssistantFab({
           <InspectorAssistantComposer
             value={draft}
             streamStatus={streamStatus}
+            streamingText={streamingText}
             onChange={onDraftChange}
             onSubmit={onSubmit}
             onStopGeneration={onStopGeneration}

@@ -233,6 +233,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
         isOpen={assistantFabOpen}
         hasSuggestion={hasSuggestion}
         draft={floatingAssistantDraft}
+        streamingText={workspace.streamingText}
         streamStatus={workspace.streamStatus}
         onToggle={() => setAssistantFabOpen((c) => !c)}
         onClose={() => setAssistantFabOpen(false)}
