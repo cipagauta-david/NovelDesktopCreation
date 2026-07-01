@@ -18,6 +18,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
   const [provider, setProvider] = useState<Provider>('OpenRouter')
   const [model, setModel] = useState(providerModels.OpenRouter[0])
   const [apiKey, setApiKey] = useState('')
+  const [streamEnabled, setStreamEnabled] = useState(true)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false)
 
@@ -67,7 +68,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
         className="onboarding-card"
         onSubmit={(event) => {
           event.preventDefault()
-          onSubmit({ authorName, provider, model, apiKey })
+          onSubmit({ authorName, provider, model, apiKey, streamEnabled })
         }}
       >
         <div className="section-title">
@@ -146,6 +147,15 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
                 autoComplete="current-password"
               />
             </Field>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={streamEnabled}
+                onChange={(e) => setStreamEnabled(e.target.checked)}
+              />
+              <span>Streaming (respuesta token por token)</span>
+            </label>
 
             <label style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.9rem' }}>
               <input 

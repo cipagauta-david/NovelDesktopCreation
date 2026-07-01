@@ -9,8 +9,6 @@ type GraphHudProps = {
   repulsionStrength: number
   gravityStrength: number
   linkWeightStrength: number
-  linkAttractionStrength: number
-  collectionCohesionStrength: number
   collectionBoundaryRepulsionStrength: number
   textFontSize: number
   simulationPaused: boolean
@@ -24,8 +22,6 @@ type GraphHudProps = {
   onRepulsionStrengthChange: (value: number) => void
   onGravityStrengthChange: (value: number) => void
   onLinkWeightStrengthChange: (value: number) => void
-  onLinkAttractionStrengthChange: (value: number) => void
-  onCollectionCohesionStrengthChange: (value: number) => void
   onCollectionBoundaryRepulsionStrengthChange: (value: number) => void
   onTextFontSizeChange: (value: number) => void
   onCenterView: () => void
@@ -42,8 +38,6 @@ export function GraphHud({
   repulsionStrength,
   gravityStrength,
   linkWeightStrength,
-  linkAttractionStrength,
-  collectionCohesionStrength,
   collectionBoundaryRepulsionStrength,
   textFontSize,
   simulationPaused,
@@ -57,8 +51,6 @@ export function GraphHud({
   onRepulsionStrengthChange,
   onGravityStrengthChange,
   onLinkWeightStrengthChange,
-  onLinkAttractionStrengthChange,
-  onCollectionCohesionStrengthChange,
   onCollectionBoundaryRepulsionStrengthChange,
   onTextFontSizeChange,
   onCenterView,

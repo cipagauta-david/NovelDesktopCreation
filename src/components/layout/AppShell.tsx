@@ -14,7 +14,8 @@ import { FormStack } from '../common/FormStack'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/Dialog'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { ResizeHandle } from '../../hooks/workspace/usePanelWidths'
-import type { PersistedState } from '../../types/workspace'
+import type { PersistedState, Provider } from '../../types/workspace'
+import { providerModels } from '../../data/constants'
 import * as Comlink from 'comlink'
 import type { AppWorker } from '../../data/worker'
 import '../../styles/layout/AppShell.css';
@@ -63,6 +64,8 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   const [syncWorkspaceId, setSyncWorkspaceId] = useState('')
   const [syncToken, setSyncToken] = useState('')
   const [nextProviderKey, setNextProviderKey] = useState('')
+  const [llmProviderDraft, setLlmProviderDraft] = useState<Provider | ''>('')
+  const [llmModelDraft, setLlmModelDraft] = useState('')
   const spectralTimerRef = useRef<number | null>(null)
   const godMode = workspace.workspaceView === 'graph'
   const hasLeftPanel = !zenMode && (workspace.panels.sidebar || workspace.panels.entities)
@@ -72,6 +75,8 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
     ? 'Vista mapa narrativa'
     : workspace.activeProject?.name ?? 'Proyecto narrativo'
   const providerModel = workspace.data.settings?.model ?? 'IA sin configurar'
+  const provider = workspace.data.settings?.provider
+  const availableModels = provider ? providerModels[provider] : []
   const aiModelLabel = providerModel
     .split('/')
     .pop()
@@ -80,6 +85,14 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
 
   // Destructure stable callbacks to avoid re-running effect on every render
   const { togglePanel, panels, selectEntity, setWorkspaceView } = workspace
+
+  useEffect(() => {
+    setLlmProviderDraft(workspace.data.settings?.provider ?? '')
+  }, [workspace.data.settings?.provider])
+
+  useEffect(() => {
+    setLlmModelDraft(workspace.data.settings?.model ?? '')
+  }, [workspace.data.settings?.model])
 
   useEffect(() => {
     function handleKeydown(e: KeyboardEvent) {
@@ -191,6 +204,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
     const mergedPrompt = `${basePrompt}${basePrompt ? '\n\n' : ''}Solicitud reciente del autor:\n${nextPrompt}`
     workspace.updateTabPrompt(mergedPrompt)
     setFloatingAssistantDraft('')
+    void workspace.generateAiProposal(mergedPrompt)
   }
 
   return (
@@ -392,6 +406,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
           <InspectorAssistantComposer
             value={floatingAssistantDraft}
             streamStatus={workspace.streamStatus}
+            streamingText={workspace.streamingText}
             onChange={setFloatingAssistantDraft}
             onSubmit={handleFloatingAssistantSubmit}
             onStopGeneration={workspace.stopGeneration}
@@ -464,8 +479,8 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
       </StackedDialog>
 
 
-      <StackedDialog open={invalidateKeyOpen} onOpenChange={setInvalidateKeyOpen} title="Invalidar API key">
-        <p>Esta acción elimina la key del vault del proveedor activo.</p>
+      <StackedDialog open={invalidateKeyOpen} onOpenChange={setInvalidateKeyOpen} title="Eliminar key guardada">
+        <p>Esta acción borra la key guardada localmente para el proveedor activo. No revoca la key en el servicio remoto; solo la quita de esta app.</p>
         <Button type="button" variant="ghost" className="ghost-button" onClick={() => setInvalidateKeyOpen(false)}>Cancelar</Button>
         <Button type="button" variant="primary" className="primary-button" onClick={() => {
           void workspace.invalidateProviderCredential()
@@ -486,8 +501,27 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
 
           {settingsTab === 'llm' && (
             <FormStack>
+              <Field label="Proveedor">
+                <select value={llmProviderDraft} onChange={(event) => setLlmProviderDraft(event.target.value as Provider)}>
+                  {Object.keys(providerModels).map((providerOption) => (
+                    <option key={providerOption} value={providerOption}>{providerOption}</option>
+                  ))}
+                </select>
+              </Field>
+
               <Field label="Modelo activo">
-                <input value={workspace.data.settings?.model ?? ''} readOnly placeholder="Modelo IA configurado" />
+                {provider ? (
+                  <select value={llmModelDraft} onChange={(event) => setLlmModelDraft(event.target.value)}>
+                    {availableModels.map((modelOption) => (
+                      <option key={modelOption} value={modelOption}>{modelOption}</option>
+                    ))}
+                    {!availableModels.includes(llmModelDraft) && llmModelDraft ? (
+                      <option value={llmModelDraft}>{llmModelDraft}</option>
+                    ) : null}
+                  </select>
+                ) : (
+                  <input value={llmModelDraft} onChange={(event) => setLlmModelDraft(event.target.value)} placeholder="Modelo IA configurado" />
+                )}
               </Field>
 
               <Field label="API Key del proveedor">
@@ -496,13 +530,34 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
 
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <Button type="button" variant="primary" className="primary-button" onClick={() => {
-                  void workspace.rotateProviderCredential(nextProviderKey)
+                  if (llmProviderDraft && llmProviderDraft !== provider) {
+                    void workspace.updateProvider(llmProviderDraft)
+                  }
+                  if (llmModelDraft.trim()) {
+                    void workspace.updateProviderModel(llmModelDraft)
+                  }
+                  if (nextProviderKey.trim()) {
+                    void workspace.rotateProviderCredential(nextProviderKey)
+                  }
                   setNextProviderKey('')
-                }}>Guardar Key</Button>
+                }}>Guardar cambios</Button>
                 <Button type="button" variant="ghost" className="ghost-button" onClick={() => {
                   void workspace.invalidateProviderCredential()
-                }}>Invalidar Key</Button>
+                }}>Eliminar Key</Button>
               </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', padding: '0.5rem 0', borderTop: '1px solid var(--border-subtle)', cursor: 'pointer' }}>
+                <span style={{ fontSize: 'var(--font-size-0)', color: 'var(--text-secondary)' }}>
+                  <strong style={{ display: 'block', color: 'var(--text-primary)', marginBottom: '0.15rem' }}>Streaming</strong>
+                  Respuesta token a token conforme se genera
+                </span>
+                <input
+                  type="checkbox"
+                  style={{ width: '1rem', height: '1rem', accentColor: 'var(--accent-primary)', flexShrink: 0, cursor: 'pointer' }}
+                  checked={workspace.data.settings?.streamEnabled ?? true}
+                  onChange={(e) => workspace.updateStreamEnabled(e.target.checked)}
+                />
+              </label>
 
             </FormStack>
 

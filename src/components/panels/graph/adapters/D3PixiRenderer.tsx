@@ -86,7 +86,6 @@ export function D3PixiRenderer({
   repulsionStrength, // Amplitud Angular (Separación)
   gravityStrength, // Espaciado de Anillos (Gravedad)
   linkWeightStrength, // Grosor 
-   // Tensión de Bezier
   collectionBoundaryRepulsionStrength, // Corte de profundidad (Depth limit)
   textFontSize, // Tamaño de fuente constante
 }: D3PixiRendererProps) {

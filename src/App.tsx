@@ -111,6 +111,7 @@ const { worker, isReady } = useAppWorker()
                 provider: payload.provider,
                 model: payload.model,
                 apiKeyHint: payload.apiKey ? `••••${payload.apiKey.slice(-4)}` : 'Modo local',
+                streamEnabled: payload.streamEnabled ?? true,
               },
             }))
           }}

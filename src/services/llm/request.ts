@@ -21,6 +21,10 @@ async function tryFallbackProviders(
   signal: AbortSignal,
   callbacks: StreamCallbacks,
 ): Promise<boolean> {
+  if (originalInput.provider === 'OpenRouter') {
+    return false
+  }
+
   const fallbacks = FALLBACK_ORDER.filter((p) => p !== originalInput.provider)
 
   for (const provider of fallbacks) {
@@ -138,6 +142,7 @@ export async function requestLlmStreaming(
       }
 
       if (!llmErr.retryable || attempt === MAX_RETRIES) {
+        callbacks.onReset?.()
         const fallbackResult = await tryFallbackProviders(validatedInput, signal, callbacks)
         if (!fallbackResult) {
           callbacks.onTrace(
@@ -157,6 +162,7 @@ export async function requestLlmStreaming(
       }
 
       const delay = retryDelay(attempt)
+      callbacks.onReset?.()
       await new Promise((resolve) => setTimeout(resolve, delay))
     }
   }

@@ -12,8 +12,6 @@ export type GraphViewSettings = {
   repulsionStrength: number
   gravityStrength: number
   linkWeightStrength: number
-  linkAttractionStrength: number
-  collectionCohesionStrength: number
   collectionBoundaryRepulsionStrength: number
   textFontSize: number
   collectionVisibility: Record<string, boolean>

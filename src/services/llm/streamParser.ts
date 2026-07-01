@@ -33,6 +33,12 @@ export async function consumeSseStream({
   }
 
   if (!response.body) {
+    console.error('[LLM SSE error] empty response body', {
+      provider,
+      url: url,
+      status: response.status,
+      statusText: response.statusText,
+    })
     throw new LlmError({
       provider,
       message: 'Respuesta SSE sin body de stream.',
@@ -68,6 +74,12 @@ export async function consumeSseStream({
       parser.feed(decoder.decode(value, { stream: true }))
 
       if (parserError) {
+        console.error('[LLM SSE parse error]', {
+          provider,
+          url,
+          error: parserError,
+          chunk: decoder.decode(value, { stream: true }),
+        })
         throw new LlmError({
           provider,
           message: 'Error en la conexión con la IA. Por favor, intenta de nuevo.',

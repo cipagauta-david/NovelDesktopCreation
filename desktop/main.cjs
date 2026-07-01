@@ -10,15 +10,72 @@ try {
   DatabaseSync = null
 }
 
+let lancedb = null
+try {
+  lancedb = require('@lancedb/lancedb')
+} catch (e) {
+  console.log('[Desktop] @lancedb/lancedb not available', e)
+}
+
+let pipeline = null
+let env = null
+try {
+  const transformers = require('@xenova/transformers')
+  pipeline = transformers.pipeline
+  env = transformers.env
+  env.allowLocalModels = false
+  env.useBrowserCache = false
+} catch (e) {
+  console.log('[Desktop] @xenova/transformers not available', e)
+}
+
 const APP_STATE_PATH = path.join(app.getPath('userData'), 'workspace-state.json')
 const APP_STATE_DB_PATH = path.join(app.getPath('userData'), 'workspace-state.db')
+const VECTOR_DB_PATH = path.join(app.getPath('userData'), 'workspace-vectors.lance')
 const APP_STATE_KEY = 'latest'
 const DB_SCHEMA_VERSION = 1
 
 console.log('[Desktop] UserData path:', app.getPath('userData'))
 console.log('[Desktop] SQLite DB path:', APP_STATE_DB_PATH)
+console.log('[Desktop] LanceDB path:', VECTOR_DB_PATH)
 
 let stateDb = null
+
+let extractorPromise = null
+function getExtractor() {
+  if (!pipeline) return null
+  if (!extractorPromise) {
+    console.log('[Desktop] Loading Xenova embedding model...')
+    extractorPromise = pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
+      quantized: true,
+    })
+  }
+  return extractorPromise
+}
+
+async function getEmbedding(text) {
+  const empty = new Array(384).fill(0)
+  if (!text) return empty
+  const extractor = await getExtractor()
+  if (!extractor) return empty
+  try {
+    const output = await extractor(text, { pooling: 'mean', normalize: true })
+    return Array.from(output.data)
+  } catch (err) {
+    console.error('[Desktop] Embeddings generation failed', err)
+    return empty
+  }
+}
+
+let lanceConnection = null
+async function getLanceDb() {
+  if (!lancedb) return null
+  if (!lanceConnection) {
+    lanceConnection = await lancedb.connect(VECTOR_DB_PATH)
+  }
+  return lanceConnection
+}
+
 
 async function ensureUserDataDir() {
   const userDataPath = app.getPath('userData')
@@ -243,16 +300,6 @@ function bootstrapStateSchema(db) {
       value_json TEXT NOT NULL,
       updated_at INTEGER NOT NULL
     );
-
-    CREATE VIRTUAL TABLE IF NOT EXISTS entities_fts USING fts5(
-      entity_id UNINDEXED,
-      project_id UNINDEXED,
-      title,
-      aliases,
-      tags,
-      content,
-      tokenize = 'unicode61 remove_diacritics 2'
-    );
   `)
 
   const upsertMeta = db.prepare('INSERT INTO schema_meta (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
@@ -460,6 +507,7 @@ function buildFtsEntityRecord(projectId, entity) {
   return {
     entityId: entity.id,
     projectId,
+    tabId: entity.tabId ?? '',
     title: entity.title ?? '',
     aliases: Array.isArray(entity.aliases) ? entity.aliases.join(' ') : '',
     tags: Array.isArray(entity.tags) ? entity.tags.join(' ') : '',
@@ -490,38 +538,72 @@ function isSameFtsPayload(a, b) {
   )
 }
 
-function syncEntityFtsIndex(db, previousState, nextState) {
+async function syncEntityLanceDb(previousState, nextState) {
   const previousMap = flattenFtsEntitiesFromState(previousState)
   const nextMap = flattenFtsEntitiesFromState(nextState)
 
-  const deleteStmt = db.prepare('DELETE FROM entities_fts WHERE entity_id = ?')
-  const upsertStmt = db.prepare('INSERT INTO entities_fts (entity_id, project_id, title, aliases, tags, content) VALUES (?, ?, ?, ?, ?, ?)')
-
+  const toDelete = []
   for (const [entityId] of previousMap) {
     if (!nextMap.has(entityId)) {
-      deleteStmt.run(entityId)
+      toDelete.push(entityId)
     }
   }
 
+  const toUpsert = []
   for (const [entityId, nextRecord] of nextMap) {
     const prevRecord = previousMap.get(entityId)
     if (prevRecord && isSameFtsPayload(prevRecord, nextRecord)) {
       continue
     }
+    toUpsert.push(nextRecord)
+  }
 
-    deleteStmt.run(entityId)
-    upsertStmt.run(
-      nextRecord.entityId,
-      nextRecord.projectId,
-      nextRecord.title,
-      nextRecord.aliases,
-      nextRecord.tags,
-      nextRecord.content,
-    )
+  if (toDelete.length === 0 && toUpsert.length === 0) return
+
+  let table = await getLanceTable()
+  if (!table && toUpsert.length > 0) {
+    console.log('[Desktop] Creating LanceDB table with', toUpsert.length, 'records')
+    const dataWithVectors = []
+    for (const record of toUpsert) {
+       const text = [record.title, record.aliases, record.tags, record.content].join(' ')
+       const vector = await getEmbedding(text)
+       dataWithVectors.push({ ...record, vector })
+    }
+    const db = await getLanceDb()
+    if (db) await db.createTable('entities', dataWithVectors)
+    return
+  }
+  
+  if (!table) return
+
+  if (toDelete.length > 0) {
+    const condition = `entityId IN (${toDelete.map(id => `'${id}'`).join(', ')})`
+    await table.delete(condition)
+  }
+
+  if (toUpsert.length > 0) {
+    const dataWithVectors = []
+    for (const record of toUpsert) {
+       const text = [record.title, record.aliases, record.tags, record.content].join(' ')
+       const vector = await getEmbedding(text)
+       dataWithVectors.push({ ...record, vector })
+       await table.delete(`entityId = '${record.entityId}'`)
+    }
+    await table.add(dataWithVectors)
   }
 }
 
-function persistStateToDb(db, state) {
+async function getLanceTable() {
+  const db = await getLanceDb()
+  if (!db) return null
+  const tableNames = await db.tableNames()
+  if (tableNames.includes('entities')) {
+    return await db.openTable('entities')
+  }
+  return null
+}
+
+async function persistStateToDb(db, state) {
   console.log('[Desktop] persistStateToDb - projects:', state?.projects?.length)
   const nowMs = Date.now()
   const stateJson = JSON.stringify(state)
@@ -533,8 +615,14 @@ function persistStateToDb(db, state) {
     upsertAppState.run(APP_STATE_KEY, stateJson, nowMs)
     upsertSnapshot.run(APP_STATE_KEY, DB_SCHEMA_VERSION, stateJson, nowMs)
     replaceDerivedTablesFromState(db, state, nowMs)
-    syncEntityFtsIndex(db, previousState, state)
   })
+  
+  try {
+    await syncEntityLanceDb(previousState, state)
+  } catch(err) {
+    console.error('[Desktop] LanceDB sync failed:', err)
+  }
+
   console.log('[Desktop] persistStateToDb complete - stateJson size:', stateJson.length)
 }
 
@@ -587,7 +675,6 @@ function clearStateInDb(db) {
     db.exec('DELETE FROM graph_layout_positions')
     db.exec('DELETE FROM llm_traces')
     db.exec('DELETE FROM correlation_reports')
-    db.exec('DELETE FROM entities_fts')
     db.exec('DELETE FROM sync_queue')
     db.exec('DELETE FROM sync_state')
   })
@@ -611,9 +698,9 @@ function buildFtsQuery(input) {
   return tokens.map((token) => `${token}*`).join(' AND ')
 }
 
-function queryDesktopFts(db, payload) {
+async function queryDesktopFts(payload) {
   const projectId = typeof payload?.projectId === 'string' ? payload.projectId.trim() : ''
-  const query = buildFtsQuery(payload?.query)
+  const query = typeof payload?.query === 'string' ? payload.query.trim() : ''
   const limitInput = Number(payload?.limit)
   const limit = Number.isFinite(limitInput) ? Math.max(1, Math.min(50, Math.floor(limitInput))) : 12
 
@@ -621,34 +708,35 @@ function queryDesktopFts(db, payload) {
     return []
   }
 
-  const stmt = db.prepare(`
-    SELECT
-      f.entity_id AS entity_id,
-      e.tab_id AS tab_id,
-      e.title AS title,
-      snippet(entities_fts, 5, '[', ']', ' … ', 18) AS snippet,
-      bm25(entities_fts, 10.0, 6.0, 4.0, 1.0) AS rank
-    FROM entities_fts f
-    JOIN entities e ON e.id = f.entity_id
-    WHERE entities_fts MATCH ?
-      AND e.project_id = ?
-      AND e.status = 'active'
-    ORDER BY rank ASC
-    LIMIT ?
-  `)
+  const table = await getLanceTable()
+  if (!table) return []
 
-  const rows = stmt.all(query, projectId, limit)
-  return rows.map((row) => {
-    const rank = typeof row.rank === 'number' ? row.rank : 0
-    const score = 1000 / (1 + Math.max(0, rank))
-    return {
-      entityId: row.entity_id,
-      tabId: row.tab_id,
-      title: row.title,
-      snippet: typeof row.snippet === 'string' && row.snippet.trim() ? row.snippet : row.title,
-      score,
-    }
-  })
+  const vector = await getEmbedding(query)
+  try {
+    const results = await table.search(vector)
+      .filter(`projectId = '${projectId}'`)
+      .limit(limit)
+      .execute()
+
+    return results.map(row => {
+      const distance = typeof row._distance === 'number' ? row._distance : 0
+      const score = 1000 / (1 + distance)
+      
+      let snippet = row.content ? row.content.slice(0, 160) : row.title
+      if (snippet && snippet.length === 160) snippet += '…'
+
+      return {
+        entityId: row.entityId,
+        tabId: row.tabId ?? '',
+        title: row.title,
+        snippet: snippet || row.title,
+        score,
+      }
+    })
+  } catch (err) {
+    console.error('[Desktop] Vector search failed:', err)
+    return []
+  }
 }
 
 function parseIsoToEpochMs(value) {
@@ -850,7 +938,7 @@ ipcMain.handle('novel:state:save', async (_event, state) => {
   const db = getStateDb()
   if (db) {
     try {
-      persistStateToDb(db, state)
+      await persistStateToDb(db, state)
       console.log('[Desktop IPC] State persisted to SQLite')
       return true
     } catch (error) {
@@ -947,13 +1035,8 @@ ipcMain.handle('novel:sync:clear', async () => {
 
 ipcMain.handle('novel:search:fts', async (_event, payload) => {
   await ensureUserDataDir()
-  const db = getStateDb()
-  if (!db) {
-    return []
-  }
-
   try {
-    return queryDesktopFts(db, payload)
+    return await queryDesktopFts(payload)
   } catch (error) {
     console.warn('[Desktop FTS] Query failed', error)
     return []

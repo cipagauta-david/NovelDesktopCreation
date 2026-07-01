@@ -52,7 +52,7 @@ export function InspectorContextTab({
         <textarea value={activeTab?.prompt ?? ''} onChange={(event) => onUpdateTabPrompt(event.target.value)} />
       </PanelSection>
 
-      {pendingProposal && (
+      {pendingProposal && streamStatus !== 'streaming' && (
         <PanelSection title="Sugerencia pendiente" meta="Necesita tu confirmacion antes de aplicarse">
           <div className="proposal-card proposal-card-staged">
             <h4>{pendingProposal.title}</h4>
@@ -78,28 +78,55 @@ export function InspectorContextTab({
         </PanelSection>
       )}
 
-      {streamStatus === 'streaming' && (
-        <PanelSection title="Generando con IA..." meta="Streaming activo">
-          <div className="proposal-card streaming-card">
-            <div className="streaming-indicator">
-              <span className="streaming-dot" />
-              <span>Recibiendo tokens...</span>
-            </div>
-            {streamingText ? (
-              <p className="streaming-preview">{streamingText.slice(-400)}</p>
-            ) : (
-              <div className="streaming-skeleton" aria-hidden="true">
-                <span />
-                <span />
-                <span />
+      {(() => {
+        const isStreaming = streamStatus === 'streaming'
+        const showStreamResult =
+          isStreaming ||
+          (!!streamingText && (streamStatus === 'done' || streamStatus === 'error'))
+        if (!showStreamResult) return null
+        const title = isStreaming
+          ? 'Generando con IA...'
+          : streamStatus === 'done'
+            ? 'Respuesta generada'
+            : 'Respuesta parcial'
+        const meta = isStreaming
+          ? 'Streaming activo'
+          : streamStatus === 'done'
+            ? 'Revisa antes de confirmar'
+            : 'El stream terminó con errores'
+        const headerLabel = isStreaming
+          ? 'Recibiendo tokens...'
+          : streamStatus === 'done'
+            ? 'Respuesta completa'
+            : 'Stream con errores'
+        return (
+          <PanelSection title={title} meta={meta}>
+            <div className="proposal-card streaming-card">
+              <div className="streaming-indicator">
+                {isStreaming && <span className="streaming-dot" />}
+                {streamStatus === 'error' && <span className="streaming-warning" aria-label="Advertencia">⚠</span>}
+                <span>{headerLabel}</span>
               </div>
-            )}
-            <Button type="button" variant="ghost" className="ghost-button destructive-text" onClick={onStopGeneration}>
-              ■ Detener generacion
-            </Button>
-          </div>
-        </PanelSection>
-      )}
+              {streamingText ? (
+                <p className="streaming-preview">{streamingText}</p>
+              ) : (
+                isStreaming && (
+                  <div className="streaming-skeleton" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                )
+              )}
+              {isStreaming && (
+                <Button type="button" variant="ghost" className="ghost-button destructive-text" onClick={onStopGeneration}>
+                  ■ Detener generacion
+                </Button>
+              )}
+            </div>
+          </PanelSection>
+        )
+      })()}
 
       {llmTraces.length > 0 && (
         <PanelSection title="Trazas de IA" meta={`${llmTraces.length} registros`} defaultOpen={false}>

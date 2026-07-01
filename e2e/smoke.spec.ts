@@ -103,6 +103,38 @@ test('onboarding completes without API key', async ({ page }) => {
   await expect(page.locator('.app-shell')).toBeVisible({ timeout: 20_000 })
 })
 
+test('assistant sends a request to the configured LLM provider', async ({ page }) => {
+  await page.goto('/')
+  await page.evaluate(() => {
+    localStorage.clear()
+    const DBDeleteRequest = indexedDB.deleteDatabase('novel-desktop-worker-db')
+    return new Promise<void>((resolve) => {
+      DBDeleteRequest.onsuccess = () => resolve()
+      DBDeleteRequest.onerror = () => resolve()
+      DBDeleteRequest.onblocked = () => resolve()
+    })
+  })
+  await page.reload()
+
+  await page.route('**/api/generate', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ response: 'Respuesta de prueba' }),
+    })
+  })
+
+  await page.waitForSelector('.onboarding-shell, .app-shell', { timeout: 30_000 })
+  await completeOnboarding(page)
+  await expect(page.locator('.app-shell')).toBeVisible({ timeout: 20_000 })
+
+  await page.locator('button[aria-label="Abrir asistente IA"]').click()
+  await page.locator('textarea[placeholder*="Pide una escena alternativa"]').fill('Prueba de conexión con la IA.')
+  await page.locator('button[aria-label="Enviar a la IA"]').click()
+
+  await page.waitForRequest('**/api/generate', { timeout: 10_000 })
+})
+
 // ── Test: Editor loads with seed entity ──────────────────
 
 test('editor shows seed entity content', async ({ page }) => {

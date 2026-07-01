@@ -15,12 +15,18 @@ export const LlmRequestInputSchema = z.object({
   tabPrompt: z.string(),
   entityTitle: z.string().trim().min(1),
   entityContent: z.string(),
+  stream: z.boolean().optional(),
 })
 
 export const OpenAiStreamChunkSchema = z.object({
   choices: z.array(z.object({
     delta: z.object({
       content: z.string().optional(),
+      reasoning: z.string().nullable().optional(),
+      reasoning_details: z.array(z.object({
+        text: z.string().nullable().optional(),
+      })).nullable().optional(),
+      role: z.string().optional(),
     }).optional(),
   })).min(1),
 })
@@ -111,6 +117,7 @@ export const PersistedStateSchema = z.object({
     model: z.string(),
     apiKeyHint: z.string(),
     apiKey: z.string().optional(),
+    streamEnabled: z.boolean().optional(),
   }).nullable(),
   projects: z.array(z.object({
     id: z.string(),
@@ -223,6 +230,13 @@ export function parseWithContract<T>(
 
   bumpValidationMetric(opts.provider, opts.contract)
   const detail = result.error.issues[0]?.message ?? 'Algo salió mal, intenta de nuevo'
+  console.error('[LLM contract validation failed]', {
+    provider: opts.provider,
+    contract: opts.contract,
+    message: opts.message,
+    payload,
+    issues: result.error.issues,
+  })
   throw new LlmError({
     provider: opts.provider,
     message: `${opts.message}: ${detail}`,
