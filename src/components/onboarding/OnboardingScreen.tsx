@@ -108,9 +108,8 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
 
         {showAdvanced && (
           <div className="advanced-config">
-            <div className="field-bento-grid">
-              <div className="field-bento-card">
-                <label className="field-key-label" htmlFor="onboarding-provider">Proveedor IA</label>
+            <div className="inline-grid">
+              <Field label="Proveedor IA">
                 <select
                   id="onboarding-provider"
                   className="field-select-input"
@@ -127,7 +126,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
                     </option>
                   ))}
                 </select>
-              </div>
+              </Field>
 
               <div className="field-bento-card">
                 <label className="field-key-label" htmlFor="onboarding-model">Modelo a utilizar</label>
@@ -154,7 +153,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
               </div>
             </div>
 
-            <label className="privacy-consent" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', cursor: 'pointer' }}>
+            <label className="checkbox-label">
               <input
                 type="checkbox"
                 checked={streamEnabled}
@@ -163,17 +162,17 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
               <span>Streaming (respuesta token por token)</span>
             </label>
 
-            <label className="privacy-consent">
-              <input 
-                type="checkbox" 
-                checked={acceptedPrivacy} 
-                onChange={(e) => setAcceptedPrivacy(e.target.checked)} 
+            <label className="checkbox-label checkbox-privacy">
+              <input
+                type="checkbox"
+                checked={acceptedPrivacy}
+                onChange={(e) => setAcceptedPrivacy(e.target.checked)}
               />
-              Entiendo que mi API key se guardará localmente. <a href="#" className="privacy-link">Ver Política de Privacidad</a>.
+              Entiendo que mi API key se guardará localmente. <a href="#">Ver Política de Privacidad</a>.
             </label>
 
-            <Button 
-              className="primary-button btn--default" 
+            <Button
+              className="primary-button"
               type="submit"
               disabled={!acceptedPrivacy || !apiKey}
             >

@@ -349,18 +349,13 @@ body,
 #root {
   width: 100%;
   min-width: 320px;
+  height: auto;
   min-height: 100vh;
-  height: 100%;
 }
 
 body {
   margin: 0;
-  overflow: hidden;
-  /* Japandi rice-paper: two soft radial warm pools over the flat base */
-  background:
-    radial-gradient(ellipse at 68% 22%, color-mix(in srgb, #FEF5E4 60%, transparent) 0%, transparent 52%),
-    radial-gradient(ellipse at 18% 80%, color-mix(in srgb, #F0EAD8 55%, transparent) 0%, transparent 46%),
-    var(--bg-base);
+  background: var(--bg-base);
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: var(--font-size-1);

@@ -39,6 +39,7 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
   const { assistantFabOpen, setAssistantFabOpen, floatingAssistantDraft, setFloatingAssistantDraft, handleFloatingAssistantSubmit } = useFloatingAssistant({
     activeTabPrompt: workspace.activeTab?.prompt,
     updateTabPrompt: workspace.updateTabPrompt,
+    onGenerateAiProposal: workspace.generateAiProposal,
   })
   const [searchPaletteOpen, setSearchPaletteOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)

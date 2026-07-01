@@ -367,12 +367,37 @@
 @media (max-width: 720px) {
   .app-shell {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
     grid-template-areas:
       "header"
+      "rails"
       "stage";
   }
 
   .icon-rail {
+    grid-area: rails;
+    flex-direction: row;
+    padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+    gap: var(--space-3, 0.75rem);
+    border-bottom: 1px solid var(--border-subtle);
+    background: color-mix(in srgb, var(--surface-float) 60%, transparent);
+    backdrop-filter: blur(10px);
+  }
+
+  .icon-rail-left {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-2, 0.5rem);
+  }
+
+  .icon-rail-right {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-2, 0.5rem);
+    margin-left: auto;
+  }
+
+  .icon-rail-spacer {
     display: none;
   }
 

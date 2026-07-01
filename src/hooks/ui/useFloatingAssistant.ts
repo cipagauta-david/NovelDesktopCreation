@@ -3,9 +3,10 @@ import { useState, useCallback, type FormEvent } from 'react'
 interface UseFloatingAssistantParams {
   activeTabPrompt: string | undefined
   updateTabPrompt: (prompt: string) => void
+  onGenerateAiProposal: (promptOverride?: string) => void
 }
 
-export function useFloatingAssistant({ activeTabPrompt, updateTabPrompt }: UseFloatingAssistantParams) {
+export function useFloatingAssistant({ activeTabPrompt, updateTabPrompt, onGenerateAiProposal }: UseFloatingAssistantParams) {
   const [assistantFabOpen, setAssistantFabOpen] = useState(false)
   const [floatingAssistantDraft, setFloatingAssistantDraft] = useState('')
 
@@ -19,7 +20,9 @@ export function useFloatingAssistant({ activeTabPrompt, updateTabPrompt }: UseFl
     const mergedPrompt = `${basePrompt}${basePrompt ? '\n\n' : ''}Solicitud reciente del autor:\n${nextPrompt}`
     updateTabPrompt(mergedPrompt)
     setFloatingAssistantDraft('')
-  }, [activeTabPrompt, floatingAssistantDraft, updateTabPrompt])
+    // Trigger AI generation with the user's prompt as override
+    onGenerateAiProposal(nextPrompt)
+  }, [activeTabPrompt, floatingAssistantDraft, updateTabPrompt, onGenerateAiProposal])
 
   return {
     assistantFabOpen,

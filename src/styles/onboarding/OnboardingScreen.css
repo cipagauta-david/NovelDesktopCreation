@@ -8,13 +8,10 @@
 .onboarding-shell {
   min-height: 100vh;
   display: grid;
-  place-items: center;
-  padding: clamp(2rem, 5vh, 4rem) var(--space-5);
-  background:
-    radial-gradient(ellipse at 20% 10%, color-mix(in srgb, var(--accent-primary) 6%, transparent), transparent 52%),
-    radial-gradient(ellipse at 80% 90%, color-mix(in srgb, var(--accent-primary) 4%, transparent), transparent 48%),
-    var(--surface-base);
-  animation: portal-breathe-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  grid-template-columns: 1.1fr minmax(360px, 460px);
+  gap: 1.5rem;
+  padding: 2rem;
+  align-items: start;
 }
 
 @keyframes portal-breathe-in {
@@ -27,10 +24,9 @@
   width: min(760px, 92vw);
   padding: clamp(2rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3rem);
   display: grid;
-  gap: var(--space-5);
-  align-content: center;
-  text-align: center;
-  animation: portal-rise 480ms 80ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  gap: 1.5rem;
+  align-content: start;
+  grid-column: 1 / -1;
 }
 
 @keyframes portal-rise {
@@ -51,12 +47,42 @@
 
 /* Headline */
 .hero-panel h1 {
-  font-family: var(--font-serif);
-  font-size: clamp(2.2rem, 4vw, 4rem);
-  font-weight: 400;
-  line-height: 1.15;
-  color: var(--text-heading);
-  letter-spacing: -0.025em;
+  font-size: clamp(2.4rem, 4vw, 4.8rem);
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.hero-feature {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: rgba(20, 31, 53, 0.9);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+}
+
+.hero-feature span {
+  color: #9fb0c9;
+}
+
+.onboarding-card {
+  padding: 2rem;
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  grid-column: 1 / -1;
+}
+
+.section-title {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.section-title h2 {
   margin: 0;
 }
 
@@ -215,52 +241,113 @@
   color: var(--text-secondary);
 }
 
-/* ─── Back Button ─── */
-.onboarding-back-btn {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 0;
-  font-size: inherit;
+.advanced-config {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--surface-float) 70%, transparent);
+  display: grid;
+  gap: 1.5rem;
 }
 
-.onboarding-back-btn:hover {
-  color: var(--text-primary);
-}
-
-/* ─── Privacy Consent ─── */
-.privacy-consent {
+.checkbox-label {
   display: flex;
-  gap: 0.5rem;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-  font-size: var(--font-size--1);
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: var(--font-size-1);
+  line-height: 1.5;
 }
 
-.privacy-link {
-  color: var(--text-accent);
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  min-width: 1.2rem;
+  min-height: 1.2rem;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
-/* ─── Dark Mode ─── */
-:root[data-theme="dark"] .onboarding-shell {
-  background:
-    radial-gradient(ellipse at 20% 10%, color-mix(in srgb, var(--accent-primary) 8%, transparent), transparent 52%),
-    radial-gradient(ellipse at 80% 90%, color-mix(in srgb, var(--text-muted) 5%, transparent), transparent 48%),
-    var(--surface-base);
+.checkbox-label a {
+  color: var(--accent-primary);
+  text-decoration: none;
+  font-weight: 500;
 }
 
-:root[data-theme="dark"] .hero-feature {
-  background: color-mix(in srgb, var(--surface-elevated) 85%, transparent);
-  border-color: color-mix(in srgb, var(--accent-primary) 10%, var(--border-subtle));
+.checkbox-label a:hover {
+  text-decoration: underline;
 }
 
-:root[data-theme="dark"] .onboarding-card {
-  background: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
-  border-color: color-mix(in srgb, var(--accent-primary) 12%, var(--border-subtle));
-  box-shadow:
-    0 2px 0 0 color-mix(in srgb, #ffffff 4%, transparent) inset,
-    0 0 0 1px color-mix(in srgb, var(--accent-primary) 8%, transparent),
-    0 24px 60px -8px rgba(0, 0, 0, 0.5);
+.checkbox-privacy {
+  font-size: var(--font-size-0);
+  color: var(--text-secondary);
 }
 
+@media (max-width: 768px) {
+  .onboarding-shell {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    min-height: auto;
+  }
+
+  .hero-panel {
+    padding: 1.5rem;
+    gap: 1rem;
+    max-width: 100% !important;
+    margin: 0 !important;
+    width: 100%;
+  }
+
+  .hero-panel h1 {
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .inline-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .advanced-config {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .onboarding-shell {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .hero-panel {
+    padding: 1rem;
+    gap: 0.75rem;
+    max-width: 100% !important;
+    margin: 0 !important;
+    width: 100%;
+  }
+
+  .hero-panel h1 {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+
+  .hero-feature {
+    padding: 0.75rem 0.9rem;
+    border-radius: 12px;
+  }
+
+  .onboarding-card {
+    padding: 1rem;
+    gap: 0.75rem;
+    max-width: 100% !important;
+    width: 100%;
+  }
+}
