@@ -69,7 +69,7 @@ function useAiStreaming({
     setToast('Generación IA cancelada.')
   }, [setStreamStatus, setToast])
 
-  async function generateAiProposal() {
+  async function generateAiProposal(promptOverride?: string) {
     if (!activeEntity || !activeTab) return
     if (streamStatus === 'streaming') return
 
@@ -102,9 +102,10 @@ function useAiStreaming({
       model: settings.model,
       apiKey: providerApiKey,
       correlationId,
-      tabPrompt: activeTab.prompt,
+      tabPrompt: promptOverride ?? activeTab.prompt,
       entityTitle: activeEntity.title,
       entityContent: activeEntity.content,
+      stream: settings.streamEnabled ?? true,
     }
 
     let accumulatedText = ''
@@ -114,12 +115,26 @@ function useAiStreaming({
       correlationId,
     })
 
+    const resetAccumulatedText = () => {
+      // Cancelar cualquier flush pendiente del intento anterior
+      if (frameRef.current != null) {
+        window.cancelAnimationFrame(frameRef.current)
+        frameRef.current = null
+      }
+      accumulatedText = ''
+      bufferedTextRef.current = ''
+      setStreamingText('')
+    }
+
     try {
       await requestLlmStreaming(input, controller.signal, {
         onToken(chunk) {
           accumulatedText += chunk
           bufferedTextRef.current = accumulatedText
           queueStreamingFlush()
+        },
+        onReset() {
+          resetAccumulatedText()
         },
         onDone(fullText) {
           if (frameRef.current != null) {
@@ -153,10 +168,13 @@ function useAiStreaming({
           setToast('Propuesta IA generada con streaming. Revisa y confirma.')
         },
         onError(error) {
+          // Flush inmediato: cancelar rAF pendiente y poner el texto final
           if (frameRef.current != null) {
             window.cancelAnimationFrame(frameRef.current)
             frameRef.current = null
           }
+          // Asegurar que bufferedTextRef tiene el valor más reciente
+          bufferedTextRef.current = accumulatedText
           setStreamingText(accumulatedText)
 
           if (error instanceof LlmError && error.category === 'cancelled') {

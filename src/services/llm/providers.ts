@@ -12,7 +12,32 @@ import { consumeSseStream } from './streamParser'
 import { buildTrace } from './trace'
 import type { LlmRequestInput, StreamCallbacks } from './types'
 
-const ANTHROPIC_MAX_TOKENS = 700
+const ANTHROPIC_MAX_TOKENS = 8192
+
+function normalizeOpenRouterModel(model: string): string {
+  const trimmed = model.trim()
+  if (!trimmed) return trimmed
+  return trimmed.replace(/^openrouter\//, '')
+}
+
+function resolveRequestedModel(provider: Provider, requestedModel: string): string {
+  if (provider === 'OpenRouter') {
+    const normalized = requestedModel.trim().toLowerCase()
+    if (!requestedModel.trim() || normalized === 'auto') {
+      return 'anthropic/claude-3.7-sonnet'
+    }
+  }
+
+  return requestedModel.trim() || getDefaultModelForProvider(provider)
+}
+
+function getOpenRouterHeaders(apiKey: string): Record<string, string> {
+  return {
+    Authorization: `Bearer ${apiKey}`,
+    'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173',
+    'X-Title': 'NovelDesktopCreation',
+  }
+}
 
 async function safeFetch(url: string, init: RequestInit, provider: Provider): Promise<unknown> {
   const response = await fetch(url, init)
@@ -75,9 +100,13 @@ async function streamOpenAiCompatible(
         })
 
         const delta = parsed.choices[0]?.delta?.content ?? ''
-        if (delta) {
-          fullText += delta
-          callbacks.onToken(delta)
+        const reasoningText = parsed.choices[0]?.delta?.reasoning_details
+          ?.map((item) => item.text ?? '')
+          .join('') ?? parsed.choices[0]?.delta?.reasoning ?? ''
+        const textToEmit = delta || reasoningText
+        if (textToEmit) {
+          fullText += textToEmit
+          callbacks.onToken(textToEmit)
         }
         return false
       },
@@ -175,6 +204,37 @@ async function streamAnthropic(
   callbacks.onTrace(buildTrace(input, provider, fullText, duration, 'ok'))
 }
 
+async function fetchOpenAiCompatibleNonStreaming(
+  url: string,
+  headers: Record<string, string>,
+  body: Record<string, unknown>,
+  provider: Provider,
+  signal: AbortSignal,
+  callbacks: StreamCallbacks,
+  startTime: number,
+  input: LlmRequestInput,
+): Promise<void> {
+  const payload = await safeFetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headers },
+    body: JSON.stringify({ ...body, stream: false }),
+    signal,
+  }, provider)
+
+  const choices = (payload as any)?.choices
+  let text = ''
+  if (choices && Array.isArray(choices) && choices.length > 0) {
+    const first = choices[0]
+    text = first?.message?.content ?? first?.text ?? first?.delta?.content ?? ''
+  }
+
+  const duration = Date.now() - startTime
+  const fullText = text
+  callbacks.onToken(fullText)
+  callbacks.onDone(fullText)
+  callbacks.onTrace(buildTrace(input, provider, fullText, duration, 'ok'))
+}
+
 async function fetchNonStreaming(
   input: LlmRequestInput,
   signal: AbortSignal,
@@ -243,7 +303,7 @@ export function getDefaultModelForProvider(provider: Provider): string {
     OpenAI: 'gpt-4o-mini',
     Anthropic: 'claude-3-5-haiku',
     'Google Gemini': 'gemini-2.0-flash',
-    OpenRouter: 'openrouter/openai/gpt-4o-mini',
+    OpenRouter: 'anthropic/claude-3.7-sonnet',
     'Local/Ollama': 'llama3.2',
   }
   return defaults[provider]
@@ -264,11 +324,33 @@ export async function executeProviderRequest(
       ? 'https://api.openai.com/v1/chat/completions'
       : 'https://openrouter.ai/api/v1/chat/completions'
 
+    const resolvedModel = resolveRequestedModel(provider, input.model)
+    if (input.stream === false) {
+      await fetchOpenAiCompatibleNonStreaming(
+        url,
+        getOpenRouterHeaders(input.apiKey),
+        {
+          model: normalizeOpenRouterModel(resolvedModel),
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: userPrompt },
+          ],
+          temperature: 0.8,
+        },
+        provider,
+        signal,
+        callbacks,
+        startTime,
+        input,
+      )
+      return
+    }
+
     await streamOpenAiCompatible(
       url,
-      { Authorization: `Bearer ${input.apiKey}` },
+      getOpenRouterHeaders(input.apiKey),
       {
-        model: input.model,
+        model: normalizeOpenRouterModel(resolvedModel),
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: userPrompt },

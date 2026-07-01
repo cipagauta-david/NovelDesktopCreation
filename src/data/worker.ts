@@ -83,8 +83,8 @@ const workerObj: AppWorker = {
         // Desktop usa SQLite FTS que se mantiene en main.cjs
         if (!isDesktopRuntime()) {
           const allEntities = savedState.projects.flatMap((p) => p.entities)
-          searchIndex.buildFromEntities(allEntities)
-          console.log(`[Worker] Web FTS Index built: ${searchIndex.indexedCount} entities`)
+          await searchIndex.buildFromEntities(allEntities)
+          console.log(`[Worker] Web Vector Index built: ${searchIndex.indexedCount} entities`)
         } else {
           console.log('[Worker] Desktop runtime: Using SQLite FTS, skipping in-memory index')
         }
@@ -111,7 +111,7 @@ const workerObj: AppWorker = {
       // Desktop delega FTS a SQLite via stateStorage adapter
       if (!isDesktopRuntime()) {
         const allEntities = validatedState.projects.flatMap((p) => p.entities)
-        searchIndex.buildFromEntities(allEntities)
+        await searchIndex.buildFromEntities(allEntities)
       }
 
       try {
@@ -132,7 +132,7 @@ const workerObj: AppWorker = {
       if (saved && !isDesktopRuntime()) {
         // Reconstruir índice FTS en memoria después de cargar para web
         const allEntities = saved.projects.flatMap((p) => p.entities)
-        searchIndex.buildFromEntities(allEntities)
+        await searchIndex.buildFromEntities(allEntities)
       }
       return saved ? migratePersistedState(saved) : fallbackState
     } catch (error) {
@@ -149,7 +149,7 @@ const workerObj: AppWorker = {
     }
     fallbackState = null
     if (!isDesktopRuntime()) {
-      searchIndex.buildFromEntities([])
+      await searchIndex.buildFromEntities([])
     }
   },
 
@@ -199,7 +199,7 @@ const workerObj: AppWorker = {
         contract: 'ipc-worker-fts-index',
         message: 'Entidad inválida para indexación FTS',
       }))
-      searchIndex.buildFromEntities(validatedEntities)
+      await searchIndex.buildFromEntities(validatedEntities)
       return searchIndex.indexedCount
     })
   },
@@ -216,7 +216,7 @@ const workerObj: AppWorker = {
       correlationId: meta?.correlationId,
       origin: meta?.origin,
     }, async () => {
-      const results = searchIndex.search(query)
+      const results = await searchIndex.search(query)
       return results.map((result) => parseWithContract(FtsSearchResultSchema, result, {
         provider: 'Local/Ollama',
         contract: 'ipc-worker-fts-search',
@@ -235,7 +235,7 @@ const workerObj: AppWorker = {
       contract: 'ipc-worker-fts-upsert',
       message: 'Entidad inválida para upsert FTS',
     })
-    searchIndex.upsertEntity(validatedEntity)
+    await searchIndex.upsertEntity(validatedEntity)
   },
 
   async ftsRemove(entityId: string): Promise<void> {

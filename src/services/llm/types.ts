@@ -1,5 +1,6 @@
 import type { Provider, LlmTraceEntry } from '../../types/workspace'
 
+
 export type LlmRequestInput = {
   provider: Provider
   model: string
@@ -8,6 +9,7 @@ export type LlmRequestInput = {
   tabPrompt: string
   entityTitle: string
   entityContent: string
+  stream?: boolean
 }
 
 export type StreamCallbacks = {
@@ -15,4 +17,5 @@ export type StreamCallbacks = {
   onDone: (fullText: string) => void
   onError: (error: import('../llmErrors').LlmError) => void
   onTrace: (trace: LlmTraceEntry) => void
+  onReset?: () => void
 }

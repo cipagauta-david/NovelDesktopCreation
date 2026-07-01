@@ -10,8 +10,6 @@ type SharedRendererProps = {
   repulsionStrength: number
   gravityStrength: number
   linkWeightStrength: number
-  linkAttractionStrength: number
-  collectionCohesionStrength: number
   collectionBoundaryRepulsionStrength: number
   textFontSize: number
   simulationPaused: boolean

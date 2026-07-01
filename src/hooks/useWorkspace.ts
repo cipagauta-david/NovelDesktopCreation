@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback, useEffect } from 'react'
 
 import { providerModels } from '../data/constants'
-import type { DraftState, PanelKey, PanelVisibility, PersistedGraphLayouts, PersistedState, WorkspaceView } from '../types/workspace'
+import type { AppSettings, DraftState, OnboardingPayload, PanelKey, PanelVisibility, PersistedGraphLayouts, PersistedState, Provider, WorkspaceView } from '../types/workspace'
 import { usePanelWidths } from './workspace/usePanelWidths'
 import { draftStateFromEntity } from '../utils/workspace'
 
@@ -19,6 +19,7 @@ import type { AppWorker } from '../data/worker'
 import {
   deleteProviderApiKey,
   rotateProviderApiKey,
+  saveProviderApiKey,
   saveWorkspaceSyncToken,
   deleteWorkspaceSyncToken,
   readProviderVaultMetadata,
@@ -123,6 +124,22 @@ export function useWorkspace(
     return () => window.clearTimeout(id)
   }, [toast, setToast])
 
+  const completeOnboarding = useCallback((payload: OnboardingPayload) => {
+    const settings: AppSettings = {
+      authorName: payload.authorName || 'Autor(a)',
+      provider: payload.provider,
+      model: payload.model,
+      apiKeyHint: payload.apiKey ? `••••${payload.apiKey.slice(-4)}` : 'Modo local',
+      streamEnabled: payload.streamEnabled ?? true,
+    }
+
+    void saveProviderApiKey(payload.provider, payload.apiKey).catch((error) => {
+      console.error('[Vault] No se pudo guardar API key', error)
+    })
+    setData((c) => ({ ...c, settings }))
+    setToast('Workspace configurado. Todo listo para escribir.')
+  }, [setData, setToast])
+
   const clearWorkspace = useCallback(async () => {
     await worker.resetWorkspace()
     await clearSyncStoragePersistence()
@@ -157,6 +174,56 @@ export function useWorkspace(
     setToast('Checkpoint restaurado.')
   }, [setData, setToast])
 
+  const updateProvider = useCallback(async (nextProvider: string) => {
+    const trimmedProvider = nextProvider.trim()
+    if (!trimmedProvider) return
+    const provider = trimmedProvider as Provider
+    const currentModel = data.settings?.model
+    const nextModel = currentModel && providerModels[provider]?.includes(currentModel)
+      ? currentModel
+      : providerModels[provider]?.[0] ?? currentModel ?? ''
+
+    setData((current) => ({
+      ...current,
+      settings: current.settings
+        ? {
+            ...current.settings,
+            provider,
+            model: nextModel,
+          }
+        : current.settings,
+    }))
+    setToast(`Proveedor actualizado a ${provider}.`)
+  }, [data.settings?.model, setData, setToast])
+
+  const updateProviderModel = useCallback(async (nextModel: string) => {
+    const trimmedModel = nextModel.trim()
+    if (!trimmedModel) return
+    setData((current) => ({
+      ...current,
+      settings: current.settings
+        ? {
+            ...current.settings,
+            model: trimmedModel,
+          }
+        : current.settings,
+    }))
+    setToast('Modelo actualizado.')
+  }, [setData, setToast])
+
+  const updateStreamEnabled = useCallback((enabled: boolean) => {
+    setData((current) => ({
+      ...current,
+      settings: current.settings
+        ? {
+            ...current.settings,
+            streamEnabled: enabled,
+          }
+        : current.settings,
+    }))
+    setToast(enabled ? 'Streaming activado.' : 'Streaming desactivado.')
+  }, [setData, setToast])
+
   const rotateProviderCredential = useCallback(async (nextApiKey: string) => {
     const provider = data.settings?.provider
     if (!provider) return
@@ -187,7 +254,7 @@ export function useWorkspace(
           }
         : current.settings,
     }))
-    setToast(`Key de ${provider} invalidada.`)
+    setToast(`Key de ${provider} eliminada del vault local. No revoca la key en ${provider}; tendrás que borrarla en ese servicio si quieres invalidarla allí.`)
   }, [data.settings?.provider, setData, setToast])
 
   const configureRemoteSync = useCallback(async (input: { endpoint: string; workspaceId: string; token?: string }) => {
@@ -270,7 +337,7 @@ export function useWorkspace(
     newTabName: tabManagement.newTabName, setNewTabName: tabManagement.setNewTabName,
     newEntityTemplateId: entityManagement.newEntityTemplateId, setNewEntityTemplateId: entityManagement.setNewEntityTemplateId,
     activeProject, activeTab, activeEntity, activeDraft, activeTemplates: activeProject?.templates ?? [], activeTabEntities: tabEntities, archivedTabEntities, selectedNewEntityTemplateId: entityManagement.selectedNewEntityTemplateId,
-    searchResults, graphModel: graphManagement.graphModel, suggestionOptions, referenceSuggestion, pendingProposal: aiManagement.pendingProposal, panels, editorViewRef: entityManagement.editorViewRef,
+    searchResults, graphModel: graphManagement.graphModel, suggestionOptions, referenceSuggestion, pendingProposal: aiManagement.pendingProposal, panels, editorViewRef: entityManagement.editorViewRef, onboardingReady: Boolean(data.settings), completeOnboarding,
     // AI streaming
     streamStatus: aiManagement.streamStatus, streamingText: aiManagement.streamingText, llmTraces: aiManagement.llmTraces, stopGeneration: aiManagement.stopGeneration,
     selectProject: projectManagement.selectProject, renameActiveProject: projectManagement.renameActiveProject, deleteActiveProject: projectManagement.deleteActiveProject, createProject: projectManagement.createProject, clearWorkspace,
@@ -290,7 +357,7 @@ export function useWorkspace(
     syncStats: data.syncStats, syncRemoteConfig: data.syncRemoteConfig, configureRemoteSync, clearRemoteSyncCredential,
     checkpoints: data.checkpoints ?? [], restoreCheckpoint,
     correlationReports: data.correlationReports ?? [],
-    rotateProviderCredential, invalidateProviderCredential, refreshVaultMetadata,
+    updateProvider, updateProviderModel, updateStreamEnabled, rotateProviderCredential, invalidateProviderCredential, refreshVaultMetadata,
     registerPlugin: pluginManager.register, listPlugins: pluginManager.list, runPluginCommand,
   }
 }

@@ -95,8 +95,6 @@ export const GraphPanel = memo(function GraphPanel({
       repulsionStrength: 78,
       gravityStrength: 38,
       linkWeightStrength: 34,
-      linkAttractionStrength: 52,
-      collectionCohesionStrength: 100,
       collectionBoundaryRepulsionStrength: 50,
       textFontSize: 12,
     }
@@ -123,8 +121,6 @@ export const GraphPanel = memo(function GraphPanel({
     viewSettings.repulsionStrength,
     viewSettings.gravityStrength,
     viewSettings.linkWeightStrength,
-    viewSettings.linkAttractionStrength,
-    viewSettings.collectionCohesionStrength,
     viewSettings.collectionBoundaryRepulsionStrength,
     viewSettings.textFontSize,
   ])
@@ -552,8 +548,6 @@ export const GraphPanel = memo(function GraphPanel({
             repulsionStrength={viewSettings.repulsionStrength}
             gravityStrength={viewSettings.gravityStrength}
             linkWeightStrength={viewSettings.linkWeightStrength}
-            linkAttractionStrength={viewSettings.linkAttractionStrength}
-            collectionCohesionStrength={viewSettings.collectionCohesionStrength}
             collectionBoundaryRepulsionStrength={viewSettings.collectionBoundaryRepulsionStrength}
             textFontSize={viewSettings.textFontSize}
             simulationPaused={simulationPaused}
@@ -588,18 +582,6 @@ export const GraphPanel = memo(function GraphPanel({
               setViewSettings((current) => ({
                 ...current,
                 linkWeightStrength: value,
-              }))
-            }
-            onLinkAttractionStrengthChange={(value) =>
-              setViewSettings((current) => ({
-                ...current,
-                linkAttractionStrength: value,
-              }))
-            }
-            onCollectionCohesionStrengthChange={(value) =>
-              setViewSettings((current) => ({
-                ...current,
-                collectionCohesionStrength: value,
               }))
             }
             onCollectionBoundaryRepulsionStrengthChange={(value) =>
@@ -640,8 +622,6 @@ export const GraphPanel = memo(function GraphPanel({
             repulsionStrength={viewSettings.repulsionStrength}
             gravityStrength={viewSettings.gravityStrength}
             linkWeightStrength={viewSettings.linkWeightStrength}
-            linkAttractionStrength={viewSettings.linkAttractionStrength}
-            collectionCohesionStrength={viewSettings.collectionCohesionStrength}
             collectionBoundaryRepulsionStrength={viewSettings.collectionBoundaryRepulsionStrength}
             textFontSize={viewSettings.textFontSize}
             simulationPaused={simulationPaused}

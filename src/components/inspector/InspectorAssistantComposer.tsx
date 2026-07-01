@@ -8,14 +8,18 @@ import '../../styles/inspector/InspectorAssistantComposer.css';
 type InspectorAssistantComposerProps = {
   value: string
   streamStatus: LlmStreamStatus
+  streamingText: string
   onChange: (value: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onStopGeneration: () => void
 }
 
-export function InspectorAssistantComposer({ value, streamStatus, onChange, onSubmit, onStopGeneration }: InspectorAssistantComposerProps) {
-  const isStreaming = streamStatus === 'streaming'
+export function InspectorAssistantComposer({ value, streamStatus, streamingText, onChange, onSubmit, onStopGeneration }: InspectorAssistantComposerProps) {
+    const isStreaming = streamStatus === 'streaming'
   const canSubmit = value.trim().length > 0 && !isStreaming
+  const showStreamResult =
+    isStreaming ||
+    (!!streamingText && (streamStatus === 'done' || streamStatus === 'error'))
   const formRef = useRef<HTMLFormElement | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
@@ -28,9 +32,15 @@ export function InspectorAssistantComposer({ value, streamStatus, onChange, onSu
     textarea.style.height = `${Math.min(textarea.scrollHeight, 320)}px`
   }, [value])
 
-  const setMode = (modePrompt: string) => {
+    const setMode = (modePrompt: string) => {
     onChange(`${value}${value ? '\n' : ''}${modePrompt}`)
   }
+
+  const streamHeader = isStreaming
+    ? 'Recibiendo respuesta…'
+    : streamStatus === 'done'
+      ? 'Respuesta generada'
+      : 'Respuesta parcial'
 
   return (
     <form ref={formRef} className="assistant-composer" onSubmit={onSubmit}>
@@ -69,6 +79,27 @@ export function InspectorAssistantComposer({ value, streamStatus, onChange, onSu
           ↗
         </Button>
       </div>
+
+            {showStreamResult && (
+        <div className="assistant-stream-preview" aria-live="polite">
+          <div className="assistant-stream-header">
+            {isStreaming && <span className="streaming-dot" />}
+            {streamStatus === 'error' && <span className="streaming-warning" aria-label="Advertencia">⚠</span>}
+            <span>{streamHeader}</span>
+          </div>
+          {streamingText ? (
+            <p className="assistant-stream-text">{streamingText}</p>
+          ) : (
+            isStreaming && (
+              <div className="assistant-stream-skeleton" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
+            )
+          )}
+        </div>
+      )}
 
       <div className="assistant-composer-actions assistant-composer-footer">
         <small>Se integra en las instrucciones activas de esta colección.</small>

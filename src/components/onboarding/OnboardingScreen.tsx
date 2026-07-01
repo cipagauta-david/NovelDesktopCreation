@@ -19,6 +19,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
   const [provider, setProvider] = useState<Provider>('OpenRouter')
   const [model, setModel] = useState(providerModels.OpenRouter[0])
   const [apiKey, setApiKey] = useState('')
+  const [streamEnabled, setStreamEnabled] = useState(true)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false)
 
@@ -68,7 +69,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
         className="onboarding-card"
         onSubmit={(event) => {
           event.preventDefault()
-          onSubmit({ authorName, provider, model, apiKey })
+          onSubmit({ authorName, provider, model, apiKey, streamEnabled })
         }}
       >
         <div className="section-title">
@@ -89,7 +90,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
           <Button 
             className="primary-button btn--default" 
             type="button" 
-            onClick={() => onSubmit({ authorName, provider: 'Local/Ollama', model: 'demo', apiKey: '' })}
+            onClick={() => onSubmit({ authorName, provider: 'Local/Ollama', model: 'demo', apiKey: '', streamEnabled: true })}
           >
             Probar sin API key — Modo demo
           </Button>
@@ -152,6 +153,15 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
                 />
               </div>
             </div>
+
+            <label className="privacy-consent" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={streamEnabled}
+                onChange={(e) => setStreamEnabled(e.target.checked)}
+              />
+              <span>Streaming (respuesta token por token)</span>
+            </label>
 
             <label className="privacy-consent">
               <input 

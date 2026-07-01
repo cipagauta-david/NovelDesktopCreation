@@ -14,9 +14,12 @@ export const providerModels: Record<Provider, string[]> = {
   Anthropic: ['claude-3-7-sonnet', 'claude-3-5-haiku'],
   'Google Gemini': ['gemini-2.5-pro', 'gemini-2.0-flash'],
   OpenRouter: [
-    'openrouter/anthropic/claude-3.7-sonnet',
-    'openrouter/openai/gpt-4o-mini',
-    'openrouter/google/gemini-2.0-flash-001',
+    'anthropic/claude-3.7-sonnet',
+    'openai/gpt-4o-mini',
+    'google/gemini-2.0-flash-001',
+    'openrouter/owl-alpha',
+    'deepseek/deepseek-chat',
+    'deepseek/deepseek-v4-pro'
   ],
   'Local/Ollama': ['llama3.2', 'qwen2.5-coder'],
 }

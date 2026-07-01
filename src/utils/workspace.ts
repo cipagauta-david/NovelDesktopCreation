@@ -130,6 +130,7 @@ export function migratePersistedState(state: PersistedState): PersistedState {
         provider: state.settings.provider,
         model: state.settings.model,
         apiKeyHint: state.settings.apiKeyHint,
+        streamEnabled: state.settings.streamEnabled ?? true,
       }
     : null
 

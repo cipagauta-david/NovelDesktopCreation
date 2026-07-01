@@ -15,6 +15,7 @@ export type AppSettings = {
 	provider: Provider
 	model: string
 	apiKeyHint: string
+	streamEnabled: boolean
 }
 
 export type OnboardingPayload = {
@@ -22,6 +23,7 @@ export type OnboardingPayload = {
 	provider: Provider
 	model: string
 	apiKey: string
+	streamEnabled?: boolean
 }
 
 export type FieldValue = {
