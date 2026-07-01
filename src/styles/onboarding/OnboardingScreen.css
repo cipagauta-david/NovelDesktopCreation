@@ -75,6 +75,9 @@
   .hero-panel {
     padding: 1.5rem;
     gap: 1rem;
+    max-width: 100% !important;
+    margin: 0 !important;
+    width: 100%;
   }
 
   .hero-panel h1 {
