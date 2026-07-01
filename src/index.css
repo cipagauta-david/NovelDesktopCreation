@@ -500,35 +500,6 @@ label {
   box-shadow: var(--shadow-popover);
 }
 
-.primary-button {
-  background: var(--accent-primary);
-  border-color: transparent;
-  color: var(--on-accent);
-  font-weight: 700;
-}
-
-.primary-button:hover {
-  background: var(--accent-hover);
-}
-
-.secondary-button,
-.outline-button {
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
-}
-
-.ghost-button {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--text-muted);
-}
-
-.ghost-button:hover {
-  background: color-mix(in srgb, var(--accent-primary) 9%, transparent);
-  border-color: var(--border-subtle);
-  color: var(--text-primary);
-}
 
 .icon-button {
   min-width: 2.75rem;
