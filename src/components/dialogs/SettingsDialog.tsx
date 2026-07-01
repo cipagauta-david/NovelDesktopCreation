@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/Dialog'
 import { Button } from '../ui/Button'
 import { FormStack } from '../common/FormStack'
 import { providerModels } from '../../data/constants'

@@ -4,7 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/components/ui/Dialog'
 
 const shortcuts: { keys: string; description: string }[] = [
   { keys: 'Ctrl + K', description: 'Abrir búsqueda / Command Palette' },

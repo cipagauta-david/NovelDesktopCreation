@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/Dialog'
 import { FormStack } from '../common/FormStack'
 
 type StackedDialogProps = {
