@@ -108,7 +108,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
         </div>
 
         {showAdvanced && (
-          <div style={{ marginTop: '2rem', padding: '1rem', border: '1px solid var(--border-subtle)', borderRadius: '8px' }}>
+          <div className="advanced-config">
             <div className="inline-grid">
               <Field label="Proveedor IA">
                 <select
@@ -148,7 +148,7 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
               />
             </Field>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', cursor: 'pointer' }}>
+            <label className="checkbox-label">
               <input
                 type="checkbox"
                 checked={streamEnabled}
@@ -157,18 +157,18 @@ export function OnboardingScreen({ onSubmit }: OnboardingScreenProps) {
               <span>Streaming (respuesta token por token)</span>
             </label>
 
-            <label style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.9rem' }}>
-              <input 
-                type="checkbox" 
-                checked={acceptedPrivacy} 
-                onChange={(e) => setAcceptedPrivacy(e.target.checked)} 
+            <label className="checkbox-label checkbox-privacy">
+              <input
+                type="checkbox"
+                checked={acceptedPrivacy}
+                onChange={(e) => setAcceptedPrivacy(e.target.checked)}
               />
-              Entiendo que mi API key se guardará localmente. <a href="#" style={{ color: 'var(--text-accent)' }}>Ver Política de Privacidad</a>.
+              Entiendo que mi API key se guardará localmente. <a href="#">Ver Política de Privacidad</a>.
             </label>
 
-            <Button 
-              className="primary-button" 
-              variant="primary" 
+            <Button
+              className="primary-button"
+              variant="primary"
               type="submit"
               disabled={!acceptedPrivacy || !apiKey}
             >

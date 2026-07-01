@@ -66,6 +66,50 @@
   font-size: 0.88rem;
 }
 
+.advanced-config {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--surface-float) 70%, transparent);
+  display: grid;
+  gap: 1.5rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: var(--font-size-1);
+  line-height: 1.5;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  min-width: 1.2rem;
+  min-height: 1.2rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.checkbox-label a {
+  color: var(--accent-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.checkbox-label a:hover {
+  text-decoration: underline;
+}
+
+.checkbox-privacy {
+  font-size: var(--font-size-0);
+  color: var(--text-secondary);
+}
+
 @media (max-width: 768px) {
   .onboarding-shell {
     grid-template-columns: 1fr;
@@ -93,6 +137,12 @@
 
   .inline-grid {
     grid-template-columns: 1fr;
+  }
+
+  .advanced-config {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    gap: 1rem;
   }
 }
 
