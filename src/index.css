@@ -187,13 +187,12 @@ body,
 #root {
   width: 100%;
   min-width: 320px;
+  height: auto;
   min-height: 100vh;
-  height: 100%;
 }
 
 body {
   margin: 0;
-  overflow: hidden;
   background: var(--bg-base);
   color: var(--text-primary);
   font-family: var(--font-sans);
