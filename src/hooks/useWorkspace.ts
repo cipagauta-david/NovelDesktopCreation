@@ -254,7 +254,7 @@ export function useWorkspace(
           }
         : current.settings,
     }))
-    setToast(`Key de ${provider} eliminada del vault local. No revoca la key en ${provider}; tendrás que borrarla en ese servicio si quieres invalidarla allí.`)
+    setToast(`Key de ${provider} eliminada del vault local. No revoca la key en ${provider}; tendrás que borrarla en ese servicio si quieres eliminarla allí.`)
   }, [data.settings?.provider, setData, setToast])
 
   const configureRemoteSync = useCallback(async (input: { endpoint: string; workspaceId: string; token?: string }) => {

@@ -81,7 +81,7 @@ export function InspectorMetricsTab({
             Rotar key
           </Button>
           <Button type="button" className="ghost-button btn--ghost" onClick={() => void onInvalidateProviderCredential()}>
-            Invalidar key
+            Eliminar key
           </Button>
           <Button type="button" className="ghost-button btn--ghost" onClick={() => void onRefreshVaultMetadata()}>
             Ver metadata

@@ -280,9 +280,14 @@ export function AppShell({ initialData, worker }: { initialData: PersistedState,
       <SettingsDialog
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
+        activeProvider={workspace.data.settings?.provider ?? 'OpenRouter'}
         activeModel={workspace.data.settings?.model ?? ''}
+        streamEnabled={workspace.data.settings?.streamEnabled ?? true}
         activeProjectName={workspace.activeProject?.name ?? ''}
         syncEndpoint={workspace.syncRemoteConfig?.endpoint ?? 'No configurado'}
+        onUpdateProvider={(provider) => void workspace.updateProvider(provider)}
+        onUpdateModel={(model) => void workspace.updateProviderModel(model)}
+        onUpdateStreamEnabled={(enabled) => workspace.updateStreamEnabled(enabled)}
         onRotateKey={(key) => void workspace.rotateProviderCredential(key)}
         onInvalidateKey={() => void workspace.invalidateProviderCredential()}
         onConfigureSync={handleOpenSyncFromSettings}

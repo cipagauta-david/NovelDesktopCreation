@@ -9,7 +9,7 @@ type InvalidateKeyConfirmDialogProps = {
 
 export function InvalidateKeyConfirmDialog({ open, onOpenChange, onConfirm }: InvalidateKeyConfirmDialogProps) {
   return (
-    <StackedDialog open={open} onOpenChange={onOpenChange} title="Invalidar API key">
+    <StackedDialog open={open} onOpenChange={onOpenChange} title="Eliminar API key">
       <p>Esta acción elimina la key del vault del proveedor activo.</p>
       <Button
         type="button"
