@@ -12,6 +12,7 @@
   display: grid;
   gap: 1.5rem;
   align-content: start;
+  grid-column: 1 / -1;
 }
 
 .hero-panel h1 {
