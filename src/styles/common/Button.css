@@ -26,12 +26,12 @@
 
 /* Variants */
 .btn--default {
-  background-color: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+  background-color: var(--accent-primary);
+  color: var(--on-accent);
 }
 
 .btn--default:hover:not(:disabled) {
-  background-color: hsl(var(--primary) / 0.8);
+  background-color: var(--accent-hover);
 }
 
 .btn--outline {
